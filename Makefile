@@ -4,7 +4,7 @@ HEADERS_DIR =	headers
 
 SRC 		=	$(addprefix src/, $(FILES))
 OBJ 		=	$(addprefix $(OBJ_DIR)/, $(FILES:.cpp=.o))
-CPPFLAGS	=	-Wall -Werror -Wextra -std=c++98
+CPPFLAGS	=	-Wall -Werror -Wextra -std=c++98 -glldb
 NAME		=	webserv
 
 OBJ_DIR		=	obj
@@ -18,13 +18,13 @@ $(NAME): $(OBJ) $(HEADERS)
 	c++ $(OBJ) -o $@
 
 $(OBJ_DIR):
-	mkdir obj
+	@mkdir obj
 
 clean:
-	rm -rf $(OBJ_DIR)
+	@rm -rf $(OBJ_DIR)
 
 fclean: clean
-	rm -rf $(NAME)
+	@rm -rf $(NAME)
 
 re: fclean all
 

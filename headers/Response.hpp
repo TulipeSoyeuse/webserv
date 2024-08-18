@@ -6,10 +6,15 @@
 class Response
 {
 private:
-	/* data */
+	Request& _request;
+	std::string _response;
+
+	void generate_response();
 public:
-	Response(/* args */);
+	Response(Request &request);
 	~Response();
+
+	std::string &get_response();
 };
 
 #endif
