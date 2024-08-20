@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 
-Request::Request(char *http_package)
+Request::Request(char *http_package): _status(true)
 {
 	_brut_request = http_package;
 	int pos = _brut_request.length() - 3;
@@ -38,27 +38,40 @@ void Request::parse()
 	while (std::getline(s, line))
 	{
 		_request[line.substr(0, line.find_first_of(':'))] =
-			line.substr(line.find_first_of(':') + 2, line.length());
+			line.substr(line.find_first_of(':') + 2);
 	}
-
-	if (_request.find("Content-Length") != _request.end())
-	{
-		f1 = _brut_request.find("\n\n") + 2;
-		_request["Payload"] = _brut_request.substr(f1);
-	}
+	parse_params();
+	parse_payload();
 }
 
-void Request::display_request() const
+void Request::parse_payload()
 {
-	if (_Type == GET)
-		std::cout << "GET request" << "\n";
-	else if (_Type == POST)
-		std::cout << "POST request" << "\n";
+	if (_request.find("Content-Length") != _request.end())
+	{
+		int f1 = _brut_request.find("\n\n") + 2;
+		_request["Payload"] = _brut_request.substr(f1);
+	}
 
-	for (std::map<std::string, std::string>::const_iterator it = _request.begin();
-		 it != _request.end(); ++it)
-		std::cout << it->first << ": "<< it->second << "\n";
-	std::cout << std::endl;
+	if (_request["Payload"].length() == 0)
+		_status = false;
+}
+
+void Request::parse_params()
+{
+	if (_Type == GET && _request["URI"].find('?') != std::string::npos)
+	{
+		std::string uri = _request["URI"].substr(0, _request["URI"].find("?"));
+		std::stringstream s;
+		s.str(_request["URI"].substr(_request["URI"].find("?") + 1));
+
+		std::string param;
+		while (std::getline(s,param, '&'))
+		{
+			_params[param.substr(0, param.find('='))] = 
+				param.substr(param.find('=') + 1);
+		}
+		_request["URI"] = uri;
+	}
 }
 
 const std::map<std::string, std::string> &Request::get_request() const
@@ -78,4 +91,25 @@ const type_e &Request::get_type() const
 
 Request::~Request()
 {
+}
+
+std::ostream &operator<<(std::ostream &out, const Request &c)
+{
+	if (c.get_type() == GET)
+		out << "GET request" << "\n";
+	else if (c.get_type() == POST)
+		out << "POST request" << "\n";
+
+	for (std::map<std::string, std::string>::const_iterator it = c.get_request().begin();
+		 it != c.get_request().end(); ++it)
+		out << it->first << ": "<< it->second << "\n";
+
+	out << "PARAMS\n";
+
+	for (std::map<std::string, std::string>::const_iterator it = c.get_params().begin();
+		 it != c.get_params().end(); ++it)
+		out << it->first << " = "<< it->second << "\n";
+
+	out << std::endl;
+	return (out);
 }

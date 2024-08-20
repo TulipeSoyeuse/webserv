@@ -66,7 +66,7 @@ int main()
 		socker_read(connection, buffer, 100);
 
 		Request r(buffer);
-		r.display_request();
+		std::cout << r;
 
 		// Send a message to the connection
 		std::string response = "Good talking to you\n";
