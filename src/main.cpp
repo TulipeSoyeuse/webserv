@@ -6,6 +6,8 @@
 #include <sys/errno.h>
 #include <poll.h>
 #include <signal.h>
+#include <cstdio>
+#include <cstring>
 
 #include "Request.hpp"
 
@@ -34,16 +36,20 @@ int main()
 	sockaddr_in sockaddr;
 	sockaddr.sin_family = AF_INET;
 	sockaddr.sin_addr.s_addr = INADDR_ANY;
-	sockaddr.sin_port = htons(9999); // htons is necessary to convert a number to
-									 // network byte order
+	sockaddr.sin_port = htons(9999);
 
+	int yes = 1;
+	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
+	{
+		perror("setsockopt");
+		exit(1);
+	}
 	if (bind(sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0)
 	{
 		std::cout << "Failed to bind to port 9999. errno: " << errno << std::endl;
 		exit(EXIT_FAILURE);
 	}
 
-	// Start listening. Hold at most 10 connections in the queue
 	if (listen(sockfd, 10) < 0)
 	{
 		std::cout << "Failed to listen on socket. errno: " << errno << std::endl;
@@ -63,10 +69,21 @@ int main()
 
 		// Read from the connection
 		char buffer[100];
+		std::memset(buffer, 0, 100);
 		socker_read(connection, buffer, 100);
-
+		char hostname[30];
+		gethostname(hostname, 30);
+		std::cout << "------------------------------------------\n"
+				  << "socket: " << connection << "\n"
+				  << "hostname: " << hostname << "\n"
+				  << "------------------------------------------\n"
+				  << buffer << "\n"
+				  << "------------------------------------------" << std::endl;
 		Request r(buffer);
 		std::cout << r;
+		std::cout << "------------------------------------------\nEND\n\n"
+				  << std::endl;
+		(void)r;
 
 		// Send a message to the connection
 		std::string response = "Good talking to you\n";

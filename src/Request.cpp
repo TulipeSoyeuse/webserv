@@ -2,7 +2,7 @@
 #include <iostream>
 #include <sstream>
 
-Request::Request(char *http_package): _status(true)
+Request::Request(char *http_package) : _status(true)
 {
 	_brut_request = http_package;
 	int pos = _brut_request.length() - 3;
@@ -24,7 +24,7 @@ void Request::parse()
 	if (f1 == f2 || f1 == (int)std::string::npos)
 	{
 		std::cout << "request Malformed" << std::endl;
-		return ;
+		return;
 	}
 
 	if (line.find("GET") == 0)
@@ -65,9 +65,9 @@ void Request::parse_params()
 		s.str(_request["URI"].substr(_request["URI"].find("?") + 1));
 
 		std::string param;
-		while (std::getline(s,param, '&'))
+		while (std::getline(s, param, '&'))
 		{
-			_params[param.substr(0, param.find('='))] = 
+			_params[param.substr(0, param.find('='))] =
 				param.substr(param.find('=') + 1);
 		}
 		_request["URI"] = uri;
@@ -102,13 +102,13 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 
 	for (std::map<std::string, std::string>::const_iterator it = c.get_request().begin();
 		 it != c.get_request().end(); ++it)
-		out << it->first << ": "<< it->second << "\n";
+		out << it->first << ": " << it->second << "\n";
 
 	out << "PARAMS\n";
 
 	for (std::map<std::string, std::string>::const_iterator it = c.get_params().begin();
 		 it != c.get_params().end(); ++it)
-		out << it->first << " = "<< it->second << "\n";
+		out << it->first << " = " << it->second << "\n";
 
 	out << std::endl;
 	return (out);

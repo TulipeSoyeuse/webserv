@@ -6,15 +6,17 @@
 class Response
 {
 private:
-	Request& _request;
+	const Request &_request;
 	std::string _response;
 
-	void generate_response();
+	int status_code;
+	std::string status_line;
+
 public:
-	Response(Request &request);
+	Response(const Request &request);
 	~Response();
 
-	std::string &get_response();
+	const int &get_status();
 };
 
 #endif
