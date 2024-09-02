@@ -1,6 +1,4 @@
 #include "Request.hpp"
-#include <iostream>
-#include <sstream>
 
 Request::Request(char *http_package) : _status(true)
 {
@@ -16,7 +14,7 @@ void Request::parse()
 	s.str(_brut_request);
 
 	std::string line;
-	std::getline(s, line);
+	safeGetline(s, line);
 
 	int f1 = line.find_first_of(' ');
 	int f2 = line.find_last_of(' ');
@@ -32,10 +30,10 @@ void Request::parse()
 	else if (line.find("POST") == 0)
 		_Type = POST;
 
-	_request["URI"] = line.substr(f1 + 1, f2 - f1);
+	_request["URI"] = line.substr(f1 + 1, f2 - f1 - 1);
 	_request["Protocol"] = line.substr(f2 + 1);
 
-	while (std::getline(s, line))
+	while (safeGetline(s, line))
 	{
 		_request[line.substr(0, line.find_first_of(':'))] =
 			line.substr(line.find_first_of(':') + 2);
@@ -74,12 +72,12 @@ void Request::parse_params()
 	}
 }
 
-const std::map<std::string, std::string> &Request::get_request() const
+const Map &Request::get_request() const
 {
 	return (_request);
 }
 
-const std::map<std::string, std::string> &Request::get_params() const
+const Map &Request::get_params() const
 {
 	return (_params);
 }
@@ -109,7 +107,12 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 	for (std::map<std::string, std::string>::const_iterator it = c.get_params().begin();
 		 it != c.get_params().end(); ++it)
 		out << it->first << " = " << it->second << "\n";
-
-	out << std::endl;
 	return (out);
+}
+
+std::istream &safeGetline(std::istream &is, std::string &t)
+{
+	std::getline(is, t);
+	t.erase(std::remove(t.begin(), t.end(), '\r'), t.end());
+	return (is);
 }

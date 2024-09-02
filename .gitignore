@@ -1,6 +1,7 @@
 .vscode
 test*
 webserv
+site-test1
 
 # Prerequisites
 *.d

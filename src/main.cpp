@@ -7,9 +7,9 @@
 #include <poll.h>
 #include <signal.h>
 #include <cstdio>
-#include <cstring>
 
 #include "Request.hpp"
+#include "Response.hpp"
 
 int socker_read(int fd, char *buffer, size_t size)
 {
@@ -81,13 +81,12 @@ int main()
 				  << "------------------------------------------" << std::endl;
 		Request r(buffer);
 		std::cout << r;
+		std::cout << "------------------------------------------" << std::endl;
+		Response resp(r);
+		std::cout << resp << std::endl;
 		std::cout << "------------------------------------------\nEND\n\n"
 				  << std::endl;
-		(void)r;
-
-		// Send a message to the connection
-		std::string response = "Good talking to you\n";
-		send(connection, response.c_str(), response.size(), 0);
+		send(connection, resp._response.c_str(), resp._response.length(), 0);
 		close(connection);
 	}
 	// Close the connections

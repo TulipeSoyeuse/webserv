@@ -2,21 +2,61 @@
 #define RESPONSE_HPP
 
 #include "Request.hpp"
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#include <cstring>
+#include <string>
+#include <fstream>
+#include <ctime>
+#include <limits>
+#include <sstream>
+
+#define SSTR(x) static_cast<std::ostringstream &>(std::ostringstream() << std::dec << x).str()
+#define AAC "audio/aac"
+#define BIN "application/octet-stream"
+#define CSV "text/csv"
+#define SVG "image/svg+xml"
+#define HTML "text/html"
+#define JS "text/javascript"
+#define TXT "text/plain"
+#define CSS "text/css"
 
 class Response
 {
 private:
 	const Request &_request;
-	std::string _response;
+
+	std::string Status_line;
+	Map general_header;
+	Map response_header;
+	Map entity_header;
 
 	int status_code;
-	std::string status_line;
+	bool _is_binary;
+	std::streamsize content_length;
+	char *payload;
+	std::string file_path;
+
+	// header --------------
+	void build_header();
+	bool match_file();
+	void MIME_attribute();
+	void Date();
+	// payload -------------
+	bool set_payload();
+	// concat  -------------
+	void cMap_str(Map &m, std::string &s);
 
 public:
+	std::string _response;
+
 	Response(const Request &request);
 	~Response();
 
 	const int &get_status();
 };
+
+std::ostream &operator<<(std::ostream &out, const Response &c);
 
 #endif

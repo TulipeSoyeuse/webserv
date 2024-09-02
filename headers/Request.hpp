@@ -4,8 +4,10 @@
 #include <string>
 #include <cstdlib>
 #include <map>
+#include <iostream>
 #include <ostream>
-
+#include <sstream>
+#include <algorithm>
 
 enum type_e
 {
@@ -13,14 +15,16 @@ enum type_e
 	POST
 };
 
+typedef std::map<std::string, std::string> Map;
+
 class Request
 {
 private:
 	std::string _brut_request;
 
 	type_e _Type;
-	std::map<std::string, std::string> _params;
-	std::map<std::string, std::string> _request;
+	Map _params;
+	Map _request;
 
 	void parse();
 	void parse_params();
@@ -31,11 +35,12 @@ public:
 	~Request();
 
 	bool _status;
-	const std::map<std::string, std::string> &get_request() const;
-	const std::map<std::string, std::string> &get_params() const;
+	const Map &get_request() const;
+	const Map &get_params() const;
 	const type_e &get_type() const;
 };
 
 std::ostream &operator<<(std::ostream &out, const Request &c);
+std::istream &safeGetline(std::istream &is, std::string &t);
 
 #endif
