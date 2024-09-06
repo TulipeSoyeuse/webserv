@@ -11,12 +11,16 @@
 #include <ctime>
 #include <limits>
 #include <sstream>
+#include <iterator>
+#include <vector>
 
 #define SSTR(x) static_cast<std::ostringstream &>(std::ostringstream() << std::dec << x).str()
 #define AAC "audio/aac"
 #define BIN "application/octet-stream"
 #define CSV "text/csv"
 #define SVG "image/svg+xml"
+#define PNG "image/png"
+#define JPEG "image/jpeg"
 #define HTML "text/html"
 #define JS "text/javascript"
 #define TXT "text/plain"
@@ -45,11 +49,13 @@ private:
 	void Date();
 	// payload -------------
 	bool set_payload();
+	void read_file(std::ifstream f);
+
 	// concat  -------------
 	void cMap_str(Map &m, std::string &s);
 
 public:
-	std::string _response;
+	std::vector<char> _response;
 
 	Response(const Request &request);
 	~Response();

@@ -8,7 +8,7 @@ Response::Response(const Request &r) : _request(r), Status_line("HTTP/1.1 "), _i
     {
         status_code = 505;
         (Status_line += SSTR(status_code << " ")) += "HTTP Version not supported\r\n";
-        _response = (Status_line + "\n\n") + "\r\n";
+        _response = Status_line + "\r\n";
     }
     // -----------------------------------------------------------------
     else
@@ -16,13 +16,15 @@ Response::Response(const Request &r) : _request(r), Status_line("HTTP/1.1 "), _i
         if (_request.get_type() == GET)
         {
             build_header();
-            _response.assign(Status_line);
+            _response.assign(Status_line.c_str());
             cMap_str(general_header, _response);
             cMap_str(response_header, _response);
             cMap_str(entity_header, _response);
             _response += "\r\n";
             if (status_code == 200)
             {
+                if (_is_binary)
+                    _response += "\r\n";
                 _response += payload;
                 _response += "\r\n";
             }
@@ -46,7 +48,17 @@ void Response::MIME_attribute()
         entity_header["Content-Type"] = AAC "; charset=UTF-8\n";
     else if (file_format == "svg")
     {
-        entity_header["Content-Type"] = SVG "; charset=UTF-8\n";
+        entity_header["Content-Type"] = SVG;
+        _is_binary = true;
+    }
+    else if (file_format == "png")
+    {
+        entity_header["Content-Type"] = PNG;
+        _is_binary = true;
+    }
+    else if (file_format == "jpg" || file_format == "jpeg")
+    {
+        entity_header["Content-Type"] = JPEG;
         _is_binary = true;
     }
     else if (file_format == "html")
@@ -186,22 +198,22 @@ bool Response::match_file()
 bool Response::set_payload()
 {
     std::ifstream f;
-
     // --------------- extension check ------------------------------
     if (_is_binary)
-        f.open(file_path.c_str(), std::ifstream::out | std::ifstream::binary);
+        f.open(file_path.c_str(), std::ifstream::binary);
     else
-        f.open(file_path.c_str(), std::ifstream::out);
+        f.open(file_path.c_str());
     // --------------------------------------------------------------
     if (f.good())
     {
+        std::cout << "is binary : " << _is_binary << "\n";
         f.ignore(std::numeric_limits<std::streamsize>::max());
         content_length = f.gcount();
         f.clear();
         f.seekg(0, std::ios_base::beg);
+
         payload = new char[content_length + 1];
-        for (unsigned int i = 0; i <= content_length; i++)
-            payload[i] = 0;
+
         f.read(payload, content_length);
         f.close();
         return (true);
