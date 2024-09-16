@@ -25,8 +25,7 @@ Response::Response(const Request &r) : _request(r), Status_line("HTTP/1.1 "), _i
             {
                 if (_is_binary)
                     _response += "\r\n";
-                _response += payload;
-                _response += "\r\n";
+                _response.append(payload, content_length);
             }
         }
     }
@@ -181,9 +180,6 @@ bool Response::match_file()
         {
             struct stat _stat;
             stat(uri.c_str(), &_stat);
-            // std::cout << "ID of device containing file: " << _stat.st_dev << "\n"
-            //           << "File type and mode: " << _stat.st_mode << "\n"
-            //           << std::endl;
             file_path = std::string("/code/site-test1").append(uri).c_str();
             status_code = 200;
             closedir(dir);
@@ -215,6 +211,7 @@ bool Response::set_payload()
         payload = new char[content_length + 1];
 
         f.read(payload, content_length);
+        payload[content_length] = 0;
         f.close();
         return (true);
     }
@@ -248,8 +245,13 @@ Response::~Response()
         delete[] payload;
 }
 
+const std::string &Response::get_response() const
+{
+    return (_response);
+}
+
 std::ostream &operator<<(std::ostream &out, const Response &c)
 {
-    out << c._response;
+    out << c.get_response().c_str();
     return (out);
 }

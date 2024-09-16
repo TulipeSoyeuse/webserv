@@ -86,7 +86,7 @@ int main()
 		std::cout << resp << std::endl;
 		std::cout << "------------------------------------------\nEND\n\n"
 				  << std::endl;
-		send(connection, resp._response.data(), resp._response.size(), 0);
+		send(connection, resp.get_response().data(), resp.get_response().size(), 0);
 		close(connection);
 	}
 	// Close the connections

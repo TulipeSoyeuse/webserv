@@ -39,6 +39,7 @@ private:
 	int status_code;
 	bool _is_binary;
 	std::streamsize content_length;
+
 	char *payload;
 	std::string file_path;
 
@@ -53,14 +54,16 @@ private:
 
 	// concat  -------------
 	void cMap_str(Map &m, std::string &s);
+	std::string _response;
+
+	// getter --------------
 
 public:
-	std::vector<char> _response;
-
 	Response(const Request &request);
 	~Response();
 
 	const int &get_status();
+	const std::string &get_response() const;
 };
 
 std::ostream &operator<<(std::ostream &out, const Response &c);
