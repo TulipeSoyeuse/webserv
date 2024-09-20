@@ -1,13 +1,6 @@
 #ifndef REQUEST_HPP
 #define REQUEST_HPP
-
-#include <string>
-#include <cstdlib>
-#include <map>
-#include <iostream>
-#include <ostream>
-#include <sstream>
-#include <algorithm>
+#include "includes.hpp"
 
 enum type_e
 {

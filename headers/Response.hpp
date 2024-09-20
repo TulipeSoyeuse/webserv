@@ -2,17 +2,7 @@
 #define RESPONSE_HPP
 
 #include "Request.hpp"
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <dirent.h>
-#include <cstring>
-#include <string>
-#include <fstream>
-#include <ctime>
-#include <limits>
-#include <sstream>
-#include <iterator>
-#include <vector>
+#include "Server.hpp"
 
 #define SSTR(x) static_cast<std::ostringstream &>(std::ostringstream() << std::dec << x).str()
 #define AAC "audio/aac"
@@ -30,6 +20,7 @@ class Response
 {
 private:
 	const Request &_request;
+	const Server &s;
 
 	std::string Status_line;
 	Map general_header;
@@ -59,7 +50,7 @@ private:
 	// getter --------------
 
 public:
-	Response(const Request &request);
+	Response(const Request &request, const Server &s);
 	~Response();
 
 	const int &get_status();

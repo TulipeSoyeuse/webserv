@@ -1,16 +1,7 @@
-#include <sys/socket.h> // For socket functions
-#include <netinet/in.h> // For sockaddr_in
-#include <cstdlib>		// For exit() and EXIT_FAILURE
-#include <iostream>		// For cout
-#include <unistd.h>		// For read
-#include <sys/errno.h>
-#include <poll.h>
-#include <signal.h>
-#include <cstdio>
-
+#include "includes.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
-
+#include "Server.hpp"
 int socker_read(int fd, char *buffer, size_t size)
 {
 	pollfd pfd;

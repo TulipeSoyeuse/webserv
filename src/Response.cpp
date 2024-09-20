@@ -1,6 +1,7 @@
 #include "Response.hpp"
 
-Response::Response(const Request &r) : _request(r), Status_line("HTTP/1.1 "), _is_binary(false), payload(NULL)
+Response::Response(const Request &r, const Server &s) : _request(r), s(s), Status_line("HTTP/1.1 "),
+                                                        _is_binary(false), payload(NULL)
 {
     // --------------- HTTP version check ------------------------------
     std::pair<std::string, std::string> proto = *_request.get_request().find("Protocol");
