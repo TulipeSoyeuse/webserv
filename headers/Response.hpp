@@ -41,7 +41,6 @@ private:
 	void Date();
 	// payload -------------
 	bool set_payload();
-	void read_file(std::ifstream f);
 
 	// concat  -------------
 	void cMap_str(Map &m, std::string &s);

@@ -1,5 +1,6 @@
-FILES		=	main.cpp Request.cpp Response.cpp Server.cpp
-HEADERS		=	$(addprefix $(HEADERS_DIR)/, Request.hpp Response.hpp Server.hpp)
+FILES		=	main.cpp Request.cpp Response.cpp Server.cpp config_string.cpp
+HEADERS		=	$(addprefix $(HEADERS_DIR)/, Request.hpp Response.hpp Server.hpp\
+				 includes.hpp config_string.hpp)
 HEADERS_DIR =	headers
 
 SRC 		=	$(addprefix src/, $(FILES))
