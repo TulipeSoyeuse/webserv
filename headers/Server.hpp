@@ -8,18 +8,27 @@ typedef std::vector<std::map<std::string, std::string> > Server_lst;
 class Server
 {
 private:
-    bool _status;
+    // -------- DEBUG ----------
+    bool _debug;
+    void display_params();
+    // -------------------------
+    // -------- CONFIG ---------
     config_string _config;
     Server_lst _servers;
-
     bool read_config();
-    bool add_serv(std::string s);
+
+    std::pair<std::string, std::string> parse_config_line(config_string);
+    // --------------------------
+    // ------- ERROR CHECK ------
+    bool _valid_conf;
+    void configuration_checking();
+    // --------------------------
 
 public:
-    Server(char *config);
-
-    void start();
-    void reload();
+    Server(const char *config, bool debug);
+    const std::string &get_param(const std::string &);
+    // void start();
+    //  void reload();
     ~Server();
 };
 

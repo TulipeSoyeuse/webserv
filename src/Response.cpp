@@ -1,6 +1,6 @@
 #include "Response.hpp"
 
-Response::Response(const Request &r, const Server &s) : _request(r), s(s), Status_line("HTTP/1.1 "),
+Response::Response(const Request &r, const Server &s) : _request(r), _serv(s), Status_line("HTTP/1.1 "),
                                                         _is_binary(false), payload(NULL)
 {
     // --------------- HTTP version check ------------------------------
@@ -71,71 +71,6 @@ void Response::MIME_attribute()
         entity_header["Content-Type"] = CSS "; charset=UTF-8\n";
     else
         entity_header["Content-Type"] = TXT "; charset=UTF-8\n";
-}
-
-void Response::Date()
-{
-    const time_t _time = time(NULL);
-    struct tm *_tm = gmtime(&_time);
-
-    // Date: <day-name>, <day> <month> <year> <hour>:<minute>:<second> GMT
-    // <day-name>
-    general_header["Date"] += "Date: ";
-    if (_tm->tm_wday == 0)
-        general_header["Date"] += "Mon, ";
-    else if (_tm->tm_wday == 1)
-        general_header["Date"] += "Tue, ";
-    else if (_tm->tm_wday == 2)
-        general_header["Date"] += "Wed, ";
-    else if (_tm->tm_wday == 3)
-        general_header["Date"] += "Thu, ";
-    else if (_tm->tm_wday == 4)
-        general_header["Date"] += "Fri, ";
-    else if (_tm->tm_wday == 5)
-        general_header["Date"] += "Sat, ";
-    else if (_tm->tm_wday == 6)
-        general_header["Date"] += "Sun, ";
-
-    // <day>
-    if (_tm->tm_mday < 10)
-        general_header["Date"] += '0';
-    general_header["Date"] += _tm->tm_mday;
-
-    // <month> One of "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-    // "Aug", "Sep", "Oct", "Nov", "Dec" (case sensitive).
-    if (_tm->tm_mon == 0)
-        general_header["Date"] += " Jan ";
-    else if (_tm->tm_mon == 1)
-        general_header["Date"] += " Feb ";
-    else if (_tm->tm_mon == 2)
-        general_header["Date"] += " Mar ";
-    else if (_tm->tm_mon == 3)
-        general_header["Date"] += " Apr ";
-    else if (_tm->tm_mon == 4)
-        general_header["Date"] += " May ";
-    else if (_tm->tm_mon == 5)
-        general_header["Date"] += " Jun ";
-    else if (_tm->tm_mon == 6)
-        general_header["Date"] += " jul ";
-    else if (_tm->tm_mon == 7)
-        general_header["Date"] += " Aug ";
-    else if (_tm->tm_mon == 8)
-        general_header["Date"] += " Sep ";
-    else if (_tm->tm_mon == 9)
-        general_header["Date"] += " Oct ";
-    else if (_tm->tm_mon == 10)
-        general_header["Date"] += " Nov ";
-    else if (_tm->tm_mon == 11)
-        general_header["Date"] += " Dec ";
-
-    // <year>
-    general_header["Date"] += 1900 + _tm->tm_year;
-    general_header["Date"] += " ";
-
-    // <hour>:<minute>:<second> GMT
-    (_response += _tm->tm_hour) += ':';
-    ((_response += _tm->tm_min) += ':') += _tm->tm_sec;
-    _response += " GMT\n";
 }
 
 void Response::build_header()
@@ -256,3 +191,68 @@ std::ostream &operator<<(std::ostream &out, const Response &c)
     out << c.get_response().c_str();
     return (out);
 }
+
+// void Response::Date()
+// {
+//     const time_t _time = time(NULL);
+//     struct tm *_tm = gmtime(&_time);
+
+//     // Date: <day-name>, <day> <month> <year> <hour>:<minute>:<second> GMT
+//     // <day-name>
+//     general_header["Date"] += "Date: ";
+//     if (_tm->tm_wday == 0)
+//         general_header["Date"] += "Mon, ";
+//     else if (_tm->tm_wday == 1)
+//         general_header["Date"] += "Tue, ";
+//     else if (_tm->tm_wday == 2)
+//         general_header["Date"] += "Wed, ";
+//     else if (_tm->tm_wday == 3)
+//         general_header["Date"] += "Thu, ";
+//     else if (_tm->tm_wday == 4)
+//         general_header["Date"] += "Fri, ";
+//     else if (_tm->tm_wday == 5)
+//         general_header["Date"] += "Sat, ";
+//     else if (_tm->tm_wday == 6)
+//         general_header["Date"] += "Sun, ";
+
+//     // <day>
+//     if (_tm->tm_mday < 10)
+//         general_header["Date"] += '0';
+//     general_header["Date"] += _tm->tm_mday;
+
+//     // <month> One of "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
+//     // "Aug", "Sep", "Oct", "Nov", "Dec" (case sensitive).
+//     if (_tm->tm_mon == 0)
+//         general_header["Date"] += " Jan ";
+//     else if (_tm->tm_mon == 1)
+//         general_header["Date"] += " Feb ";
+//     else if (_tm->tm_mon == 2)
+//         general_header["Date"] += " Mar ";
+//     else if (_tm->tm_mon == 3)
+//         general_header["Date"] += " Apr ";
+//     else if (_tm->tm_mon == 4)
+//         general_header["Date"] += " May ";
+//     else if (_tm->tm_mon == 5)
+//         general_header["Date"] += " Jun ";
+//     else if (_tm->tm_mon == 6)
+//         general_header["Date"] += " jul ";
+//     else if (_tm->tm_mon == 7)
+//         general_header["Date"] += " Aug ";
+//     else if (_tm->tm_mon == 8)
+//         general_header["Date"] += " Sep ";
+//     else if (_tm->tm_mon == 9)
+//         general_header["Date"] += " Oct ";
+//     else if (_tm->tm_mon == 10)
+//         general_header["Date"] += " Nov ";
+//     else if (_tm->tm_mon == 11)
+//         general_header["Date"] += " Dec ";
+
+//     // <year>
+//     general_header["Date"] += 1900 + _tm->tm_year;
+//     general_header["Date"] += " ";
+
+//     // <hour>:<minute>:<second> GMT
+//     (_response += _tm->tm_hour) += ':';
+//     ((_response += _tm->tm_min) += ':') += _tm->tm_sec;
+//     _response += " GMT\n";
+// }

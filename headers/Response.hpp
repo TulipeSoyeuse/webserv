@@ -20,7 +20,7 @@ class Response
 {
 private:
 	const Request &_request;
-	const Server &s;
+	const Server &_serv;
 
 	std::string Status_line;
 	Map general_header;
@@ -38,8 +38,8 @@ private:
 	void build_header();
 	bool match_file();
 	void MIME_attribute();
-	void Date();
-	// payload -------------
+	// void Date();
+	//  payload -------------
 	bool set_payload();
 
 	// concat  -------------

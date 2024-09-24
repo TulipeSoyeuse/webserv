@@ -2,6 +2,7 @@
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Server.hpp"
+
 int socker_read(int fd, char *buffer, size_t size)
 {
 	pollfd pfd;
@@ -15,7 +16,10 @@ int socker_read(int fd, char *buffer, size_t size)
 
 int main()
 {
-	// Create a socket (IPv4, TCP)
+
+	Server webserv("test.conf", true);
+
+	// Create a socket(IPv4, TCP)
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd == -1)
 	{
@@ -33,7 +37,7 @@ int main()
 	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
 	{
 		perror("setsockopt");
-		exit(1);
+		exit(EXIT_FAILURE);
 	}
 	if (bind(sockfd, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0)
 	{
@@ -59,9 +63,9 @@ int main()
 		}
 
 		// Read from the connection
-		char buffer[100];
-		std::memset(buffer, 0, 100);
-		socker_read(connection, buffer, 100);
+		char buffer[500];
+		std::memset(buffer, 0, 500);
+		socker_read(connection, buffer, 500);
 		char hostname[30];
 		gethostname(hostname, 30);
 		std::cout << "------------------------------------------\n"
