@@ -2,6 +2,7 @@
 test*
 webserv
 site-test1
+site-test2
 
 # Prerequisites
 *.d

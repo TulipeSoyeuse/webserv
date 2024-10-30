@@ -1,7 +1,7 @@
 #include "Response.hpp"
 
-Response::Response(const Request &r, const Server &s) : _request(r), _serv(s), Status_line("HTTP/1.1 "),
-                                                        _is_binary(false), payload(NULL)
+Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "),
+                                                  _is_binary(false), payload(NULL)
 {
     // --------------- HTTP version check ------------------------------
     std::pair<std::string, std::string> proto = *_request.get_request().find("Protocol");
@@ -14,6 +14,7 @@ Response::Response(const Request &r, const Server &s) : _request(r), _serv(s), S
     // -----------------------------------------------------------------
     else
     {
+        set_server_conf(s);
         if (_request.get_type() == GET)
         {
             build_header();
@@ -76,7 +77,6 @@ void Response::MIME_attribute()
 void Response::build_header()
 {
     general_header["Server"] = "webserv/0.1\n";
-    // Date();
     if (match_file())
         (Status_line += SSTR(status_code)) += " Sucess\r\n";
     else
@@ -97,10 +97,10 @@ bool Response::match_file()
     // TODO: implement location
     const std::string root_dir = "/code/site-test1";
     std::string uri = _request.get_request().find("URI")->second;
+    // std::cout << " -> substr:" << uri.substr(0, uri.find_last_of('/')) << ":" << uri.length() << "\n";
     DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
     struct dirent *diread;
 
-    // TODO: check if URI here ?
     if (std::strcmp("/", uri.c_str()) == 0)
     {
         uri.assign("/index.html");
@@ -108,7 +108,7 @@ bool Response::match_file()
 
     const std::string file = uri.substr(uri.find_last_of('/') + 1);
     std::cout << "file asked: " << "\"" << file << "\"" << "\n";
-    std::cout << "full path: " << "\"" << std::string("/code/site-test1").append(uri).c_str() << "\"" << "\n";
+    std::cout << "full path: " << "\"" << serv.find("location")->second << uri.c_str() << "\"" << "\n";
 
     while ((diread = readdir(dir)) != NULL)
     {
@@ -125,6 +125,12 @@ bool Response::match_file()
     status_code = 404;
     closedir(dir);
     return false;
+}
+
+void Response::set_server_conf(Server &s)
+{
+    std::string host = _request.get_request().find("Host")->second;
+    serv = s.get_config(host);
 }
 
 bool Response::set_payload()
@@ -191,68 +197,3 @@ std::ostream &operator<<(std::ostream &out, const Response &c)
     out << c.get_response().c_str();
     return (out);
 }
-
-// void Response::Date()
-// {
-//     const time_t _time = time(NULL);
-//     struct tm *_tm = gmtime(&_time);
-
-//     // Date: <day-name>, <day> <month> <year> <hour>:<minute>:<second> GMT
-//     // <day-name>
-//     general_header["Date"] += "Date: ";
-//     if (_tm->tm_wday == 0)
-//         general_header["Date"] += "Mon, ";
-//     else if (_tm->tm_wday == 1)
-//         general_header["Date"] += "Tue, ";
-//     else if (_tm->tm_wday == 2)
-//         general_header["Date"] += "Wed, ";
-//     else if (_tm->tm_wday == 3)
-//         general_header["Date"] += "Thu, ";
-//     else if (_tm->tm_wday == 4)
-//         general_header["Date"] += "Fri, ";
-//     else if (_tm->tm_wday == 5)
-//         general_header["Date"] += "Sat, ";
-//     else if (_tm->tm_wday == 6)
-//         general_header["Date"] += "Sun, ";
-
-//     // <day>
-//     if (_tm->tm_mday < 10)
-//         general_header["Date"] += '0';
-//     general_header["Date"] += _tm->tm_mday;
-
-//     // <month> One of "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul",
-//     // "Aug", "Sep", "Oct", "Nov", "Dec" (case sensitive).
-//     if (_tm->tm_mon == 0)
-//         general_header["Date"] += " Jan ";
-//     else if (_tm->tm_mon == 1)
-//         general_header["Date"] += " Feb ";
-//     else if (_tm->tm_mon == 2)
-//         general_header["Date"] += " Mar ";
-//     else if (_tm->tm_mon == 3)
-//         general_header["Date"] += " Apr ";
-//     else if (_tm->tm_mon == 4)
-//         general_header["Date"] += " May ";
-//     else if (_tm->tm_mon == 5)
-//         general_header["Date"] += " Jun ";
-//     else if (_tm->tm_mon == 6)
-//         general_header["Date"] += " jul ";
-//     else if (_tm->tm_mon == 7)
-//         general_header["Date"] += " Aug ";
-//     else if (_tm->tm_mon == 8)
-//         general_header["Date"] += " Sep ";
-//     else if (_tm->tm_mon == 9)
-//         general_header["Date"] += " Oct ";
-//     else if (_tm->tm_mon == 10)
-//         general_header["Date"] += " Nov ";
-//     else if (_tm->tm_mon == 11)
-//         general_header["Date"] += " Dec ";
-
-//     // <year>
-//     general_header["Date"] += 1900 + _tm->tm_year;
-//     general_header["Date"] += " ";
-
-//     // <hour>:<minute>:<second> GMT
-//     (_response += _tm->tm_hour) += ':';
-//     ((_response += _tm->tm_min) += ':') += _tm->tm_sec;
-//     _response += " GMT\n";
-// }

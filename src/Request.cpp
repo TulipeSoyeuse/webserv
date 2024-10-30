@@ -3,8 +3,8 @@
 Request::Request(char *http_package) : _status(true)
 {
 	_brut_request = http_package;
-	int pos = _brut_request.length() - 3;
-	_brut_request.erase(pos, std::string::npos);
+	// int pos = _brut_request.length() - 2;
+	// _brut_request.erase(pos, std::string::npos);
 	parse();
 }
 
@@ -13,6 +13,8 @@ void Request::parse()
 	std::stringstream s;
 	s.str(_brut_request);
 
+	std::cout << "\n\n"
+			  << _brut_request;
 	std::string line;
 	safeGetline(s, line);
 
@@ -32,8 +34,7 @@ void Request::parse()
 
 	_request["URI"] = line.substr(f1 + 1, f2 - f1 - 1);
 	_request["Protocol"] = line.substr(f2 + 1);
-
-	while (safeGetline(s, line))
+	while (safeGetline(s, line) && line.length() > 0)
 	{
 		_request[line.substr(0, line.find_first_of(':'))] =
 			line.substr(line.find_first_of(':') + 2);
@@ -100,7 +101,7 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 
 	for (std::map<std::string, std::string>::const_iterator it = c.get_request().begin();
 		 it != c.get_request().end(); ++it)
-		out << it->first << ": " << it->second << "\n";
+		out << "[" << it->first << "]: \"" << it->second << "\"\n";
 
 	out << "PARAMS\n";
 
@@ -113,6 +114,8 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 std::istream &safeGetline(std::istream &is, std::string &t)
 {
 	std::getline(is, t);
+	std::cout << "line before: " << t << "\n";
 	t.erase(std::remove(t.begin(), t.end(), '\r'), t.end());
+	std::cout << "line: " << t << "\n";
 	return (is);
 }

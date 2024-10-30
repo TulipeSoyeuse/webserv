@@ -11,7 +11,7 @@ bool is_string_empty(std::string s)
 	return (c);
 }
 
-Server::Server(const char *config, bool debug = false) : _debug(debug), _valid_conf(false)
+Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_res(), _valid_conf(false)
 {
 	std::ifstream _config_file;
 
@@ -27,8 +27,7 @@ Server::Server(const char *config, bool debug = false) : _debug(debug), _valid_c
 		_config = s;
 		read_config();
 	}
-	if (_debug)
-		display_params();
+	display_params();
 }
 
 bool Server::read_config()
@@ -39,7 +38,6 @@ bool Server::read_config()
 		std::cout << "parsing config...\n";
 	while (cursor = _config.find("server", cursor), cursor != std::string::npos)
 	{
-		std::cout << "cursor :" << cursor << "\n";
 		std::map<std::string, std::string> server;
 		if (_config.get_server_name(cursor) != config_string::npos)
 		{
@@ -113,7 +111,7 @@ std::pair<std::string, std::string> Server::parse_config_line(config_string l)
 
 void Server::display_params()
 {
-	std::cout << "-------------------\ndisplay webserv params and servers: " << _servers.size() <<"\n";
+	std::cout << "-------------------\ndisplay webserv params and servers: " << _servers.size() << "\n";
 	for (Server_lst::iterator it1 = _servers.begin(); it1 != _servers.end(); ++it1)
 	{
 		std::cout << "Server 1:\n";
@@ -125,14 +123,41 @@ void Server::display_params()
 	}
 }
 
-const std::string &get_param(cont std::string &s)
+const std::string &Server::get_param(const std::string &s, const std::string &host)
 {
+	std::map<std::string, std::string>::iterator val;
 
+	for (Server_lst::iterator it = _servers.begin(); it != _servers.end(); ++it)
+	{
+		val = it->find("host");
+		if (val != it->end() && val->second == host)
+		{
+			std::map<std::string, std::string>::const_iterator val2 = it->find(s);
+			if (val2 != it->end())
+				return (val2->second);
+		}
+	}
+	Server_lst::iterator it = _servers.begin();
+	it++;
+	val = it->find(s);
+	if (val != it->end())
+		return (val->second);
+	return (_empty_res);
 }
 
 void Server::configuration_checking()
 {
 	_valid_conf = true;
+}
+
+const std::map<std::string, std::string> &Server::get_config(std::string &host) const
+{
+	for (Server_lst::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
+	{
+		if ((*it).find("Host")->second == host)
+			return (*it);
+	}
+	return ((*(_servers.begin()++)));
 }
 
 // void Server::start()

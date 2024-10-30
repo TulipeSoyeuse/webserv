@@ -17,7 +17,7 @@ int socker_read(int fd, char *buffer, size_t size)
 int main()
 {
 
-	Server webserv("test.conf", true);
+	Server webserv("test.conf", false);
 
 	// Create a socket(IPv4, TCP)
 	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
@@ -44,7 +44,6 @@ int main()
 		std::cout << "Failed to bind to port 9999. errno: " << errno << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
 	if (listen(sockfd, 10) < 0)
 	{
 		std::cout << "Failed to listen on socket. errno: " << errno << std::endl;
@@ -63,7 +62,7 @@ int main()
 		}
 
 		// Read from the connection
-		char buffer[500];
+		char buffer[2048];
 		std::memset(buffer, 0, 500);
 		socker_read(connection, buffer, 500);
 		char hostname[30];
@@ -77,7 +76,7 @@ int main()
 		Request r(buffer);
 		std::cout << r;
 		std::cout << "------------------------------------------" << std::endl;
-		Response resp(r);
+		Response resp(r, webserv);
 		std::cout << resp << std::endl;
 		std::cout << "------------------------------------------\nEND\n\n"
 				  << std::endl;

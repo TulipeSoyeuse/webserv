@@ -16,7 +16,7 @@ private:
     config_string _config;
     Server_lst _servers;
     bool read_config();
-
+    std::string _empty_res;
     std::pair<std::string, std::string> parse_config_line(config_string);
     // --------------------------
     // ------- ERROR CHECK ------
@@ -26,7 +26,8 @@ private:
 
 public:
     Server(const char *config, bool debug);
-    const std::string &get_param(const std::string &);
+    const std::string &get_param(const std::string &, const std::string &);
+    const std::map<std::string, std::string> &get_config(std::string &) const;
     // void start();
     //  void reload();
     ~Server();
