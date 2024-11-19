@@ -12,6 +12,7 @@
 #include <sstream>
 #include <iterator>
 #include <vector>
+#include <list>
 
 #include <string>
 #include <cstdlib>
@@ -33,4 +34,8 @@
 
 #include <cctype>
 
+#include <signal.h>
+
+#include <sys/types.h>
+#include <sys/wait.h>
 #endif

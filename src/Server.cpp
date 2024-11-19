@@ -11,7 +11,8 @@ bool is_string_empty(std::string s)
 	return (c);
 }
 
-Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_res(), _valid_conf(false)
+Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_res(),
+														 server_count(0), _valid_conf(false)
 {
 	std::ifstream _config_file;
 
@@ -68,6 +69,9 @@ bool Server::read_config()
 				server.insert(parse_config_line(l));
 		}
 		_servers.push_back(server);
+		server_count++;
+		if (server.find("port") != server.end())
+			port_lst.push_back(std::atoi(server.find("port")->second.c_str()));
 	}
 	return (true);
 }
@@ -150,14 +154,25 @@ void Server::configuration_checking()
 	_valid_conf = true;
 }
 
-const std::map<std::string, std::string> &Server::get_config(std::string &host) const
+const std::map<std::string, std::string> &Server::get_config(std::string &host, int port) const
 {
+	(void)host;
 	for (Server_lst::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
-		if ((*it).find("Host")->second == host)
+		if ((*it).find("port") != it->end() && atoi(((*it).find("port")->second.c_str())) == port)
 			return (*it);
 	}
 	return ((*(_servers.begin()++)));
+}
+
+const size_t &Server::get_server_count() const
+{
+	return (server_count);
+}
+
+const port_array &Server::get_ports() const
+{
+	return (port_lst);
 }
 
 // void Server::start()

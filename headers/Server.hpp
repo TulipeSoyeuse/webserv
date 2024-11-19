@@ -4,6 +4,7 @@
 #include "config_string.hpp"
 
 typedef std::vector<std::map<std::string, std::string> > Server_lst;
+typedef std::vector<int> port_array;
 
 class Server
 {
@@ -12,13 +13,17 @@ private:
     bool _debug;
     void display_params();
     // -------------------------
+
     // -------- CONFIG ---------
     config_string _config;
     Server_lst _servers;
     bool read_config();
     std::string _empty_res;
+    size_t server_count;
     std::pair<std::string, std::string> parse_config_line(config_string);
+    port_array port_lst;
     // --------------------------
+
     // ------- ERROR CHECK ------
     bool _valid_conf;
     void configuration_checking();
@@ -26,8 +31,11 @@ private:
 
 public:
     Server(const char *config, bool debug);
+
     const std::string &get_param(const std::string &, const std::string &);
-    const std::map<std::string, std::string> &get_config(std::string &) const;
+    const std::map<std::string, std::string> &get_config(std::string &, int) const;
+    const size_t &get_server_count() const;
+    const port_array &get_ports() const;
     // void start();
     //  void reload();
     ~Server();

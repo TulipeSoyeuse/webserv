@@ -3,6 +3,7 @@
 
 #include "Request.hpp"
 #include "Server.hpp"
+#include "hm_popen.hpp"
 
 #define SSTR(x) static_cast<std::ostringstream &>(std::ostringstream() << std::dec << x).str()
 #define AAC "audio/aac"
@@ -15,6 +16,8 @@
 #define JS "text/javascript"
 #define TXT "text/plain"
 #define CSS "text/css"
+
+#define PHP_ext ".php"
 
 class Response
 {
@@ -35,6 +38,7 @@ private:
 
 	std::map<std::string, std::string> serv_param;
 	std::map<std::string, std::string> serv;
+	size_t client_size;
 
 	// header --------------
 	void build_header();
@@ -46,6 +50,8 @@ private:
 
 	//  payload ------------
 	bool set_payload();
+	bool read_payload_from_file();
+	bool CGI_from_file();
 
 	// concat  -------------
 	void cMap_str(Map &m, std::string &s);

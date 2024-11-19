@@ -95,28 +95,43 @@ void Response::build_header()
 bool Response::match_file()
 {
     // TODO: implement location
-    const std::string root_dir = "/code/site-test1";
+    const std::string root_dir = serv.find("route")->second + serv.find("location")->second;
     std::string uri = _request.get_request().find("URI")->second;
-    // std::cout << " -> substr:" << uri.substr(0, uri.find_last_of('/')) << ":" << uri.length() << "\n";
     DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
     struct dirent *diread;
 
-    if (std::strcmp("/", uri.c_str()) == 0)
+    if (uri == "/")
     {
-        uri.assign("/index.html");
+        while ((diread = readdir(dir)) != NULL)
+        {
+            if (std::strncmp(diread->d_name, "index", 5) == 0)
+            {
+                struct stat _stat;
+                stat(diread->d_name, &_stat);
+                file_path = root_dir + '/' + diread->d_name;
+                std::cout << file_path << "\n";
+                status_code = 200;
+                closedir(dir);
+                return true;
+            }
+        }
+        status_code = 404;
+        closedir(dir);
+        return false;
     }
 
     const std::string file = uri.substr(uri.find_last_of('/') + 1);
     std::cout << "file asked: " << "\"" << file << "\"" << "\n";
-    std::cout << "full path: " << "\"" << serv.find("location")->second << uri.c_str() << "\"" << "\n";
+    std::cout << "full path: " << "\"" << root_dir << uri.c_str() << "\"" << "\n";
 
     while ((diread = readdir(dir)) != NULL)
     {
         if (std::strcmp(diread->d_name, file.c_str()) == 0)
         {
             struct stat _stat;
-            stat(uri.c_str(), &_stat);
-            file_path = std::string("/code/site-test1").append(uri).c_str();
+            stat(diread->d_name, &_stat);
+            file_path = root_dir + uri;
+            std::cout << file_path << "\n";
             status_code = 200;
             closedir(dir);
             return true;
@@ -130,10 +145,35 @@ bool Response::match_file()
 void Response::set_server_conf(Server &s)
 {
     std::string host = _request.get_request().find("Host")->second;
-    serv = s.get_config(host);
+    serv = s.get_config(host, _request.get_in_port());
+
+    if (serv.find("client_size") != serv.end() && serv.find("client_size")->second != "0")
+        client_size = std::atoi(serv.find("client_size")->second.c_str());
+    else
+        client_size = 4096;
 }
 
 bool Response::set_payload()
+{
+    if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
+        return CGI_from_file();
+    else
+        return read_payload_from_file();
+}
+
+bool Response::CGI_from_file()
+{
+    std::cout << "---------CGI from file--------\n";
+    if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
+    {
+        payload = new char[client_size];
+        hm_popen hmpop(file_path, PHP);
+        content_length = hmpop.read_out(payload, client_size);
+    }
+    return (true);
+}
+
+bool Response::read_payload_from_file()
 {
     std::ifstream f;
     // --------------- extension check ------------------------------
@@ -142,9 +182,9 @@ bool Response::set_payload()
     else
         f.open(file_path.c_str());
     // --------------------------------------------------------------
+    std::cout << "is binary : " << _is_binary << "\n";
     if (f.good())
     {
-        std::cout << "is binary : " << _is_binary << "\n";
         f.ignore(std::numeric_limits<std::streamsize>::max());
         content_length = f.gcount();
         f.clear();

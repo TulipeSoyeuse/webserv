@@ -1,10 +1,8 @@
 #include "Request.hpp"
 
-Request::Request(char *http_package) : _status(true)
+Request::Request(char *http_package, unsigned int port) : in_port(port), _status(true)
 {
 	_brut_request = http_package;
-	// int pos = _brut_request.length() - 2;
-	// _brut_request.erase(pos, std::string::npos);
 	parse();
 }
 
@@ -24,6 +22,7 @@ void Request::parse()
 	if (f1 == f2 || f1 == (int)std::string::npos)
 	{
 		std::cout << "request Malformed" << std::endl;
+		_status = false;
 		return;
 	}
 
@@ -50,9 +49,6 @@ void Request::parse_payload()
 		int f1 = _brut_request.find("\n\n") + 2;
 		_request["Payload"] = _brut_request.substr(f1);
 	}
-
-	if (_request["Payload"].length() == 0)
-		_status = false;
 }
 
 void Request::parse_params()
@@ -88,6 +84,11 @@ const type_e &Request::get_type() const
 	return (_Type);
 }
 
+const unsigned int &Request::get_in_port() const
+{
+	return (in_port);
+}
+
 Request::~Request()
 {
 }
@@ -114,8 +115,6 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 std::istream &safeGetline(std::istream &is, std::string &t)
 {
 	std::getline(is, t);
-	std::cout << "line before: " << t << "\n";
 	t.erase(std::remove(t.begin(), t.end(), '\r'), t.end());
-	std::cout << "line: " << t << "\n";
 	return (is);
 }
