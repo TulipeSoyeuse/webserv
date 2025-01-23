@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Tester GET et POST</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Test Webserv</h1>
+            <p>Methodes : </p>
+        </header>
+
+        <section class="forms-section">
+            <!-- Section GET -->
+            <div class="form-container">
+                <h2>GET</h2>
+                <a href="page2.html">
+                    <button class="button-9" role="button">POST REQUEST</button>
+
+                </a>
+            </div>
+
+            <!-- Section POST -->
+            <div class="form-container">
+                <h2>POST</h2>
+                <form action="post_test.php" method="post">
+                    <label for="name_post">Nom :</label>
+                    <input type="text" id="name_post" name="name_post" placeholder="Entrez votre nom" required>
+
+                    <label for="email_post">Email :</label>
+                    <input type="email" id="email_post" name="email_post" placeholder="Entrez votre email" required>
+
+                    <button class="button-9" role="button">POST REQUEST</button>
+                </form>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2025 Test GET et POST. Tous droits réservés.</p>
+        </footer>
+    </div>
+
+</body>
+</html>

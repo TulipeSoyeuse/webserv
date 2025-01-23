@@ -5,6 +5,7 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 {
     // --------------- HTTP version check ------------------------------
     std::pair<std::string, std::string> proto = *_request.get_request().find("Protocol");
+    // * check the http version
     if (proto.second != "HTTP/1.1")
     {
         status_code = 505;
@@ -14,9 +15,12 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
     // -----------------------------------------------------------------
     else
     {
+        // * get info about request ? 
         set_server_conf(s);
+        // * if request is GET
         if (_request.get_type() == GET)
         {
+            // * build header
             build_header();
             _response.assign(Status_line.c_str());
             cMap_str(general_header, _response);
@@ -33,7 +37,7 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
     }
 }
 
-void Response::MIME_attribute()
+void Response:: MIME_attribute()
 {
     std::string uri = ((Map)_request.get_request())["URI"];
     if (uri == "/")
@@ -76,7 +80,9 @@ void Response::MIME_attribute()
 
 void Response::build_header()
 {
+
     general_header["Server"] = "webserv/0.1\n";
+    // * if i find the file
     if (match_file())
         (Status_line += SSTR(status_code)) += " Sucess\r\n";
     else
@@ -84,8 +90,10 @@ void Response::build_header()
         (Status_line += SSTR(status_code)) += " Not Found\r\n";
         return;
     }
+    // * if everything is ok
     if (status_code == 200)
     {
+        // * 
         MIME_attribute();
         set_payload();
         entity_header["Content-Length"] = SSTR(content_length);
@@ -97,6 +105,7 @@ bool Response::match_file()
     // TODO: implement location
     const std::string root_dir = serv.find("route")->second + serv.find("location")->second;
     std::string uri = _request.get_request().find("URI")->second;
+    std::cout << "root dir : " << root_dir << std::endl;
     DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
     struct dirent *diread;
 
@@ -144,9 +153,11 @@ bool Response::match_file()
 
 void Response::set_server_conf(Server &s)
 {
+    // * get host
     std::string host = _request.get_request().find("Host")->second;
+    // * get port
     serv = s.get_config(host, _request.get_in_port());
-
+    // * get client_size
     if (serv.find("client_size") != serv.end() && serv.find("client_size")->second != "0")
         client_size = std::atoi(serv.find("client_size")->second.c_str());
     else
@@ -155,8 +166,10 @@ void Response::set_server_conf(Server &s)
 
 bool Response::set_payload()
 {
+    // * call the cgi 
     if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
         return CGI_from_file();
+    // * return de body
     else
         return read_payload_from_file();
 }
