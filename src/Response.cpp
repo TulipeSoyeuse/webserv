@@ -51,6 +51,9 @@ void Response:: MIME_attribute()
 
     if (file_format == "aac")
         entity_header["Content-Type"] = AAC "; charset=UTF-8\n";
+    // ! Rajout de cette ligne pour tester le script bash et php
+    if(file_format == "sh")
+        entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
     else if (file_format == "svg")
     {
         entity_header["Content-Type"] = SVG;
@@ -169,6 +172,8 @@ bool Response::set_payload()
     // * call the cgi 
     if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
         return CGI_from_file();
+    if (file_path.substr(file_path.find_last_of('.')) == SH_ext)
+        return CGI_from_file();
     // * return de body
     else
         return read_payload_from_file();
@@ -181,6 +186,12 @@ bool Response::CGI_from_file()
     {
         payload = new char[client_size];
         hm_popen hmpop(file_path, PHP);
+        content_length = hmpop.read_out(payload, client_size);
+    }
+        if (file_path.substr(file_path.find_last_of('.')) == SH_ext)
+    {
+        payload = new char[client_size];
+        hm_popen hmpop(file_path, BASH);
         content_length = hmpop.read_out(payload, client_size);
     }
     return (true);
