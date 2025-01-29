@@ -1,4 +1,4 @@
-#ifndef REQUEST_HPP
+#pragma once
 #define REQUEST_HPP
 #include "includes.hpp"
 
@@ -38,5 +38,3 @@ public:
 
 std::ostream &operator<<(std::ostream &out, const Request &c);
 std::istream &safeGetline(std::istream &is, std::string &t);
-
-#endif

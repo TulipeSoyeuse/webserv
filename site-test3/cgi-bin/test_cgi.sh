@@ -1,4 +1,4 @@
-!/bin/bash
+#!/bin/bash
 # HTML start
 echo "<html>"
 echo "<body>"

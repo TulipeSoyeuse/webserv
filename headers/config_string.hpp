@@ -1,4 +1,4 @@
-#ifndef CONFIG_STRING_HPP
+#pragma once
 #define CONFIG_STRING_HPP
 
 #include "includes.hpp"
@@ -19,5 +19,3 @@ public:
 	size_t get_server_name(const size_t pos) const;
 	std::string get_next_line();
 };
-
-#endif

@@ -3,34 +3,9 @@
 Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "),
 												  _is_binary(false), payload(NULL)
 {
-	// --------------- HTTP version check ------------------------------
-	std::pair<std::string, std::string> proto = *_request.get_request().find("Protocol");
-	if (proto.second != "HTTP/1.1")
-	{
-		status_code = 505;
-		(Status_line += SSTR(status_code << " ")) += "HTTP Version not supported\r\n";
-		_response = Status_line + "\r\n";
-	}
-	// -----------------------------------------------------------------
-	else
-	{
-		set_server_conf(s);
-		if (_request.get_type() == GET)
-		{
-			// build_header();
-			_response.assign(Status_line.c_str());
-			cMap_str(general_header, _response);
-			cMap_str(response_header, _response);
-			cMap_str(entity_header, _response);
-			_response += "\r\n";
-			if (status_code == 200)
-			{
-				if (_is_binary)
-					_response += "\r\n";
-				_response.append(payload, content_length);
-			}
-		}
-	}
+	// TODO: handle HTTPS
+	// TODO: rework error code and dedicated function
+	// TODO: handle CGI env
 	// --------------- HTTP version check ------------------------------
 	std::pair<std::string, std::string> proto = *_request.get_request().find("Protocol");
 	// * check the http version
@@ -62,6 +37,7 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 				_response.append(payload, content_length);
 			}
 		}
+		// TODO: POST
 	}
 }
 
@@ -199,29 +175,30 @@ bool Response::set_payload()
 {
 	// * call the cgi
 	if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
-		return CGI_from_file();
-	if (file_path.substr(file_path.find_last_of('.')) == SH_ext)
-		return CGI_from_file();
+		return CGI_from_file(PHP);
+	else if (file_path.substr(file_path.find_last_of('.')) == SH_ext)
+		return CGI_from_file(BASH);
+	else if (file_path.substr(file_path.find_last_of('.')) == PY_ext)
+		return CGI_from_file(PYTHON);
 	// * return de body
 	else
 		return read_payload_from_file();
 }
 
-bool Response::CGI_from_file()
+bool Response::CGI_from_file(CGI c)
 {
 	std::cout << "---------CGI from file--------\n";
-	if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
-	{
-		payload = new char[client_size];
-		hm_popen hmpop(file_path, PHP);
-		content_length = hmpop.read_out(payload, client_size);
-	}
-	if (file_path.substr(file_path.find_last_of('.')) == SH_ext)
-	{
-		payload = new char[client_size];
-		hm_popen hmpop(file_path, BASH);
-		content_length = hmpop.read_out(payload, client_size);
-	}
+	std::cout << "reading cgi: " << c << "\n";
+
+	payload = new char[client_size];
+	hm_popen hmpop(file_path, c);
+	if (!hmpop.is_good())
+		std::cout << "C CASSE\n";
+	// TODO: after error response rework -> handle good flag from popen
+	content_length = hmpop.read_out(payload, client_size);
+	std::cout << "content length: " << content_length << "\n";
+	std::cout << "---------PAYLOAD--------\n"
+			  << payload;
 	return (true);
 }
 

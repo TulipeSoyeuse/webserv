@@ -1,4 +1,4 @@
-#ifndef INCLUDE_HPP
+#pragma once
 #define INCLUDE_HPP
 
 #include <fcntl.h>
@@ -40,4 +40,5 @@
 
 #include <sys/types.h>
 #include <sys/wait.h>
-#endif
+
+extern char **environ;

@@ -1,5 +1,4 @@
-#ifndef RESPONSE_HPP
-#define RESPONSE_HPP
+#pragma once
 
 #include "Request.hpp"
 #include "Server.hpp"
@@ -19,8 +18,7 @@
 
 #define PHP_ext ".php"
 #define SH_ext ".sh"
-
-
+#define PY_ext ".py"
 
 class Response
 {
@@ -54,7 +52,7 @@ private:
 	//  payload ------------
 	bool set_payload();
 	bool read_payload_from_file();
-	bool CGI_from_file();
+	bool CGI_from_file(CGI);
 
 	// concat  -------------
 	void cMap_str(Map &m, std::string &s);
@@ -71,5 +69,3 @@ public:
 };
 
 std::ostream &operator<<(std::ostream &out, const Response &c);
-
-#endif
