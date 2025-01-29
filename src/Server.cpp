@@ -11,6 +11,11 @@ bool is_string_empty(std::string s)
 	return (c);
 }
 
+inline bool does_file_exist(const std::string &name)
+{
+	return (access(name.c_str(), F_OK) != -1);
+}
+
 Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_res(),
 														 server_count(0), _valid_conf(false)
 {
@@ -30,6 +35,7 @@ Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_r
 	}
 	// * display info about all server
 	display_params();
+	configuration_checking();
 }
 
 bool Server::read_config()
@@ -109,10 +115,9 @@ std::pair<std::string, std::string> Server::parse_config_line(config_string l)
 	std::pair<std::string, std::string> p(a, b);
 
 	if (_debug)
-	{
 		std::cout << "----------\n"
-				  << "param: " << a << "\nvalue: \"" << b << "\"\n----------\n";
-	}
+				  << "param: " << a << "\nvalue: \""
+				  << b << "\"\n----------\n";
 
 	return (p);
 }
@@ -125,7 +130,7 @@ void Server::display_params()
 		std::cout << "Server 1:\n";
 		for (std::map<std::string, std::string>::iterator it2 = (*it1).begin(); it2 != (*it1).end(); ++it2)
 		{
-			std::cout << "[" << it2->first << "]=\"" << it2->second << "\"; ";
+			std::cout << "[" << it2->first << "]=\"" << it2->second << "\"\n";
 		}
 		std::cout << "\n";
 	}
@@ -155,6 +160,21 @@ const std::string &Server::get_param(const std::string &s, const std::string &ho
 
 void Server::configuration_checking()
 {
+	std::map<std::string, std::string>::iterator val;
+	for (Server_lst::iterator it = _servers.begin(); it != _servers.end(); ++it)
+	{
+		val = it->find("error_page");
+		if (val != it->end())
+		{
+			std::string f(it->find("route")->second + it->find("location")->second + "/" + val->second);
+			if (!does_file_exist(f))
+			{
+				std::cerr << "config error, file " << f << " don't exist\n"
+						  << "from server: " << it->find("name")->second << "\n";
+				return;
+			}
+		}
+	}
 	_valid_conf = true;
 }
 
@@ -179,9 +199,10 @@ const port_array &Server::get_ports() const
 	return (port_lst);
 }
 
-// void Server::start()
-// {
-// }
+const bool &Server::is_conf_valid() const
+{
+	return (_valid_conf);
+}
 
 Server::~Server()
 {

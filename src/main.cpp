@@ -72,6 +72,7 @@ int network_accept_any(int fds[], unsigned int count,
 
 int main()
 {
+
 	// * Signal handling: ^C to quit properly
 	struct sigaction act;
 	act.sa_handler = sign_handler;
@@ -82,7 +83,11 @@ int main()
 
 	// * call webserv constructor -> parse config file
 	Server webserv("test.conf", false);
-
+	if (!webserv.is_conf_valid())
+	{
+		std::cerr << "exiting..." << std::endl;
+		return (1);
+	}
 	// Create a socket(IPv4, TCP)
 
 	// * get port parsed in config file
@@ -170,15 +175,13 @@ int main()
 		Request r(buffer, port);
 		std::cout << r;
 		std::cout << "------------------------------------------" << std::endl;
-		if (r._status == true)
-		{
-			// * Response class :
-			Response resp(r, webserv);
-			// std::cout << resp << std::endl;
-			// std::cout << "------------------------------------------\nEND\n\n"
-			//   << std::endl;
-			send(connection, resp.get_response().data(), resp.get_response().size(), 0);
-		}
+		// * Response class :
+		Response resp(r, webserv);
+		std::cout << "--------------------START----------------------\n\n";
+		std::cout << resp << std::endl;
+		std::cout << "--------------------END------------------------\n\n"
+				  << std::endl;
+		send(connection, resp.get_response().data(), resp.get_response().size(), 0);
 		close(connection);
 	}
 

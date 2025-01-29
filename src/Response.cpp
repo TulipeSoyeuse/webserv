@@ -1,19 +1,29 @@
 #include "Response.hpp"
 
 Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "),
-												  _is_binary(false), payload(NULL)
+												  status_code(200), _is_binary(false),
+												  payload(NULL)
 {
+	if (!_request._status)
+	{
+		http_error(400);
+		return;
+	}
+
 	// TODO: handle HTTPS
 	// TODO: rework error code and dedicated function
-	// TODO: handle CGI env
+	// TODO: POST handler for upload file
 	// --------------- HTTP version check ------------------------------
 	std::pair<std::string, std::string> proto = *_request.get_request().find("Protocol");
 	// * check the http version
+	Status_line = "HTTP/1.1 200 Sucess\r\n";
 	if (proto.second != "HTTP/1.1")
 	{
-		status_code = 505;
-		(Status_line += SSTR(status_code << " ")) += "HTTP Version not supported\r\n";
-		_response = Status_line + "\r\n";
+		http_error(505);
+		return;
+		// status_code = 505;
+		// (Status_line += SSTR(status_code << " ")) += "HTTP Version not supported\r\n";
+		// _response = Status_line + "\r\n";
 	}
 	// -----------------------------------------------------------------
 	else
@@ -30,12 +40,7 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 			cMap_str(response_header, _response);
 			cMap_str(entity_header, _response);
 			_response += "\r\n";
-			if (status_code == 200)
-			{
-				if (_is_binary)
-					_response += "\r\n";
-				_response.append(payload, content_length);
-			}
+			_response.append(payload, content_length);
 		}
 		// TODO: POST
 	}
@@ -90,17 +95,10 @@ void Response::build_header()
 
 	general_header["Server"] = "webserv/0.1\n";
 	// * if i find the file
-	if (match_file())
-		(Status_line += SSTR(status_code)) += " Sucess\r\n";
+	if (!match_file())
+		return;
 	else
 	{
-		(Status_line += SSTR(status_code)) += " Not Found\r\n";
-		return;
-	}
-	// * if everything is ok
-	if (status_code == 200)
-	{
-		// *
 		MIME_attribute();
 		set_payload();
 		entity_header["Content-Length"] = SSTR(content_length);
@@ -126,13 +124,12 @@ bool Response::match_file()
 				stat(diread->d_name, &_stat);
 				file_path = root_dir + '/' + diread->d_name;
 				std::cout << file_path << "\n";
-				status_code = 200;
 				closedir(dir);
 				return true;
 			}
 		}
-		status_code = 404;
 		closedir(dir);
+		http_error(404);
 		return false;
 	}
 
@@ -148,13 +145,12 @@ bool Response::match_file()
 			stat(diread->d_name, &_stat);
 			file_path = root_dir + uri;
 			std::cout << file_path << "\n";
-			status_code = 200;
 			closedir(dir);
 			return true;
 		}
 	}
-	status_code = 404;
 	closedir(dir);
+	http_error(404);
 	return false;
 }
 
@@ -235,6 +231,8 @@ bool Response::read_payload_from_file()
 
 void Response::cMap_str(Map &m, std::string &s)
 {
+	if (status_code != 200)
+		return;
 	for (Map::const_iterator it = m.begin(); it != m.end(); ++it)
 	{
 		s += it->first + ": ";
@@ -243,6 +241,16 @@ void Response::cMap_str(Map &m, std::string &s)
 			s += '\n';
 		it--;
 	}
+}
+
+void Response::http_error(int code)
+{
+	status_code = code;
+	if (code == 505)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "HTTP Version not supported\r\n");
+	if (code == 404)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Not Found\r\n");
+	// TODO: set up response
 }
 
 const int &Response::get_status()

@@ -12,8 +12,6 @@ private:
 	// -------- DEBUG ----------
 	bool _debug;
 	void display_params();
-	// -------------------------
-
 	// -------- CONFIG ---------
 	config_string _config;
 	Server_lst _servers;
@@ -36,7 +34,6 @@ public:
 	const std::map<std::string, std::string> &get_config(std::string &, int) const;
 	const size_t &get_server_count() const;
 	const port_array &get_ports() const;
-	// void start();
-	//  void reload();
+	const bool &is_conf_valid() const;
 	~Server();
 };

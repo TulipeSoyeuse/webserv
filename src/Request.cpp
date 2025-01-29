@@ -22,7 +22,6 @@ void Request::parse()
 
 	if (f1 == f2 || f1 == (int)std::string::npos)
 	{
-		std::cout << "request Malformed" << std::endl;
 		_status = false;
 		return;
 	}
