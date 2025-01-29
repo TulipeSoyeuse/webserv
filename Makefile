@@ -5,7 +5,7 @@ HEADERS_DIR =	headers
 
 SRC 		=	$(addprefix src/, $(FILES))
 OBJ 		=	$(addprefix $(OBJ_DIR)/, $(FILES:.cpp=.o))
-CPPFLAGS	=	-Wall -Werror -Wextra -std=c++98 -glldb
+CPPFLAGS	=	-Wall -Werror -Wextra -std=c++98 -g3
 NAME		=	webserv
 
 OBJ_DIR		=	obj

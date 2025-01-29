@@ -1,6 +1,8 @@
 #ifndef INCLUDE_HPP
 #define INCLUDE_HPP
 
+#include <fcntl.h>
+#include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>

@@ -30,7 +30,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi) : all_read(false)
 		close(stdout_pipe[1]);
 		close(stderr_pipe[1]);
 
-		char *const argv[3] = {(char *const)"-f", (char *const)f.c_str(), (char *)0};
+		char *const argv[3] = {(char *)"-f", (char *)f.c_str(), (char *)0};
 		if (execve(get_CGI_exec(cgi), argv, NULL) == -1)
 		{
 			perror("execve");

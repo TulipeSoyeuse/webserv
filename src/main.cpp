@@ -74,6 +74,7 @@ int main()
 	// Create a socket(IPv4, TCP)
 	const port_array &parray = webserv.get_ports();
 	int num_fd = webserv.get_server_count();
+	// ---------- socket --------------------
 	struct sockaddr_in *sockaddr = new sockaddr_in[num_fd];
 	int *sockfd = new int[num_fd];
 
@@ -136,14 +137,14 @@ int main()
 				  << buffer << "\n"
 				  << "------------------------------------------" << std::endl;
 		Request r(buffer, port);
-		// std::cout << r;
-		// std::cout << "------------------------------------------" << std::endl;
+		std::cout << r;
+		std::cout << "------------------------------------------" << std::endl;
 		if (r._status == true)
 		{
 			Response resp(r, webserv);
-			std::cout << resp << std::endl;
-			std::cout << "------------------------------------------\nEND\n\n"
-					  << std::endl;
+			// std::cout << resp << std::endl;
+			// std::cout << "------------------------------------------\nEND\n\n"
+			//   << std::endl;
 			send(connection, resp.get_response().data(), resp.get_response().size(), 0);
 		}
 		close(connection);
