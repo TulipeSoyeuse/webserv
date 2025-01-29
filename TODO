@@ -1,0 +1,10 @@
+- set tup des variables 'envrionnement dans l'enfant 
+mettre = 
+    REQUEST_METHOD
+    CONTENT_LENGTH
+    QUERY_STRING
+    SCRIPT_NAME
+    SERVER_PORT
+    SERVER_NAME
+
+- avoir acces a request dans popen 

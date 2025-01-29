@@ -191,7 +191,7 @@ bool Response::CGI_from_file(CGI c)
 	std::cout << "reading cgi: " << c << "\n";
 
 	payload = new char[client_size];
-	hm_popen hmpop(file_path, c);
+	hm_popen hmpop(file_path, c, _request);
 	if (!hmpop.is_good())
 		std::cout << "C CASSE\n";
 	// TODO: after error response rework -> handle good flag from popen

@@ -1,6 +1,6 @@
 #include "hm_popen.hpp"
 
-hm_popen::hm_popen(std::string &f, CGI cgi) : all_read(false), good(false)
+hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(_request), all_read(false), good(false)
 {
 	int stdout_pipe[2];
 	int stderr_pipe[2];
@@ -18,6 +18,8 @@ hm_popen::hm_popen(std::string &f, CGI cgi) : all_read(false), good(false)
 	}
 	if (pid == 0)
 	{
+		build_env(f);
+
 		// Child process
 		close(stdout_pipe[0]); // Close reading end of stdout pipe in child
 		close(stderr_pipe[0]); // Close reading end of stderr pipe in child
@@ -83,6 +85,28 @@ hm_popen::hm_popen(std::string &f, CGI cgi) : all_read(false), good(false)
 		subprocess_stdout_fd = stdout_pipe[0];
 		subprocess_stderr_fd = stderr_pipe[0];
 	}
+}
+
+void hm_popen::build_env(std::string &f) {
+    Map R = _Request.get_request();
+    Map::iterator it = R.find("Content-Length"); 
+
+    if (_Request.get_type() == GET) {
+		setenv("[REQUEST_METHOD]", "GET", 1);
+        if (it != R.end())  {
+			std::cerr << "REQUEST METHOD" << it->second << std::endl;
+            setenv("[CONTENT_LENGTH]", it->second.c_str(), 1); 
+		}
+		// * choper le port dans server
+		// it = R.find("port");
+		// if (it != R.end()) 
+        //     setenv("[SERVER_PORT]", it->second.c_str(), 1); 
+		if (it != R.end() && !f.empty()) 
+            setenv("[SCRIPT_FILENAME]", f.c_str(), 1);
+		it = R.find("URI");
+		if(it != R.end())
+			setenv("[QUERY_STRING]", it->second.c_str(), 1);
+    }
 }
 
 const char *hm_popen::get_CGI_exec(const CGI &cgi) const
