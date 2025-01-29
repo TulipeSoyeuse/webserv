@@ -6,6 +6,7 @@
 enum CGI
 {
 	PHP,
+	BASH,
 };
 
 class hm_popen

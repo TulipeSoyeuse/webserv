@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WebServ - Projet 42</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header>
+        <h1>WebServ - Test Interface</h1>
+        <p>Testez les méthodes GET, POST et CI de votre serveur WebServ</p>
+    </header>
+
+    <div class="container">
+        <div class="bubble" id="getBubble">
+            <h2>Test GET</h2>
+            <a href="html/page2.html">
+                <button type="button">Envoyer GET</button>
+            </a>
+        </div>
+
+        <div class="bubble" id="postBubble">
+            <h2>Test POST</h2>
+            <form method="POST" action="html/post.html">
+                <input type="text" id="postData" placeholder="Entrez un message" required>
+                <button type="submit">Envoyer POST</button>
+            </form>
+        </div>
+
+        <div class="bubble" id="ciBubble">
+            <h2>CGI</h2>
+            <a href="cgi-bin/test_cgi.sh">
+                <button>Scripts CGI</button>
+            </a>
+        </div>
+    </div>
+
+</body>
+</html>

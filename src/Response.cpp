@@ -31,6 +31,38 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 			}
 		}
 	}
+	// --------------- HTTP version check ------------------------------
+	std::pair<std::string, std::string> proto = *_request.get_request().find("Protocol");
+	// * check the http version
+	if (proto.second != "HTTP/1.1")
+	{
+		status_code = 505;
+		(Status_line += SSTR(status_code << " ")) += "HTTP Version not supported\r\n";
+		_response = Status_line + "\r\n";
+	}
+	// -----------------------------------------------------------------
+	else
+	{
+		// * get info about request ?
+		set_server_conf(s);
+		// * if request is GET
+		if (_request.get_type() == GET)
+		{
+			// * build header
+			build_header();
+			_response.assign(Status_line.c_str());
+			cMap_str(general_header, _response);
+			cMap_str(response_header, _response);
+			cMap_str(entity_header, _response);
+			_response += "\r\n";
+			if (status_code == 200)
+			{
+				if (_is_binary)
+					_response += "\r\n";
+				_response.append(payload, content_length);
+			}
+		}
+	}
 }
 
 void Response::MIME_attribute()
@@ -47,6 +79,9 @@ void Response::MIME_attribute()
 
 	if (file_format == "aac")
 		entity_header["Content-Type"] = AAC "; charset=UTF-8\n";
+	// ! Rajout de cette ligne pour tester le script bash et php
+	if (file_format == "sh")
+		entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
 	else if (file_format == "svg")
 	{
 		entity_header["Content-Type"] = SVG;
@@ -76,7 +111,9 @@ void Response::MIME_attribute()
 
 void Response::build_header()
 {
+
 	general_header["Server"] = "webserv/0.1\n";
+	// * if i find the file
 	if (match_file())
 		(Status_line += SSTR(status_code)) += " Sucess\r\n";
 	else
@@ -84,8 +121,10 @@ void Response::build_header()
 		(Status_line += SSTR(status_code)) += " Not Found\r\n";
 		return;
 	}
+	// * if everything is ok
 	if (status_code == 200)
 	{
+		// *
 		MIME_attribute();
 		set_payload();
 		entity_header["Content-Length"] = SSTR(content_length);
@@ -97,6 +136,7 @@ bool Response::match_file()
 	// TODO: implement location
 	const std::string root_dir = serv.find("route")->second + serv.find("location")->second;
 	std::string uri = _request.get_request().find("URI")->second;
+	std::cout << "root dir : " << root_dir << std::endl;
 	DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
 	struct dirent *diread;
 
@@ -144,9 +184,11 @@ bool Response::match_file()
 
 void Response::set_server_conf(Server &s)
 {
+	// * get host
 	std::string host = _request.get_request().find("Host")->second;
+	// * get port
 	serv = s.get_config(host, _request.get_in_port());
-
+	// * get client_size
 	if (serv.find("client_size") != serv.end() && serv.find("client_size")->second != "0")
 		client_size = std::atoi(serv.find("client_size")->second.c_str());
 	else
@@ -155,8 +197,12 @@ void Response::set_server_conf(Server &s)
 
 bool Response::set_payload()
 {
+	// * call the cgi
 	if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
 		return CGI_from_file();
+	if (file_path.substr(file_path.find_last_of('.')) == SH_ext)
+		return CGI_from_file();
+	// * return de body
 	else
 		return read_payload_from_file();
 }
@@ -168,6 +214,12 @@ bool Response::CGI_from_file()
 	{
 		payload = new char[client_size];
 		hm_popen hmpop(file_path, PHP);
+		content_length = hmpop.read_out(payload, client_size);
+	}
+	if (file_path.substr(file_path.find_last_of('.')) == SH_ext)
+	{
+		payload = new char[client_size];
+		hm_popen hmpop(file_path, BASH);
 		content_length = hmpop.read_out(payload, client_size);
 	}
 	return (true);

@@ -28,6 +28,7 @@ Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_r
 		_config = s;
 		read_config();
 	}
+	// * display info about all server
 	display_params();
 }
 
@@ -43,6 +44,7 @@ bool Server::read_config()
 		if (_config.get_server_name(cursor) != config_string::npos)
 		{
 			server.insert(
+				// * get serveur name
 				std::pair<std::string, std::string>(
 					"name", _config.get_next_word(_config.get_server_name(cursor))));
 			if (_debug)
@@ -52,6 +54,7 @@ bool Server::read_config()
 		}
 		else
 		{
+			// * default server name
 			server.insert(
 				std::pair<std::string, std::string>(
 					"name", "unnamed"));
@@ -70,6 +73,7 @@ bool Server::read_config()
 		}
 		_servers.push_back(server);
 		server_count++;
+		// * get port
 		if (server.find("port") != server.end())
 			port_lst.push_back(std::atoi(server.find("port")->second.c_str()));
 	}

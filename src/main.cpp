@@ -15,8 +15,14 @@ void sign_handler(int sig)
 
 int socket_read(int fd, char *buffer, size_t size)
 {
+	// * data structure pollfd -> fd = file descriptor
+	// * short events -> request events
+	// * short revents -> returned events
 	pollfd pfd;
 
+	// * poll() -> similar to select(), take the data struct pollfd, the numbers of items in the fd array (nfds), and the number of millisec that poll should block waiting for a fd to become ready
+	// * POLL_IN -> there is data to read
+	// * POLL_PRI -> There is some exceptional condition on the file descriptor
 	pfd.events = POLL_IN | POLL_PRI;
 	pfd.fd = fd;
 	if (poll(&pfd, 1, 30) == 1)
@@ -32,19 +38,23 @@ int network_accept_any(int fds[], unsigned int count,
 	unsigned int i;
 	int status;
 
+	// * -> FD_ZERO -> like memset
 	FD_ZERO(&readfds);
 	maxfd = -1;
 	for (i = 0; i < count; i++)
 	{
+		// * ajoute un descripteur de fichier a readfds. Si le descripteur de fichier existe déjà dans le jeu et que fd_count du fd_set est inférieur à FD_SETSIZE, un doublon est ajouté.
 		FD_SET(fds[i], &readfds);
 		if (fds[i] > maxfd)
 			maxfd = fds[i];
 	}
+	// *  select -> use to supervise efficiently fds to check if one of them is ready(=if enter and exit become possible)
 	status = select(maxfd + 1, &readfds, NULL, NULL, NULL);
 	if (status < 0)
 		return INVALID_SOCKET;
 	fd = INVALID_SOCKET;
 	for (i = 0; i < count; i++)
+		// * FD_ISSETtest to see if a fd is part of the set
 		if (FD_ISSET(fds[i], &readfds))
 		{
 			fd = fds[i];
@@ -55,13 +65,14 @@ int network_accept_any(int fds[], unsigned int count,
 	else
 	{
 		incomming_fd = fd;
+		// * accept a connexion on a socket
 		return accept(fd, addr, addrlen);
 	}
 }
 
 int main()
 {
-	// Signal handling:
+	// * Signal handling: ^C to quit properly
 	struct sigaction act;
 	act.sa_handler = sign_handler;
 	sigemptyset(&act.sa_mask);
@@ -69,51 +80,66 @@ int main()
 	sigaction(SIGINT, &act, 0);
 	sigaction(SIGSTOP, &act, 0);
 
+	// * call webserv constructor -> parse config file
 	Server webserv("test.conf", false);
 
 	// Create a socket(IPv4, TCP)
+
+	// * get port parsed in config file
 	const port_array &parray = webserv.get_ports();
+	// * get number of port
 	int num_fd = webserv.get_server_count();
-	// ---------- socket --------------------
+	// * struct SOCKADDR_IN to define transport adress and port for AF_INET family
 	struct sockaddr_in *sockaddr = new sockaddr_in[num_fd];
 	int *sockfd = new int[num_fd];
 
 	for (int i = 0; i < num_fd; i++)
 	{
+		// * AF_INET = used to designate the type of adresses that your socket can communicate with (Protocol v4)
+		// * SOCK_STREAM -> for TCP
 		sockfd[i] = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 		if (sockfd[i] == -1)
 		{
 			std::cout << "Failed to create socket n°" << i << " . errno: " << errno << std::endl;
 			exit(EXIT_FAILURE);
 		}
-
 		// Listen to port 9999 on any address
+		// * sin family = family adresses for tranort adress. Always be define on AF_INET
 		sockaddr[i].sin_family = AF_INET;
+		// * struct SIN_ADDR qui contient une adresse de transport IPv4 and INADDR_ANY flag can accept any incoming messages
 		sockaddr[i].sin_addr.s_addr = INADDR_ANY;
+		// * sin_port = port number of transport protocol
+		// * The htons() function converts the unsigned short integer hostshort from host byte order to network byte order.
 		sockaddr[i].sin_port = htons(parray[i]);
 
 		int yes = 1;
+		// * manipulate option for the socket referred to by the fd sockfd,
+		// * SOL_SOCKET -> to manipulate options at the socket API level
+		// * SO_REUSEADDR -> can force a socket to link to a port used by another socket. (for details https://learn.microsoft.com/fr-fr/windows/win32/winsock/using-so-reuseaddr-and-so-exclusiveaddruse)
 		if (setsockopt(sockfd[i], SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
 		{
 			perror("setsockopt");
 			exit(EXIT_FAILURE);
 		}
+		// * It is necessary to assign a local address with bind() before a SOCK_STREAM socket can receive connections.
 		if (bind(sockfd[i], (struct sockaddr *)&(sockaddr[i]), sizeof(sockaddr[i])) < 0)
 		{
 			std::cout << "Failed to bind to port " << parray[i] << ". errno: " << errno << std::endl;
 			exit(EXIT_FAILURE);
 		}
+		// * listen() -> The listen function places a socket in a state in which it is listening for an incoming connection.
 		if (listen(sockfd[i], 10) < 0)
 		{
 			std::cout << "Failed to listen on socket n°" << i << ". errno: " << errno << std::endl;
 			exit(EXIT_FAILURE);
 		}
 	}
-
+	// * -> get size of all sockadress
 	socklen_t addrlen = sizeof(sockaddr) * num_fd;
 
 	while (1)
 	{
+		// * accept the connexion with a ready socket
 		int connection = network_accept_any(sockfd, num_fd, (struct sockaddr *)sockaddr, &addrlen);
 		if (connection == INVALID_SOCKET)
 		{
@@ -125,10 +151,13 @@ int main()
 		int port = parray[incomming_fd - 3];
 
 		// Read from the connection
+		// * buffer to read request
 		char buffer[2048];
 		std::memset(buffer, 0, 2048);
+		// * read the data in the socket (cd comment in function)
 		socket_read(connection, buffer, 2048);
 		char hostname[30];
+		// * The gethostname function get the local computer's standard host name.
 		gethostname(hostname, 30);
 		std::cout << "------------------------------------------\n"
 				  << "socket port: " << port << "\n"
@@ -136,11 +165,14 @@ int main()
 				  << "------------------------------------------\n"
 				  << buffer << "\n"
 				  << "------------------------------------------" << std::endl;
+
+		// * Request class : parsew request
 		Request r(buffer, port);
 		std::cout << r;
 		std::cout << "------------------------------------------" << std::endl;
 		if (r._status == true)
 		{
+			// * Response class :
 			Response resp(r, webserv);
 			// std::cout << resp << std::endl;
 			// std::cout << "------------------------------------------\nEND\n\n"

@@ -30,7 +30,8 @@ hm_popen::hm_popen(std::string &f, CGI cgi) : all_read(false)
 		close(stdout_pipe[1]);
 		close(stderr_pipe[1]);
 
-		char *const argv[3] = {(char *)"-f", (char *)f.c_str(), (char *)0};
+		char *const argv[3] = {(char *const)"-f", (char *const)f.c_str(), (char *)0};
+		std::cout << "this is path :" << argv[0] << std::cout;
 		if (execve(get_CGI_exec(cgi), argv, NULL) == -1)
 		{
 			perror("execve");
@@ -50,6 +51,8 @@ const char *hm_popen::get_CGI_exec(const CGI &cgi) const
 {
 	if (cgi == PHP)
 		return "/usr/bin/php";
+	if (cgi == BASH)
+		return "/bin/bash";
 	else
 		return "";
 }
@@ -60,7 +63,7 @@ size_t hm_popen::read_out(char *buffer, const size_t buffer_size)
 	buffer[nbytes] = 0;
 	if (nbytes < buffer_size - 1)
 		all_read = true;
-	std::cout << buffer;
+	// std::cout << buffer;
 	return (nbytes);
 }
 

@@ -26,6 +26,7 @@ void Request::parse()
 		return;
 	}
 
+	// * get http method
 	if (line.find("GET") == 0)
 		_Type = GET;
 	else if (line.find("POST") == 0)

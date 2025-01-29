@@ -18,6 +18,9 @@
 #define CSS "text/css"
 
 #define PHP_ext ".php"
+#define SH_ext ".sh"
+
+
 
 class Response
 {
