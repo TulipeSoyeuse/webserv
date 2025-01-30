@@ -53,8 +53,11 @@ void Response::MIME_attribute()
 	if (file_format == "aac")
 		entity_header["Content-Type"] = AAC "; charset=UTF-8\n";
 	// ! Rajout de cette ligne pour tester le script bash et php
-	if (file_format == "sh")
+	if (file_format == "php")
 		entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
+
+	else if(file_format == "sh")
+		entity_header["Content-Type"] = "text/plain ; charset=UTF-8\n";
 	else if (file_format == "svg")
 	{
 		entity_header["Content-Type"] = SVG;

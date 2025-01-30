@@ -109,16 +109,14 @@ std::pair<std::string, std::string> Server::parse_config_line(config_string l)
 		while (l[i])
 		{
 			if (!isspace(l[i]))
-			{
 				i++;
-			}
 			else
 				break;
 		}
-		std::string b = l.get_next_word(i);
-		if (b.empty())
-			std::cout << "parse error" << std::endl; // TODO : how manage error for error file ?
-		std::cout << b << std::endl;
+		//d::string b = l.get_next_word(i);
+		// if (b.empty())
+		// 	std::cout << "parse error" << std::endl; // TODO : how manage error for error file ?
+		// std::cout << b << std::endl;
 	}
 	while (true)
 		if (isspace(l[i]))
