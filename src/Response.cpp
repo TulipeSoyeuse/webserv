@@ -26,19 +26,14 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	{
 		// * link the right server for the current request (link on "serv" var)
 		set_server_conf(s);
-		// * if request is GET
-		if (_request.get_type() == GET)
-		{
-			// * build header
-			build_header();
-			_response.assign(Status_line.c_str());
-			cMap_str(general_header, _response);
-			cMap_str(response_header, _response);
-			cMap_str(entity_header, _response);
-			_response += "\r\n";
-			_response.append(payload, content_length);
-		}
-		// TODO: POST
+		// * build header
+		build_header();
+		_response.assign(Status_line.c_str());
+		cMap_str(general_header, _response);
+		cMap_str(response_header, _response);
+		cMap_str(entity_header, _response);
+		_response += "\r\n";
+		_response.append(payload, content_length);
 	}
 }
 

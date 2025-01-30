@@ -45,7 +45,6 @@ void Request::parse()
 		_request[line.substr(0, line.find_first_of(':'))] =
 			line.substr(line.find_first_of(':') + 2);
 	}
-	parse_params();
 	parse_payload();
 }
 
@@ -58,23 +57,23 @@ void Request::parse_payload()
 	}
 }
 
-void Request::parse_params()
-{
-	if (_Type == GET && _request["URI"].find('?') != std::string::npos)
-	{
-		std::string uri = _request["URI"].substr(0, _request["URI"].find("?"));
-		std::stringstream s;
-		s.str(_request["URI"].substr(_request["URI"].find("?") + 1));
+// void Request::parse_params()
+// {
+// 	if (_Type == GET && _request["URI"].find('?') != std::string::npos)
+// 	{
+// 		std::string uri = _request["URI"].substr(0, _request["URI"].find("?"));
+// 		std::stringstream s;
+// 		s.str(_request["URI"].substr(_request["URI"].find("?") + 1));
 
-		std::string param;
-		while (std::getline(s, param, '&'))
-		{
-			_params[param.substr(0, param.find('='))] =
-				param.substr(param.find('=') + 1);
-		}
-		_request["URI"] = uri;
-	}
-}
+// 		std::string param;
+// 		while (std::getline(s, param, '&'))
+// 		{
+// 			_params[param.substr(0, param.find('='))] =
+// 				param.substr(param.find('=') + 1);
+// 		}
+// 		_request["URI"] = uri;
+// 	}
+// }
 
 const Map &Request::get_request() const
 {

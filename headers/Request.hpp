@@ -22,7 +22,6 @@ private:
 	const unsigned int in_port;
 
 	void parse();
-	void parse_params();
 	void parse_payload();
 
 public:
