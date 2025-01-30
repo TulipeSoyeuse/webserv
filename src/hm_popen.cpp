@@ -1,6 +1,6 @@
 #include "hm_popen.hpp"
 
-hm_popen::hm_popen(std::string &f, CGI cgi) : all_read(false), good(false)
+hm_popen::hm_popen(std::string &f, CGI cgi) : all_read(false), good(true)
 {
 	int stdout_pipe[2];
 	int stderr_pipe[2];
@@ -54,6 +54,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi) : all_read(false), good(false)
 		}
 		if (execve(prgm, (char *const *)argv, environ) == -1)
 		{
+			// int fd = open("child.log",);
 			perror("execve");
 			exit(1);
 		}
@@ -68,7 +69,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi) : all_read(false), good(false)
 		while (waitpid(pid, &status, WNOHANG) == 0)
 		{
 			time(&end);
-			if (difftime(end, start) > 1)
+			if (difftime(end, start) > 5)
 			{
 				kill(pid, 9);
 				good = false;
