@@ -4,11 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/styles.css">
-    <title>Page 2</title>
 </head>
 <body>
-
-    <h1>You are in Page 2 !</h1>
-
+    <h1>Envoyer un formulaire avec get</h1>
+    <div class="container">
+        <div class="bubble" id="getBubble">
+            <form method="GET" action="../cgi-bin/cgi-py.py">
+                <input type="text" id="postData" placeholder="Entrez un message" required>
+                <button type="submit">Envoyer avec GET</button>
+            </form>
+        </div>
 </body>
 </html>
