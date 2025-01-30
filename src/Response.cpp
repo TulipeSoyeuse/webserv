@@ -10,7 +10,6 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 		return;
 	}
 
-	// TODO: handle HTTPS
 	// TODO: rework error code and dedicated function
 	// TODO: POST handler for upload file
 	// --------------- HTTP version check ------------------------------
@@ -28,6 +27,8 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 		set_server_conf(s);
 		// * build header
 		build_header();
+		if (set_payload())
+			entity_header["Content-Length"] = SSTR(content_length);
 		_response.assign(Status_line.c_str());
 		cMap_str(general_header, _response);
 		cMap_str(response_header, _response);
@@ -36,7 +37,7 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 		_response.append(payload, content_length);
 	}
 }
-
+// TODO: add in server multiple error page for error code
 void Response::MIME_attribute()
 {
 	std::string uri = ((Map)_request.get_request())["URI"];
@@ -86,8 +87,6 @@ void Response::build_header()
 	general_header["Server"] = "webserv/0.1\n";
 	// * if i find the file
 	MIME_attribute();
-	set_payload();
-	entity_header["Content-Length"] = SSTR(content_length);
 }
 
 bool Response::match_file()
@@ -137,7 +136,7 @@ bool Response::match_file()
 	http_error(404);
 	return false;
 }
-
+// setup file path and check his accessibility
 bool Response::check_file()
 {
 	std::string uri(_request.get_request().find("URI")->second);

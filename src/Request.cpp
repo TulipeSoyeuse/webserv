@@ -8,7 +8,6 @@ Request::Request(char *http_package, unsigned int port) : in_port(port), _status
 
 void Request::parse()
 {
-	// TODO: query string handle
 	std::stringstream s;
 	s.str(_brut_request);
 
@@ -52,7 +51,7 @@ void Request::parse_payload()
 {
 	if (_request.find("Content-Length") != _request.end())
 	{
-		int f1 = _brut_request.find("\n\n") + 2;
+		int f1 = _brut_request.find_last_of("\r\n") + 2;
 		_request["Payload"] = _brut_request.substr(f1);
 	}
 }

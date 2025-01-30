@@ -18,7 +18,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 	}
 	if (pid == 0)
 	{
-		build_env(f);
+		build_env(f); // TODO: porque ça marche pas
 
 		// Child process
 		close(stdout_pipe[0]); // Close reading end of stdout pipe in child
@@ -91,25 +91,32 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 void hm_popen::build_env(std::string &f)
 {
 	Map R = _Request.get_request();
-	Map::iterator it = R.find("Content-Length");
+	Map::iterator it = R.find("Cookie");
+	if (it != R.end())
+		setenv("HTTP_COOKIE=", it->second.c_str(), 1);
+	it = R.find("User-Agent");
+	if (it != R.end())
+		setenv("HTTP_USER_AGENT=", it->second.c_str(), 1);
+	if (!f.empty())
+		setenv("SCRIPT_FILENAME", f.c_str(), 1);
 
 	if (_Request.get_type() == GET)
 	{
-		setenv("[REQUEST_METHOD]", "GET", 1);
+		setenv("REQUEST_METHOD", "GET", 1);
+		it = R.find("QUERY_STRING");
 		if (it != R.end())
-		{
-			std::cerr << "REQUEST METHOD" << it->second << std::endl;
-			setenv("[CONTENT_LENGTH]", it->second.c_str(), 1);
-		}
-		// * choper le port dans server
-		// it = R.find("port");
-		// if (it != R.end())
-		//     setenv("[SERVER_PORT]", it->second.c_str(), 1);
-		if (it != R.end() && !f.empty())
-			setenv("[SCRIPT_FILENAME]", f.c_str(), 1);
-		it = R.find("URI");
+			setenv("QUERY_STRING=", it->second.c_str(), 1);
+	}
+
+	if (_Request.get_type() == POST)
+	{
+		setenv("REQUEST_METHOD", "GET", 1);
+		it = R.find("Content-Type");
 		if (it != R.end())
-			setenv("[QUERY_STRING]", it->second.c_str(), 1);
+			setenv("CONTENT_TYPE=", it->second.c_str(), 1);
+		it = R.find("Content-Lenght");
+		if (it != R.end())
+			setenv("CONTENT_LENGHT=", it->second.c_str(), 1);
 	}
 }
 

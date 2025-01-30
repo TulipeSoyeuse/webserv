@@ -158,6 +158,7 @@ void Server::configuration_checking()
 	std::map<std::string, std::string>::iterator val;
 	for (Server_lst::iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
+		// ------------------ ERROR PAGE ----------------------------
 		val = it->find("error_page");
 		if (val != it->end())
 		{
