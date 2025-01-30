@@ -265,13 +265,28 @@ void Response::http_error(int code)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Internal Server Error\r\n");
 	// read error file if provided in server conf
 	_is_binary = false;
-	Map::iterator error_page = serv.find("error_page");
+	Map::iterator error_page = serv.find(ft_itoa(code));
 	if (error_page != serv.end())
 	{
+
+		// dynamic error page
 		file_path = serv.find("route")->second + serv.find("location")->second + "/" + error_page->second;
+		//eate_error_page(code);
 		read_payload_from_file();
 	}
 }
+
+// void Response::create_error_page(int code) {
+// 	//verifier le path et qu'il existe
+// 	std::ifstream err_out;
+
+// 	std::string replace;
+
+
+
+// 	//avancer jusque body
+// 	// Changer l'erreur 
+// }
 
 const int &Response::get_status()
 {

@@ -54,6 +54,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 			argv[1] = (char *)f.c_str();
 			argv[2] = (char *)0;
 		}
+		prgm = "kk";
 		if (execve(prgm, (char *const *)argv, environ) == -1)
 		{
 			// int fd = open("child.log",);

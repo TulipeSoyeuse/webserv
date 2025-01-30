@@ -19,3 +19,6 @@ public:
 	size_t get_server_name(const size_t pos) const;
 	std::string get_next_line();
 };
+
+
+char* ft_itoa(int n);
