@@ -86,7 +86,8 @@ std::pair<std::string, std::string> Server::parse_config_line(config_string l)
 	std::string a;
 	bool start = false;
 	size_t i = 0;
-	for (std::string::iterator it = l.begin(); it != l.end(); ++it)
+	std::string::iterator it;
+	for (it = l.begin(); it != l.end(); ++it)
 	{
 		if (isspace(*it))
 		{
@@ -101,18 +102,34 @@ std::pair<std::string, std::string> Server::parse_config_line(config_string l)
 		}
 		i++;
 	}
+	if (a == "error_page")
+	{
+		a = l.get_next_word(i);
+		i++;
+		while (l[i])
+		{
+			if (!isspace(l[i]))
+				i++;
+			else
+				break;
+		}
+		//d::string b = l.get_next_word(i);
+		// if (b.empty())
+		// 	std::cout << "parse error" << std::endl; // TODO : how manage error for error file ?
+		// std::cout << b << std::endl;
+	}
 	while (true)
 		if (isspace(l[i]))
 			i++;
 		else
 			break;
+
 	std::string b = l.get_next_word(i);
 	std::pair<std::string, std::string> p(a, b);
 
-	if (_debug)
-		std::cout << "----------\n"
-				  << "param: " << a << "\nvalue: \""
-				  << b << "\"\n----------\n";
+	std::cout << "----------\n"
+			  << "param: " << a << "\nvalue: \""
+			  << b << "\"\n----------\n";
 
 	return (p);
 }
