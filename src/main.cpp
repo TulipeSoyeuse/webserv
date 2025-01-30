@@ -13,6 +13,11 @@ void sign_handler(int sig)
 	exit(EXIT_FAILURE);
 }
 
+extern bool does_file_exist(const std::string &name)
+{
+	return (access(name.c_str(), F_OK) != -1);
+}
+
 int socket_read(int fd, char *buffer, size_t size)
 {
 	// * data structure pollfd -> fd = file descriptor
@@ -157,7 +162,7 @@ int main()
 
 		// Read from the connection
 		// * buffer to read request
-		char buffer[2048];
+		char buffer[4096];
 		std::memset(buffer, 0, 2048);
 		// * read the data in the socket (cd comment in function)
 		socket_read(connection, buffer, 2048);
@@ -177,7 +182,7 @@ int main()
 		std::cout << "------------------------------------------" << std::endl;
 		// * Response class :
 		Response resp(r, webserv);
-		std::cout << "--------------------START----------------------\n\n";
+		std::cout << "--------------------START----------------------\n";
 		std::cout << resp << std::endl;
 		std::cout << "--------------------END------------------------\n\n"
 				  << std::endl;

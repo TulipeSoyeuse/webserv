@@ -43,7 +43,9 @@ private:
 
 	// header ---------------------
 	void build_header();
+	// deprecated
 	bool match_file();
+	bool check_file();
 	void MIME_attribute();
 
 	// server config ----------------

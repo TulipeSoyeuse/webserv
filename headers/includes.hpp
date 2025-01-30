@@ -42,3 +42,4 @@
 #include <sys/wait.h>
 
 extern char **environ;
+extern bool does_file_exist(const std::string &name);

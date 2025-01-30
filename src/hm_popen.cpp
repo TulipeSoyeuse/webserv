@@ -1,6 +1,6 @@
 #include "hm_popen.hpp"
 
-hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(_request), all_read(false), good(false)
+hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(_request), all_read(false), good(true)
 {
 	int stdout_pipe[2];
 	int stderr_pipe[2];

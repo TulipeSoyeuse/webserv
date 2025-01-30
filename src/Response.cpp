@@ -21,14 +21,10 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	{
 		http_error(505);
 		return;
-		// status_code = 505;
-		// (Status_line += SSTR(status_code << " ")) += "HTTP Version not supported\r\n";
-		// _response = Status_line + "\r\n";
 	}
-	// -----------------------------------------------------------------
 	else
 	{
-		// * get info about request ?
+		// * link the right server for the current request (link on "serv" var)
 		set_server_conf(s);
 		// * if request is GET
 		if (_request.get_type() == GET)
@@ -92,22 +88,15 @@ void Response::MIME_attribute()
 
 void Response::build_header()
 {
-
 	general_header["Server"] = "webserv/0.1\n";
 	// * if i find the file
-	if (!match_file())
-		return;
-	else
-	{
-		MIME_attribute();
-		set_payload();
-		entity_header["Content-Length"] = SSTR(content_length);
-	}
+	MIME_attribute();
+	set_payload();
+	entity_header["Content-Length"] = SSTR(content_length);
 }
 
 bool Response::match_file()
 {
-	// TODO: implement location
 	const std::string root_dir = serv.find("route")->second + serv.find("location")->second;
 	std::string uri = _request.get_request().find("URI")->second;
 	std::cout << "root dir : " << root_dir << std::endl;
@@ -154,6 +143,25 @@ bool Response::match_file()
 	return false;
 }
 
+bool Response::check_file()
+{
+	std::string uri(_request.get_request().find("URI")->second);
+	const std::string root_dir = serv.find("route")->second + serv.find("location")->second;
+
+	if (uri == "/")
+	{
+		DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
+		struct dirent *diread;
+		while ((diread = readdir(dir)) != NULL)
+			if (std::strncmp(diread->d_name, "index", 5) == 0)
+				file_path = root_dir + "/" + diread->d_name;
+	}
+	else
+		file_path = root_dir + uri;
+	std::cout << "file requested: \"" << file_path << "\"\n";
+	return (does_file_exist(file_path));
+}
+
 void Response::set_server_conf(Server &s)
 {
 	// * get host
@@ -169,6 +177,11 @@ void Response::set_server_conf(Server &s)
 
 bool Response::set_payload()
 {
+	if (!check_file())
+	{
+		http_error(404);
+		return (false);
+	}
 	// * call the cgi
 	if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
 		return CGI_from_file(PHP);
@@ -189,7 +202,10 @@ bool Response::CGI_from_file(CGI c)
 	payload = new char[client_size];
 	hm_popen hmpop(file_path, c, _request);
 	if (!hmpop.is_good())
-		std::cout << "C CASSE\n";
+	{
+		http_error(500);
+		return (false);
+	}
 	// TODO: after error response rework -> handle good flag from popen
 	content_length = hmpop.read_out(payload, client_size);
 	std::cout << "content length: " << content_length << "\n";
@@ -216,9 +232,8 @@ bool Response::read_payload_from_file()
 		f.seekg(0, std::ios_base::beg);
 
 		payload = new char[content_length + 1];
-
+		bzero(payload, content_length + 1);
 		f.read(payload, content_length);
-		payload[content_length] = 0;
 		f.close();
 		return (true);
 	}
@@ -231,8 +246,6 @@ bool Response::read_payload_from_file()
 
 void Response::cMap_str(Map &m, std::string &s)
 {
-	if (status_code != 200)
-		return;
 	for (Map::const_iterator it = m.begin(); it != m.end(); ++it)
 	{
 		s += it->first + ": ";
@@ -245,12 +258,25 @@ void Response::cMap_str(Map &m, std::string &s)
 
 void Response::http_error(int code)
 {
+	// set env
 	status_code = code;
+	entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
+	entity_header["Content-Length"] = SSTR(content_length);
+	// code
 	if (code == 505)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "HTTP Version not supported\r\n");
-	if (code == 404)
+	else if (code == 404)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Not Found\r\n");
-	// TODO: set up response
+	else if (code == 500)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Internal Server Error\r\n");
+	// read error file if provided in server conf
+	_is_binary = false;
+	Map::iterator error_page = serv.find("error_page");
+	if (error_page != serv.end())
+	{
+		file_path = serv.find("route")->second + serv.find("location")->second + "/" + error_page->second;
+		read_payload_from_file();
+	}
 }
 
 const int &Response::get_status()

@@ -11,11 +11,6 @@ bool is_string_empty(std::string s)
 	return (c);
 }
 
-inline bool does_file_exist(const std::string &name)
-{
-	return (access(name.c_str(), F_OK) != -1);
-}
-
 Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_res(),
 														 server_count(0), _valid_conf(false)
 {
