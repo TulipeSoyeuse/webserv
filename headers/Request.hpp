@@ -5,7 +5,8 @@
 enum type_e
 {
 	GET,
-	POST
+	POST,
+	PUT,
 };
 
 typedef std::map<std::string, std::string> Map;

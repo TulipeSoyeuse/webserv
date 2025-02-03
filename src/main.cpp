@@ -78,6 +78,9 @@ int network_accept_any(int fds[], unsigned int count,
 
 int main()
 {
+	// TODO: rework connection flow
+	// TODO: handle PUT
+	// TODO:
 
 	// * Signal handling: ^C to quit properly
 	struct sigaction act;

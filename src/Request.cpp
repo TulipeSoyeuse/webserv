@@ -30,6 +30,8 @@ void Request::parse()
 		_Type = GET;
 	else if (line.find("POST") == 0)
 		_Type = POST;
+	else if (line.find("PUT") == 0)
+		_Type = PUT;
 
 	_request["URI"] = line.substr(f1 + 1, f2 - f1 - 1);
 	size_t qs = _request["URI"].find('?');
@@ -52,8 +54,7 @@ void Request::parse_payload()
 	if (_request.find("Content-Length") != _request.end() &&
 		_request.find("Content-Length")->second != "0")
 	{
-		std::cout << "PIIIIIIIIIIIIINGGGGGGGG\n";
-		int f1 = _brut_request.find_last_of("\r\n") + 2;
+		int f1 = _brut_request.find_last_of("\r\n") + 1;
 		_request["Payload"] = _brut_request.substr(f1);
 	}
 }

@@ -15,7 +15,11 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	// --------------- HTTP version check ------------------------------
 	std::pair<std::string, std::string> proto = *_request.get_request().find("Protocol");
 	// * check the http version
-	Status_line = "HTTP/1.1 200 Sucess\r\n";
+	if (_request.get_type() != PUT)
+		Status_line = "HTTP/1.1 200 Sucess\r\n";
+	else
+		Status_line = "HTTP/1.1 201 Created\r\n";
+
 	if (proto.second != "HTTP/1.1")
 	{
 		http_error(505);
@@ -34,7 +38,8 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 		cMap_str(response_header, _response);
 		cMap_str(entity_header, _response);
 		_response += "\r\n";
-		_response.append(payload, content_length);
+		if (payload)
+			_response.append(payload, content_length);
 	}
 }
 // TODO: add in server multiple error page for error code
@@ -176,7 +181,20 @@ bool Response::set_payload()
 {
 	if (!check_file())
 	{
+		if (_request.get_type() == PUT)
+		{
+			content_length = 0;
+			write_file();
+			return (true);
+		}
+		else
+			http_error(403); // TODO: check write auth in route
 		http_error(404);
+		return (false);
+	}
+	else if (_request.get_type() == PUT)
+	{
+		http_error(403);
 		return (false);
 	}
 	// * call the cgi
@@ -245,6 +263,24 @@ bool Response::read_payload_from_file()
 	}
 }
 
+bool Response::write_file()
+{
+	std::ofstream f;
+	std::ios_base::openmode m = std::ios::trunc;
+	if (_is_binary) // TODO: check ?
+		m = m | std::ios::binary;
+	std::cout << "CREATING: " << file_path << "\n";
+	f.open(file_path.c_str(), m);
+	if (f.good())
+	{
+		f.write(_request.get_request().find("Payload")->second.c_str(),
+				std::atoi(_request.get_request().find("Content-Length")->second.c_str()));
+	}
+	else
+		return (false);
+	return (true);
+}
+
 void Response::cMap_str(Map &m, std::string &s)
 {
 	for (Map::const_iterator it = m.begin(); it != m.end(); ++it)
@@ -265,16 +301,17 @@ void Response::http_error(int code)
 	// code
 	if (code == 505)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "HTTP Version not supported\r\n");
+	else if (code == 403)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Forbidden\r\n");
 	else if (code == 404)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Not Found\r\n");
 	else if (code == 500)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Internal Server Error\r\n");
 	// read error file if provided in server conf
 	_is_binary = false;
-	Map::iterator error_page = serv.find(ft_itoa(code));
+	Map::iterator error_page = serv.find(SSTR(code));
 	if (error_page != serv.end())
 	{
-
 		// dynamic error page
 		file_path = serv.find("route")->second + serv.find("location")->second + "/" + error_page->second;
 		// eate_error_page(code);

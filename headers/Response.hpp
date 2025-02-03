@@ -54,6 +54,7 @@ private:
 	bool set_payload();
 	bool read_payload_from_file();
 	bool CGI_from_file(CGI);
+	bool write_file();
 
 	// concat  --------------------------
 	void cMap_str(Map &m, std::string &s);
