@@ -30,6 +30,10 @@ void Request::parse()
 		_Type = GET;
 	else if (line.find("POST") == 0)
 		_Type = POST;
+	else if (line.find("PUT") == 0) {
+		_Type = PUT;
+	std::cout << std::endl << std::endl << std::endl << "KAKA" << std::endl << std::endl;
+	}
 
 	_request["URI"] = line.substr(f1 + 1, f2 - f1 - 1);
 	size_t qs = _request["URI"].find('?');
