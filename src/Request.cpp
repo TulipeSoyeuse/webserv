@@ -49,7 +49,8 @@ void Request::parse()
 
 void Request::parse_payload()
 {
-	if (_request.find("Content-Length") != _request.end())
+	if (_request.find("Content-Length") != _request.end() &&
+		_request.find("Content-Length")->second != "0")
 	{
 		int f1 = _brut_request.find_last_of("\r\n") + 2;
 		_request["Payload"] = _brut_request.substr(f1);
@@ -79,11 +80,6 @@ const Map &Request::get_request() const
 	return (_request);
 }
 
-const Map &Request::get_params() const
-{
-	return (_params);
-}
-
 const type_e &Request::get_type() const
 {
 	return (_Type);
@@ -108,12 +104,6 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 	for (std::map<std::string, std::string>::const_iterator it = c.get_request().begin();
 		 it != c.get_request().end(); ++it)
 		out << "[" << it->first << "]: \"" << it->second << "\"\n";
-
-	out << "PARAMS\n";
-
-	for (std::map<std::string, std::string>::const_iterator it = c.get_params().begin();
-		 it != c.get_params().end(); ++it)
-		out << it->first << " = " << it->second << "\n";
 	return (out);
 }
 

@@ -20,8 +20,6 @@ private:
 	size_t server_count;
 	std::pair<std::string, std::string> parse_config_line(config_string);
 	port_array port_lst;
-	// --------------------------
-
 	// ------- ERROR CHECK ------
 	bool _valid_conf;
 	void configuration_checking();

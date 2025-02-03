@@ -16,7 +16,6 @@ private:
 	std::string _brut_request;
 
 	type_e _Type;
-	Map _params;
 	Map _request;
 
 	const unsigned int in_port;
@@ -30,7 +29,6 @@ public:
 
 	bool _status;
 	const Map &get_request() const;
-	const Map &get_params() const;
 	const type_e &get_type() const;
 	const unsigned int &get_in_port() const;
 };

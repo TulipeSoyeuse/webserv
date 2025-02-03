@@ -183,8 +183,8 @@ int main()
 		// * Response class :
 		Response resp(r, webserv);
 		std::cout << "--------------------START----------------------\n";
-		std::cout << resp << std::endl;
-		std::cout << "--------------------END------------------------\n\n"
+		std::cout << resp;
+		std::cout << "--------------------END------------------------"
 				  << std::endl;
 		send(connection, resp.get_response().data(), resp.get_response().size(), 0);
 		close(connection);
