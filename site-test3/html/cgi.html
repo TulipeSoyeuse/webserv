@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/styles.css">
+    <title>Page 2</title>
+</head>
+<body>
+    <body>
+        <header>
+            <h1>GCI</h1>
+            <p>CHoisissez votre script</p>
+        </header>
+    
+        <div class="container">
+            <div class="bubble" id="getBubble">
+                <a href="../cgi-bin/cgi-py.py">
+                    <button type="button">PYTHON</button>
+                </a>
+            </div>
+    
+            <div class="bubble" id="postBubble">
+                <form method="GET" action="../cgi-bin/test_cgi.sh">
+                    <button type="submit">BASH</button>
+                </form>
+            </div>
+    
+            <div class="bubble" id="ciBubble">
+                <a href="../cgi-bin/cgi-php.php">
+                    <button>PHP</button>
+                </a>
+            </div>
+        </div>
+    
+    </body>
+
+</body>
+</html>

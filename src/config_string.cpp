@@ -52,6 +52,7 @@ std::string config_string::get_config_subpart(const size_t pos) const
 			cursor_start++;
 
 		std::string res = substr(cursor_start, cursor_end - cursor_start);
+		std::cout << "this is res" << res << std::endl;
 		return (res);
 	}
 	else
@@ -107,4 +108,33 @@ config_string::config_string(const std::string &s) : c(0)
 
 config_string::~config_string()
 {
+}
+
+
+
+#include <iostream>
+
+char* ft_itoa(int n) {
+    int temp = n, len = (n <= 0) ? 1 : 0;
+    
+    while (temp) {
+        temp /= 10;
+        len++;
+    }
+
+    char* str = new char[len + 1];
+    str[len] = '\0';
+
+    if (n < 0) {
+        str[0] = '-';
+        n = -n;
+    }
+
+
+    while (len-- && str[len] != '-') {
+        str[len] = (n % 10) + '0';
+        n /= 10;
+    }
+
+    return str;
 }

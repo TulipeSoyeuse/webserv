@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur 404</title>
+    <style>
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
+        }
+        body {
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; background: #1a1a1a; color: white; font-family: Arial, sans-serif;
+        }
+        .container { text-align: center; }
+        h1 {
+            font-size: 100px; font-weight: bold; color: #ff1744;
+            text-shadow: 2px 2px 10px rgba(255,23,68,0.5);
+            animation: glitch 0.8s infinite alternate;
+        }
+        p { font-size: 20px; margin-bottom: 20px; }
+        a {
+            text-decoration: none; padding: 12px 24px; background: #ff1744; 
+            color: white; border-radius: 5px; font-size: 18px; transition: 0.3s;
+        }
+        a:hover { background: #e91e63; transform: scale(1.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>404</h1>
+        <p>J'ai pas trouve</p>
+        <a href="/">Retour à l'accueil</a>
+    </div>
+</body>
+</html>

@@ -62,6 +62,7 @@ private:
 
 	// error response handler --------------
 	void http_error(int);
+	//id create_error_page(int code);
 
 public:
 	Response(const Request &request, Server &s);
