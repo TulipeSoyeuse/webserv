@@ -52,6 +52,7 @@ void Request::parse_payload()
 	if (_request.find("Content-Length") != _request.end() &&
 		_request.find("Content-Length")->second != "0")
 	{
+		std::cout << "PIIIIIIIIIIIIINGGGGGGGG\n";
 		int f1 = _brut_request.find_last_of("\r\n") + 2;
 		_request["Payload"] = _brut_request.substr(f1);
 	}
@@ -104,6 +105,7 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 	for (std::map<std::string, std::string>::const_iterator it = c.get_request().begin();
 		 it != c.get_request().end(); ++it)
 		out << "[" << it->first << "]: \"" << it->second << "\"\n";
+
 	return (out);
 }
 

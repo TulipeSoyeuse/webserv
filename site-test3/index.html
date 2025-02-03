@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test WebServ - Projet 42</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
     <header>
         <h1>WebServ - Test Interface</h1>
@@ -23,7 +25,7 @@
         <div class="bubble" id="postBubble">
             <h2>Test POST</h2>
             <form method="POST" action="html/post.html">
-                <input type="text" id="postData" placeholder="Entrez un message" required>
+                <input type="text" id="postData" placeholder="Entrez un message" name="param" required>
                 <button type="submit">Envoyer POST</button>
             </form>
         </div>
@@ -44,4 +46,5 @@
     </div>
 
 </body>
+
 </html>

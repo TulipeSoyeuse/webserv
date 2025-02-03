@@ -198,13 +198,17 @@ bool Response::CGI_from_file(CGI c)
 
 	payload = new char[client_size];
 	hm_popen hmpop(file_path, c, _request);
+	content_length = hmpop.read_out(payload, client_size);
 	if (!hmpop.is_good())
 	{
+		std::cerr << "----child error----\n"
+				  << payload << "\n--------------\n";
+		delete payload;
+		content_length = 0;
 		http_error(500);
 		return (false);
 	}
 	// TODO: after error response rework -> handle good flag from popen
-	content_length = hmpop.read_out(payload, client_size);
 	std::cout << "content length: " << content_length << "\n";
 	std::cout << "---------PAYLOAD--------\n"
 			  << payload;
@@ -258,7 +262,6 @@ void Response::http_error(int code)
 	// set env
 	status_code = code;
 	entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
-	entity_header["Content-Length"] = SSTR(content_length);
 	// code
 	if (code == 505)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "HTTP Version not supported\r\n");
@@ -276,6 +279,7 @@ void Response::http_error(int code)
 		file_path = serv.find("route")->second + serv.find("location")->second + "/" + error_page->second;
 		// eate_error_page(code);
 		read_payload_from_file();
+		entity_header["Content-Length"] = SSTR(content_length);
 	}
 }
 

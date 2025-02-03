@@ -1,5 +1,5 @@
 import os
 import sys
 
-for i in sys.argv :
-    print(i)
+for k, v in os.environ.items():
+    print("[{}]:{}".format(k, v))
