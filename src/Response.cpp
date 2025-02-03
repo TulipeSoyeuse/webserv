@@ -56,7 +56,7 @@ void Response::MIME_attribute()
 	if (file_format == "php")
 		entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
 
-	else if(file_format == "sh")
+	else if (file_format == "sh")
 		entity_header["Content-Type"] = "text/plain ; charset=UTF-8\n";
 	else if (file_format == "svg")
 	{
@@ -274,7 +274,7 @@ void Response::http_error(int code)
 
 		// dynamic error page
 		file_path = serv.find("route")->second + serv.find("location")->second + "/" + error_page->second;
-		//eate_error_page(code);
+		// eate_error_page(code);
 		read_payload_from_file();
 	}
 }
@@ -285,10 +285,8 @@ void Response::http_error(int code)
 
 // 	std::string replace;
 
-
-
 // 	//avancer jusque body
-// 	// Changer l'erreur 
+// 	// Changer l'erreur
 // }
 
 const int &Response::get_status()

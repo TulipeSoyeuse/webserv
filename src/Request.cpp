@@ -35,8 +35,8 @@ void Request::parse()
 	size_t qs = _request["URI"].find('?');
 	if (qs != std::string::npos)
 	{
-		_request["request_string"] = _request["URI"].substr(_request["URI"].find('?'));
-		_request["URI"] = _request["URI"].substr(0, _request["URI"].find('?'));
+		_request["request_string"] = _request["URI"].substr(qs + 1);
+		_request["URI"] = _request["URI"].substr(0, qs - 1);
 	}
 	_request["Protocol"] = line.substr(f2 + 1);
 	while (safeGetline(s, line) && line.length() > 0)

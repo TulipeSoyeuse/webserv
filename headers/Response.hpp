@@ -43,8 +43,7 @@ private:
 
 	// header ---------------------
 	void build_header();
-	// deprecated
-	bool match_file();
+	bool match_file(); // deprecated
 	bool check_file();
 	void MIME_attribute();
 
@@ -62,7 +61,7 @@ private:
 
 	// error response handler --------------
 	void http_error(int);
-	//id create_error_page(int code);
+	// id create_error_page(int code);
 
 public:
 	Response(const Request &request, Server &s);
