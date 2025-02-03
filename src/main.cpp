@@ -9,8 +9,9 @@ int incomming_fd = 0;
 
 void sign_handler(int sig)
 {
-	std::cerr << "\nSIGINT " << sig << " recevied closing server....\n";
-	exit(EXIT_FAILURE);
+	(void)sig;
+	std::cerr << "\nSIGINT " << " recevied closing server....\n";
+	exit(EXIT_SUCCESS);
 }
 
 extern bool does_file_exist(const std::string &name)
