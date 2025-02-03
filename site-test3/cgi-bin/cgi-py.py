@@ -1,6 +1,4 @@
 import os
 
-print("kaka")
-
-result = os.environ.get('QUERY_STRING')
-print(result)
+for k, v in os.environ.items():
+    print("[{}]:{}".format(k, v))

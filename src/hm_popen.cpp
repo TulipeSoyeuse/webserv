@@ -14,6 +14,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 	if (pid == -1)
 	{
 		perror("fork");
+		good = false;
 		return;
 	}
 	if (pid == 0)
@@ -56,7 +57,6 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 		}
 		if (execve(prgm, (char *const *)argv, environ) == -1)
 		{
-			// int fd = open("child.log",);
 			perror("execve");
 			exit(1);
 		}
