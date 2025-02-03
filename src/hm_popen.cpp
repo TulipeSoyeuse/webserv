@@ -90,22 +90,25 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 
 void hm_popen::build_env(std::string &f)
 {
+	std::ofstream test("prout");
 	Map R = _Request.get_request();
 	Map::iterator it = R.find("Cookie");
 	if (it != R.end())
-		setenv("HTTP_COOKIE=", it->second.c_str(), 1);
+		setenv("HTTP_COOKIE", it->second.c_str(), 1);
 	it = R.find("User-Agent");
 	if (it != R.end())
-		setenv("HTTP_USER_AGENT=", it->second.c_str(), 1);
+		setenv("HTTP_USER_AGENT", it->second.c_str(), 1);
 	if (!f.empty())
 		setenv("SCRIPT_FILENAME", f.c_str(), 1);
 
 	if (_Request.get_type() == GET)
 	{
 		setenv("REQUEST_METHOD", "GET", 1);
-		it = R.find("QUERY_STRING");
-		if (it != R.end())
-			setenv("QUERY_STRING=", it->second.c_str(), 1);
+		it = R.find("request_string");
+		if (it != R.end()) {
+			test << "query = " << it->second.c_str() << std::endl;
+			setenv("QUERY_STRING", it->second.c_str(), 1);
+		}
 	}
 
 	if (_Request.get_type() == POST)
@@ -113,10 +116,10 @@ void hm_popen::build_env(std::string &f)
 		setenv("REQUEST_METHOD", "GET", 1);
 		it = R.find("Content-Type");
 		if (it != R.end())
-			setenv("CONTENT_TYPE=", it->second.c_str(), 1);
+			setenv("CONTENT_TYPE", it->second.c_str(), 1);
 		it = R.find("Content-Lenght");
 		if (it != R.end())
-			setenv("CONTENT_LENGHT=", it->second.c_str(), 1);
+			setenv("CONTENT_LENGHT", it->second.c_str(), 1);
 	}
 }
 

@@ -1,5 +1,6 @@
 import os
-import sys
 
-for i in sys.argv :
-    print(i)
+print("kaka")
+
+result = os.environ.get('QUERY_STRING')
+print(result)
