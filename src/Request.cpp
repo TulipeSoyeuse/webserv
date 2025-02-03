@@ -36,7 +36,7 @@ void Request::parse()
 	if (qs != std::string::npos)
 	{
 		_request["request_string"] = _request["URI"].substr(qs + 1);
-		_request["URI"] = _request["URI"].substr(0, qs - 1);
+		_request["URI"] = _request["URI"].substr(0, qs);
 	}
 	_request["Protocol"] = line.substr(f2 + 1);
 	while (safeGetline(s, line) && line.length() > 0)
