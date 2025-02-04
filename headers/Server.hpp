@@ -29,7 +29,7 @@ public:
 	Server(const char *config, bool debug);
 
 	const std::string &get_param(const std::string &, const std::string &);
-	const std::map<std::string, std::string> &_config(std::string &, int) const;
+	const std::map<std::string, std::string> &get_config(std::string &, int) const;
 	const size_t &get_server_count() const;
 	const port_array &get_ports() const;
 	const bool &is_conf_valid() const;
