@@ -14,26 +14,9 @@ void sign_handler(int sig)
 	exit(EXIT_SUCCESS);
 }
 
-extern bool does_file_exist(const std::string &name)
+extern inline bool does_file_exist(const std::string &name)
 {
 	return (access(name.c_str(), F_OK) != -1);
-}
-
-int socket_read(int fd, char *buffer, size_t size)
-{
-	// * data structure pollfd -> fd = file descriptor
-	// * short events -> request events
-	// * short revents -> returned events
-	pollfd pfd;
-
-	// * poll() -> similar to select(), take the data struct pollfd, the numbers of items in the fd array (nfds), and the number of millisec that poll should block waiting for a fd to become ready
-	// * POLL_IN -> there is data to read
-	// * POLL_PRI -> There is some exceptional condition on the file descriptor
-	pfd.events = POLL_IN | POLL_PRI;
-	pfd.fd = fd;
-	if (poll(&pfd, 1, 30) == 1)
-		return (read(fd, buffer, size));
-	return (-1);
 }
 
 int network_accept_any(int fds[], unsigned int count,
