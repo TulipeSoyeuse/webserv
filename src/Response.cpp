@@ -2,7 +2,7 @@
 
 Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "),
 												  status_code(200), _is_binary(false),
-												  payload(NULL)
+												  payload(NULL), autoindex(false), foundIndex(false)
 {
 	if (!_request._status)
 	{
@@ -29,6 +29,9 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	{
 		// * link the right server for the current request (link on "serv" var)
 		set_server_conf(s);
+		std::map<std::string, std::string>::iterator it = serv.find("autoindex");
+		if (it != serv.end() && it->second == "on")
+			autoindex = true;
 		// * build header
 		build_header();
 		if (set_payload())
@@ -148,7 +151,7 @@ bool Response::match_file()
 bool Response::check_file()
 {
 	std::string uri(_request.get_request().find("URI")->second);
-	const std::string root_dir = serv.find("route")->second + serv.find("location")->second;
+	root_dir = serv.find("route")->second + serv.find("location")->second;
 
 	if (uri == "/")
 	{
@@ -156,10 +159,19 @@ bool Response::check_file()
 		struct dirent *diread;
 		while ((diread = readdir(dir)) != NULL)
 			if (std::strncmp(diread->d_name, "index", 5) == 0)
+			{
 				file_path = root_dir + "/" + diread->d_name;
+				foundIndex = true;
+			}
 	}
 	else
+	{
 		file_path = root_dir + uri;
+		foundIndex = true;
+	}
+	std::cout << "index is " << foundIndex << "auto is " << autoindex << std::endl;
+	if (autoindex && !foundIndex)
+		return true;
 	std::cout << "file requested: \"" << file_path << "\"\n";
 	return (does_file_exist(file_path));
 }
@@ -189,6 +201,7 @@ bool Response::set_payload()
 		}
 		else
 			http_error(403); // TODO: check write auth in route
+		std::cout << "404 here" << std::endl;
 		http_error(404);
 		return (false);
 	}
@@ -197,6 +210,8 @@ bool Response::set_payload()
 		http_error(403);
 		return (false);
 	}
+	if (autoindex && !foundIndex)
+		return (generate_autoindex());
 	// * call the cgi
 	if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
 		return CGI_from_file(PHP);
@@ -207,6 +222,55 @@ bool Response::set_payload()
 	// * return de body
 	else
 		return read_payload_from_file();
+}
+
+
+std::string dir_listing(std::string root_dir) {
+
+	std::string html ;
+	DIR *dir = opendir(root_dir.c_str());
+	struct dirent *entry;
+
+	if (!dir) {
+        html += "<p>Error opening directory</p>\n</body>\n</html>";
+        return html; 
+    }
+
+	html += "<ul>\n";
+	while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
+            html += "<li><a href=\"" + root_dir + "/" + entry->d_name + "\">" + entry->d_name + "</a></li>\n";
+        }
+    }
+	html += "</ul>\n";
+	closedir(dir);
+    return html; 
+}
+
+bool Response::generate_autoindex()
+{
+	
+	std::string dir = dir_listing(root_dir);
+	std::string html_content =
+		"<!DOCTYPE html>"
+		"<html lang=\"en\">"
+		"<head>"
+		"<meta charset=\"UTF-8\">"
+		"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+		"<title>Simple Page</title>"
+		"</head>"
+		"<body>"
+		"<h1>Autoindex</h1>";
+		html_content += dir;
+		html_content += "</body>"
+		"</html>";
+
+	content_length = html_content.length();
+	payload = new char[html_content.length() + 1];
+	std::strcpy(payload, html_content.c_str());
+	std::cout << "Payload:\n"
+			  << payload << std::endl;
+	return true;
 }
 
 bool Response::CGI_from_file(CGI c)

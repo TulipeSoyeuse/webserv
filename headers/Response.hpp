@@ -55,6 +55,7 @@ private:
 	bool read_payload_from_file();
 	bool CGI_from_file(CGI);
 	bool write_file();
+	bool generate_autoindex();
 
 	// concat  --------------------------
 	void cMap_str(Map &m, std::string &s);
@@ -63,6 +64,10 @@ private:
 	// error response handler --------------
 	void http_error(int);
 	// id create_error_page(int code);
+
+	bool autoindex;
+	bool foundIndex;
+	std::string root_dir;
 
 public:
 	Response(const Request &request, Server &s);
