@@ -5,7 +5,7 @@ typedef enum e_read_buffer
 {
 	BUFFER_EMPTY,
 	COMPLETE_REQUEST_READ,
-	IMCOMPLETE_REQUEST_READ,
+	IMCOMPLETE_REQUEST,
 };
 
 #define npos std::string::npos
@@ -19,11 +19,11 @@ private:
 	std::string buffer;
 	std::string &res;
 	socketfd fd;
-	char *read_array[4096];
+	char read_array[4096];
 
 	int socket_read();
 	e_read_buffer read_request_from_buffer();
-	e_read_buffer read_request_from_socket();
+	int populate_buffer();
 
 public:
 	get_next_request(socketfd, std::string &);

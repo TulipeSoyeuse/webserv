@@ -19,6 +19,18 @@ int get_next_request::socket_read()
 	return (-1);
 }
 
+int get_next_request::populate_buffer()
+{
+	int t;
+	if (t = socket_read() == -1)
+		return (-1);
+	else
+	{
+		buffer.append(read_array, t);
+		return (t);
+	}
+}
+
 // @brief add part or complete request to res
 e_read_buffer get_next_request::read_request_from_buffer()
 {
@@ -39,10 +51,8 @@ e_read_buffer get_next_request::read_request_from_buffer()
 	}
 	else
 	{
-		res.assign(buffer);
-		buffer.clear();
-		std::cout << "IMCOMPLETE_REQUEST_READ\n";
-		return (IMCOMPLETE_REQUEST_READ);
+		std::cout << "IMCOMPLETE_REQUEST\n";
+		return (IMCOMPLETE_REQUEST);
 	}
 }
 
@@ -55,10 +65,15 @@ bool get_next_request::next()
 	e_read_buffer e = read_request_from_buffer();
 	if (e == COMPLETE_REQUEST_READ)
 		return (true);
-	else if (e == IMCOMPLETE_REQUEST_READ)
+	else if (e == IMCOMPLETE_REQUEST)
 	{
-		if (socket_read() == -1)
+		if (populate_buffer() == -1)
+		{
+			_status = false;
 			return (false);
+		}
+		else
+			next();
 	}
 }
 
