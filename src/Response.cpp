@@ -226,25 +226,24 @@ bool Response::set_payload()
 
 
 std::string dir_listing(std::string root_dir) {
+    std::string html;
+    DIR *dir = opendir(root_dir.c_str());
+    struct dirent *entry;
 
-	std::string html ;
-	DIR *dir = opendir(root_dir.c_str());
-	struct dirent *entry;
-
-	if (!dir) {
+    if (!dir) {
         html += "<p>Error opening directory</p>\n</body>\n</html>";
-        return html; 
+        return html;
     }
 
-	html += "<ul>\n";
-	while ((entry = readdir(dir)) != NULL) {
+    html += "<ul>\n";
+	    while ((entry = readdir(dir)) != NULL) {
         if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-            html += "<li><a href=\"" + root_dir + "/" + entry->d_name + "\">" + entry->d_name + "</a></li>\n";
+            html += "<li><a href=\"" + std::string(entry->d_name) + "\">" + entry->d_name + "</a></li>\n";
         }
     }
-	html += "</ul>\n";
-	closedir(dir);
-    return html; 
+    html += "</ul>\n";
+    closedir(dir);
+    return html;
 }
 
 bool Response::generate_autoindex()
@@ -267,6 +266,7 @@ bool Response::generate_autoindex()
 
 	content_length = html_content.length();
 	payload = new char[html_content.length() + 1];
+
 	std::strcpy(payload, html_content.c_str());
 	std::cout << "Payload:\n"
 			  << payload << std::endl;
