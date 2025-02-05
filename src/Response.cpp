@@ -64,6 +64,9 @@ void Response::MIME_attribute()
 	if (file_format == "php")
 		entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
 
+	else if (file_format == "py")
+		entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
+
 	else if (file_format == "sh")
 		entity_header["Content-Type"] = "text/plain ; charset=UTF-8\n";
 	else if (file_format == "svg")
@@ -416,6 +419,8 @@ void Response::http_error(int code)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Not Found\r\n");
 	else if (code == 500)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Internal Server Error\r\n");
+	else if (code == 400)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Bad Request\r\n");
 	// read error file if provided in server conf
 	_is_binary = false;
 	Map::iterator error_page = serv.find(SSTR(code));

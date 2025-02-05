@@ -19,8 +19,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 	}
 	if (pid == 0)
 	{
-		build_env(f); // TODO: porque ça marche pas
-
+		build_env(f); 
 		// Child process
 		close(stdout_pipe[0]); // Close reading end of stdout pipe in child
 		close(stderr_pipe[0]); // Close reading end of stderr pipe in child

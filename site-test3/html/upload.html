@@ -4,15 +4,60 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/styles.css">
-    <title>Page 2</title>
+    <title>Upload your file</title>
 </head>
 <body>
 
     <h1>Upload your file</h1>
-    <form>
-        <input type="file" method="put" id="postFile" placeholder="Upload your file" name="file1" required>
+    <form id="uploadForm">
+        <!-- Champ pour sélectionner le fichier -->
+        <input type="file" id="postFile" placeholder="Upload your file" name="file1" required>
+        <br>
+        <!-- Champ pour spécifier le chemin de destination -->
+        <input type="text" id="destinationPath" placeholder="Enter the destination path (e.g., folder1/file.txt)" required>
+        <br>
         <button type="submit">Envoyer</button>
     </form>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault(); 
+
+            const fileInput = document.getElementById('postFile');
+            const destinationInput = document.getElementById('destinationPath');
+            const file = fileInput.files[0];
+            const destinationPath = destinationInput.value; 
+
+            if (!file || !destinationPath) {
+                alert('Veuillez sélectionner un fichier et spécifier un chemin de destination.');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const fileContent = e.target.result; 
+
+               
+                fetch(`http://localhost:9997/upload/${destinationPath}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/octet-stream' 
+                    },
+                    body: fileContent 
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('Fichier téléchargé avec succès!');
+                    console.log('Réponse serveur:', data);
+                })
+                .catch((error) => {
+                    alert('Erreur lors du téléchargement du fichier.');
+                    console.error('Erreur:', error);
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    </script>
 
 </body>
 </html>

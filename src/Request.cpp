@@ -26,6 +26,7 @@ void Request::parse()
 	}
 
 	// * get http method
+	// TODO : gerer method not allowed;
 	if (line.find("GET") == 0)
 		_Type = GET;
 	else if (line.find("POST") == 0)
