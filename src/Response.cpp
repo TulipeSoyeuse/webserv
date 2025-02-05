@@ -206,13 +206,17 @@ bool Response::set_payload()
 			}
 		}
 		else
+		{
+			std::cout << "koukou\n";
 			http_error(403);
+		}
 		http_error(404);
 		return (false);
 	}
 
 	else if (_request.get_type() == PUT)
 	{
+		std::cout << "kaka\n";
 		http_error(403);
 		return (false);
 	}
@@ -357,20 +361,29 @@ bool can_write(std::string file_path)
 
 bool Response::write_file()
 {
+	std::string dir;
+	size_t pos = file_path.rfind('/');
+	if (pos != std::string::npos)
+	{
+		dir = file_path.substr(0, pos);
+		std::cout << "kaka" << dir << std::endl;
+	}
+	else
+		std::cout << dir << std::endl;
 
-	struct stat file;
-
-	if (stat(file_path.c_str(), &file))
+	if (access(dir.c_str(), R_OK | X_OK))
 	{
 		if (errno == ENOENT)
 		{
 			std::cerr << "Error: not found\n";
 			http_error(404);
+			return false;
 		}
-		else if (errno == EACCES) 
+		else if (errno == EACCES)
 		{
-			std::cerr << "Error: no permission to access file\n";
+			std::cerr << "Error: no permission to access\n";
 			http_error(403);
+			return false;
 		}
 	}
 
@@ -385,6 +398,7 @@ bool Response::write_file()
 	if (f.good())
 	{
 		// ! Segfault ad il y a pas de content lenght
+		std::cout << _request.get_request().find("Content-Length")->second.c_str() << std::endl;
 		f.write(_request.get_request().find("Payload")->second.c_str(),
 				std::atoi(_request.get_request().find("Content-Length")->second.c_str()));
 	}
