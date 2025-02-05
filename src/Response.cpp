@@ -196,15 +196,21 @@ bool Response::set_payload()
 		if (_request.get_type() == PUT)
 		{
 			content_length = 0;
-			write_file();
-			return (true);
+			if (write_file())
+				return (true);
+			else
+			{
+				// * si route inexistant 404
+				// * si droit insuffisant 403
+				return (false);
+			}
 		}
 		else
-			http_error(403); // TODO: check write auth in route
-		std::cout << "404 here" << std::endl;
+			http_error(403);
 		http_error(404);
 		return (false);
 	}
+
 	else if (_request.get_type() == PUT)
 	{
 		http_error(403);
@@ -224,31 +230,34 @@ bool Response::set_payload()
 		return read_payload_from_file();
 }
 
+std::string dir_listing(std::string root_dir)
+{
+	std::string html;
+	DIR *dir = opendir(root_dir.c_str());
+	struct dirent *entry;
 
-std::string dir_listing(std::string root_dir) {
-    std::string html;
-    DIR *dir = opendir(root_dir.c_str());
-    struct dirent *entry;
+	if (!dir)
+	{
+		html += "<p>Error opening directory</p>\n</body>\n</html>";
+		return html;
+	}
 
-    if (!dir) {
-        html += "<p>Error opening directory</p>\n</body>\n</html>";
-        return html;
-    }
-
-    html += "<ul>\n";
-	    while ((entry = readdir(dir)) != NULL) {
-        if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0) {
-            html += "<li><a href=\"" + std::string(entry->d_name) + "\">" + entry->d_name + "</a></li>\n";
-        }
-    }
-    html += "</ul>\n";
-    closedir(dir);
-    return html;
+	html += "<ul>\n";
+	while ((entry = readdir(dir)) != NULL)
+	{
+		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
+		{
+			html += "<li><a href=\"" + std::string(entry->d_name) + "\">" + entry->d_name + "</a></li>\n";
+		}
+	}
+	html += "</ul>\n";
+	closedir(dir);
+	return html;
 }
 
 bool Response::generate_autoindex()
 {
-	
+
 	std::string dir = dir_listing(root_dir);
 	std::string html_content =
 		"<!DOCTYPE html>"
@@ -260,9 +269,9 @@ bool Response::generate_autoindex()
 		"</head>"
 		"<body>"
 		"<h1>Autoindex</h1>";
-		html_content += dir;
-		html_content += "</body>"
-		"</html>";
+	html_content += dir;
+	html_content += "</body>"
+					"</html>";
 
 	content_length = html_content.length();
 	payload = new char[html_content.length() + 1];
@@ -327,16 +336,55 @@ bool Response::read_payload_from_file()
 	}
 }
 
+bool can_write(std::string file_path)
+{
+	struct stat file;
+
+	if (!stat(file_path.c_str(), &file))
+	{
+		std::cerr << "Error: cannot access file\n";
+		return false;
+	}
+
+	if (!(file.st_mode & S_IWUSR))
+	{
+		std::cerr << "Error: No write permission\n";
+		return false;
+	}
+
+	return true;
+}
+
 bool Response::write_file()
 {
+
+	struct stat file;
+
+	if (stat(file_path.c_str(), &file))
+	{
+		if (errno == ENOENT)
+		{
+			std::cerr << "Error: not found\n";
+			http_error(404);
+		}
+		else if (errno == EACCES) 
+		{
+			std::cerr << "Error: no permission to access file\n";
+			http_error(403);
+		}
+	}
+
 	std::ofstream f;
 	std::ios_base::openmode m = std::ios::trunc;
 	if (_is_binary) // TODO: check ?
 		m = m | std::ios::binary;
+
+	std::cout << "this is file_path= " << std::endl;
 	std::cout << "CREATING: " << file_path << "\n";
 	f.open(file_path.c_str(), m);
 	if (f.good())
 	{
+		// ! Segfault ad il y a pas de content lenght
 		f.write(_request.get_request().find("Payload")->second.c_str(),
 				std::atoi(_request.get_request().find("Content-Length")->second.c_str()));
 	}
