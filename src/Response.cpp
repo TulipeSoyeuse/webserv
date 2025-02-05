@@ -196,18 +196,14 @@ bool Response::set_payload()
 		if (_request.get_type() == PUT)
 		{
 			content_length = 0;
-			if (write_file())
+			if (write_file()) {
 				return (true);
-			else
-			{
-				// * si route inexistant 404
-				// * si droit insuffisant 403
-				return (false);
 			}
+			else
+				return (false);
 		}
 		else
 		{
-			std::cout << "koukou\n";
 			http_error(403);
 		}
 		http_error(404);
@@ -216,7 +212,6 @@ bool Response::set_payload()
 
 	else if (_request.get_type() == PUT)
 	{
-		std::cout << "kaka\n";
 		http_error(403);
 		return (false);
 	}
@@ -340,33 +335,14 @@ bool Response::read_payload_from_file()
 	}
 }
 
-bool can_write(std::string file_path)
+bool Response::error_path()
 {
-	struct stat file;
 
-	if (!stat(file_path.c_str(), &file))
-	{
-		std::cerr << "Error: cannot access file\n";
-		return false;
-	}
-
-	if (!(file.st_mode & S_IWUSR))
-	{
-		std::cerr << "Error: No write permission\n";
-		return false;
-	}
-
-	return true;
-}
-
-bool Response::write_file()
-{
 	std::string dir;
 	size_t pos = file_path.rfind('/');
 	if (pos != std::string::npos)
 	{
 		dir = file_path.substr(0, pos);
-		std::cout << "kaka" << dir << std::endl;
 	}
 	else
 		std::cout << dir << std::endl;
@@ -386,21 +362,28 @@ bool Response::write_file()
 			return false;
 		}
 	}
+	return true;
+}
+
+bool Response::write_file()
+{
+
+	if (!error_path())
+		return false;
 
 	std::ofstream f;
 	std::ios_base::openmode m = std::ios::trunc;
 	if (_is_binary) // TODO: check ?
 		m = m | std::ios::binary;
 
-	std::cout << "this is file_path= " << std::endl;
 	std::cout << "CREATING: " << file_path << "\n";
 	f.open(file_path.c_str(), m);
 	if (f.good())
 	{
-		// ! Segfault ad il y a pas de content lenght
+		// TODO : segfault with bad request
 		std::cout << _request.get_request().find("Content-Length")->second.c_str() << std::endl;
-		f.write(_request.get_request().find("Payload")->second.c_str(),
-				std::atoi(_request.get_request().find("Content-Length")->second.c_str()));
+			f.write(_request.get_request().find("Payload")->second.c_str(),
+					std::atoi(_request.get_request().find("Content-Length")->second.c_str()));
 	}
 	else
 		return (false);

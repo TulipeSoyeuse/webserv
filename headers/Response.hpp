@@ -56,6 +56,7 @@ private:
 	bool CGI_from_file(CGI);
 	bool write_file();
 	bool generate_autoindex();
+	bool error_path();
 
 	// concat  --------------------------
 	void cMap_str(Map &m, std::string &s);
