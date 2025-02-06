@@ -4,7 +4,8 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 {
 	int stdout_pipe[2];
 	int stderr_pipe[2];
-	if (pipe(stdout_pipe) == -1 || pipe(stderr_pipe) == -1)
+	int stdin_pipe[2];
+	if (pipe(stdout_pipe) == -1 || pipe(stderr_pipe) == -1 || pipe(stdin_pipe) == -1)
 	{
 		perror("pipe");
 		return;
@@ -21,14 +22,17 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 	{
 		build_env(f); 
 		// Child process
+		close(stdin_pipe[1]); // <- on ne veut pas ecrire dans stdin
 		close(stdout_pipe[0]); // Close reading end of stdout pipe in child
 		close(stderr_pipe[0]); // Close reading end of stderr pipe in child
 
 		// Redirect stdout & stderr to stdout_pipe & stderr_pipe
+		dup2(stdin_pipe[0], STDIN_FILENO); 
 		dup2(stdout_pipe[1], STDOUT_FILENO);
 		dup2(stderr_pipe[1], STDERR_FILENO);
 
 		// Close write ends after redirection
+		close(stdin_pipe[0]);
 		close(stdout_pipe[1]);
 		close(stderr_pipe[1]);
 
@@ -67,6 +71,14 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 		int status;
 		close(stdout_pipe[1]); // Close writing end of stdout pipe in parent
 		close(stderr_pipe[1]); // Close writing end of stderr pipe in parent
+		close(stdin_pipe[0]);
+
+		// si la methode c post et que y'a un payload
+		if(_request.get_type() == POST && _request.get_request().find("Payload") != _request.get_request().end()) {
+			std::string payload = _request.get_request().find("Payload")->second;
+			write(stdin_pipe[1], payload.c_str(), payload.size());
+		}
+		close(stdin_pipe[1]);
 		while (waitpid(pid, &status, WNOHANG) == 0)
 		{
 			time(&end);

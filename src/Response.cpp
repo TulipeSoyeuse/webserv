@@ -289,6 +289,7 @@ bool Response::CGI_from_file(CGI c)
 	std::cout << "---------CGI from file--------\n";
 	std::cout << "reading cgi: " << c << "\n";
 
+
 	payload = new char[client_size];
 	hm_popen hmpop(file_path, c, _request);
 	content_length = hmpop.read_out(payload, client_size);
