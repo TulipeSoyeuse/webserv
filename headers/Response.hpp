@@ -57,6 +57,7 @@ private:
 	bool write_file();
 	bool generate_autoindex();
 	bool error_path();
+	bool delete_file();
 
 	// concat  --------------------------
 	void cMap_str(Map &m, std::string &s);

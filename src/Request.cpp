@@ -33,6 +33,10 @@ void Request::parse()
 		_Type = POST;
 	else if (line.find("PUT") == 0)
 		_Type = PUT;
+	else if(line.find("DELETE") == 0)
+		_Type = DELETE;
+	else
+		_Type = UNKNOWN;
 
 	_request["URI"] = line.substr(f1 + 1, f2 - f1 - 1);
 	size_t qs = _request["URI"].find('?');

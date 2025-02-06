@@ -8,36 +8,39 @@
 </head>
 <body>
 
-    <h1>Upload your file</h1>
     <form id="uploadForm">
-        <!-- Champ pour sélectionner le fichier -->
+        <h2>Upload your file</h2>
         <input type="file" id="postFile" placeholder="Upload your file" name="file1" required>
         <br>
-        <!-- Champ pour spécifier le chemin de destination -->
         <input type="text" id="destinationPath" placeholder="Enter the destination path (e.g., folder1/file.txt)" required>
         <br>
-        <button type="submit">Envoyer</button>
+        <button type="submit">Send</button>
     </form>
+    <br>
+    <br>
+    <h2>Delete your file</h2>
+    <input type="text" id="deletePath" placeholder="Enter path" required>
+    <button id="deleteButton">Delete</button>
 
     <script>
         document.getElementById('uploadForm').addEventListener('submit', function(event) {
             event.preventDefault(); 
-
+    
             const fileInput = document.getElementById('postFile');
             const destinationInput = document.getElementById('destinationPath');
             const file = fileInput.files[0];
             const destinationPath = destinationInput.value; 
-
+    
             if (!file || !destinationPath) {
                 alert('Veuillez sélectionner un fichier et spécifier un chemin de destination.');
                 return;
             }
-
+    
             const reader = new FileReader();
             reader.onload = function(e) {
                 const fileContent = e.target.result; 
-
-               
+    
+                // Envoi du fichier via une requête PUT pour l'upload
                 fetch(`http://localhost:9997/upload/${destinationPath}`, {
                     method: 'PUT',
                     headers: {
@@ -45,19 +48,25 @@
                     },
                     body: fileContent 
                 })
-                .then(response => response.json())
-                .then(data => {
-                    alert('Fichier téléchargé avec succès!');
-                    console.log('Réponse serveur:', data);
-                })
-                .catch((error) => {
-                    alert('Erreur lors du téléchargement du fichier.');
-                    console.error('Erreur:', error);
-                });
             };
             reader.readAsArrayBuffer(file);
         });
+    
+        // Script pour supprimer un fichier
+        document.getElementById('deleteButton').addEventListener('click', function() {
+            const deletePath = document.getElementById('deletePath').value;
+    
+            if (!deletePath) {
+                alert('Veuillez entrer le chemin du fichier à supprimer.');
+                return;
+            }
+    
+            fetch(`http://localhost:9997/${deletePath}`, {
+                method: 'DELETE'
+            })
+        });
     </script>
+    
 
 </body>
 </html>

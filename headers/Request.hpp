@@ -7,6 +7,8 @@ enum type_e
 	GET,
 	POST,
 	PUT,
+	DELETE,
+	UNKNOWN,
 };
 
 typedef std::map<std::string, std::string> Map;
