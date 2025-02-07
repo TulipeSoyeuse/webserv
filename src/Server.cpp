@@ -39,10 +39,10 @@ bool Server::read_config()
 
 	if (_debug)
 		std::cout << "parsing config...\n";
-	while (cursor = _config.find("server", cursor), cursor != std::string::npos)
+	while (cursor = _config.get_str().find("server", cursor), cursor != std::string::npos)
 	{
 		std::map<std::string, std::string> server;
-		if (_config.get_server_name(cursor) != config_string::npos)
+		if (_config.get_server_name(cursor) != std::string::npos)
 		{
 			server.insert(
 				// * get serveur name
@@ -87,7 +87,7 @@ std::pair<std::string, std::string> Server::parse_config_line(config_string l)
 	bool start = false;
 	size_t i = 0;
 	std::string::iterator it;
-	for (it = l.begin(); it != l.end(); ++it)
+	for (it = l.get_str().begin(); it != l.get_str().end(); ++it)
 	{
 		if (isspace(*it))
 		{
@@ -106,20 +106,20 @@ std::pair<std::string, std::string> Server::parse_config_line(config_string l)
 	{
 		a = l.get_next_word(i);
 		i++;
-		while (l[i])
+		while (l.get_str()[i])
 		{
-			if (!isspace(l[i]))
+			if (!isspace(l.get_str()[i]))
 				i++;
 			else
 				break;
 		}
-		//d::string b = l.get_next_word(i);
-		// if (b.empty())
-		// 	std::cout << "parse error" << std::endl; // TODO : how manage error for error file ?
-		// std::cout << b << std::endl;
+		// d::string b = l.get_str().get_next_word(i);
+		//  if (b.empty())
+		//  	std::cout << "parse error" << std::endl; // TODO : how manage error for error file ?
+		//  std::cout << b << std::endl;
 	}
 	while (true)
-		if (isspace(l[i]))
+		if (isspace(l.get_str()[i]))
 			i++;
 		else
 			break;

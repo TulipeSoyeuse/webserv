@@ -11,7 +11,7 @@ config_string::config_string(std::ifstream &f) : c(0)
 		char *payload = new char[content_length + 1];
 		payload[content_length] = 0;
 		f.read(payload, content_length);
-		assign(payload);
+		in.assign(payload);
 		delete[] payload;
 	}
 	else
@@ -24,7 +24,7 @@ std::string config_string::get_next_word(const size_t pos) const
 	std::string res;
 	bool start = false;
 
-	for (std::string::const_iterator it = begin(); it != end(); ++it)
+	for (std::string::const_iterator it = in.begin(); it != in.end(); ++it)
 	{
 		if (++i < pos || (isspace(*it) && !start))
 			continue;
@@ -43,15 +43,15 @@ std::string config_string::get_next_word(const size_t pos) const
 
 std::string config_string::get_config_subpart(const size_t pos) const
 {
-	size_t cursor_start = find('{', pos) + 1;
+	size_t cursor_start = in.find('{', pos) + 1;
 	size_t cursor_end;
 
-	if (cursor_end = find('}', pos), cursor_end != npos)
+	if (cursor_end = in.find('}', pos), cursor_end != in.npos)
 	{
-		if (at(cursor_start) == '\n' && (cursor_start + 1) < length())
+		if (in.at(cursor_start) == '\n' && (cursor_start + 1) < in.length())
 			cursor_start++;
 
-		std::string res = substr(cursor_start, cursor_end - cursor_start);
+		std::string res = in.substr(cursor_start, cursor_end - cursor_start);
 		std::cout << "this is res" << res << std::endl;
 		return (res);
 	}
@@ -67,34 +67,39 @@ size_t config_string::get_server_name(const size_t pos) const
 	if (get_next_word(pos) == "server")
 	{
 		size_t cursor = pos + 6;
-		const char *data = this->c_str();
+		const char *data = in.c_str();
 		while (isspace(data[cursor]) && data[cursor] != 0)
 			cursor++;
 		if (data[cursor] == '{')
-			return (npos);
+			return (in.npos);
 		return (cursor);
 	}
 	else
-		return (npos);
+		return (in.npos);
 }
 
 std::string config_string::get_next_line()
 {
-	size_t find_return = find('\n', c);
+	size_t find_return = in.find('\n', c);
 	std::string res;
 
-	if (find_return == npos)
+	if (find_return == in.npos)
 	{
-		if (c >= length())
+		if (c >= in.length())
 			return (res);
 		else
-			res = substr(c);
+			res = in.substr(c);
 	}
 	else
-		res = substr(c, find_return - c + 1);
+		res = in.substr(c, find_return - c + 1);
 
 	c = find_return + 1;
 	return (res);
+}
+
+std::string &config_string::get_str()
+{
+	return (in);
 }
 
 config_string::config_string() : c(0)
@@ -103,38 +108,37 @@ config_string::config_string() : c(0)
 
 config_string::config_string(const std::string &s) : c(0)
 {
-	assign(s);
+	in.assign(s);
 }
 
 config_string::~config_string()
 {
 }
 
+char *ft_itoa(int n)
+{
+	int temp = n, len = (n <= 0) ? 1 : 0;
 
+	while (temp)
+	{
+		temp /= 10;
+		len++;
+	}
 
-#include <iostream>
+	char *str = new char[len + 1];
+	str[len] = '\0';
 
-char* ft_itoa(int n) {
-    int temp = n, len = (n <= 0) ? 1 : 0;
-    
-    while (temp) {
-        temp /= 10;
-        len++;
-    }
+	if (n < 0)
+	{
+		str[0] = '-';
+		n = -n;
+	}
 
-    char* str = new char[len + 1];
-    str[len] = '\0';
+	while (len-- && str[len] != '-')
+	{
+		str[len] = (n % 10) + '0';
+		n /= 10;
+	}
 
-    if (n < 0) {
-        str[0] = '-';
-        n = -n;
-    }
-
-
-    while (len-- && str[len] != '-') {
-        str[len] = (n % 10) + '0';
-        n /= 10;
-    }
-
-    return str;
+	return str;
 }
