@@ -6,6 +6,12 @@ Request::Request(char *http_package, unsigned int port) : in_port(port), _status
 	parse();
 }
 
+Request::Request(std::string &http_package, unsigned int port) : in_port(port), _status(true)
+{
+	_brut_request.assign(http_package);
+	parse();
+}
+
 void Request::parse()
 {
 	std::stringstream s;

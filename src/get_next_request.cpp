@@ -22,7 +22,7 @@ int get_next_request::socket_read()
 int get_next_request::populate_buffer()
 {
 	int t;
-	if (t = socket_read() == -1)
+	if ((t = socket_read()) == -1)
 		return (-1);
 	else
 	{
@@ -34,7 +34,6 @@ int get_next_request::populate_buffer()
 // @brief add part or complete request to res
 e_read_buffer get_next_request::read_request_from_buffer()
 {
-	char *pattern;
 	int v;
 
 	if (buffer.empty())
@@ -42,7 +41,7 @@ e_read_buffer get_next_request::read_request_from_buffer()
 		std::cout << "BUFFER_EMPTY\n";
 		return (BUFFER_EMPTY);
 	}
-	else if (v = buffer.find(pattern, 0, 3), v != npos || (v = buffer.find(pattern, 0, 2), v != npos))
+	else if (v = buffer.find("\r\n\0", 0, 3), v != npos || (v = buffer.find("\n\0", 0, 2), v != npos))
 	{
 		res.assign(buffer, 0, v);
 		buffer.erase(0, v);

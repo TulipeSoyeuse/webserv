@@ -1,7 +1,7 @@
 #include "includes.hpp"
 
 typedef unsigned int socketfd;
-typedef enum e_read_buffer
+enum e_read_buffer
 {
 	BUFFER_EMPTY,
 	COMPLETE_REQUEST_READ,

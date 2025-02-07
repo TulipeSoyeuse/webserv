@@ -2,6 +2,7 @@
 #include "Request.hpp"
 #include "Response.hpp"
 #include "Server.hpp"
+#include "get_next_request.hpp"
 
 #define INVALID_SOCKET -1
 
@@ -61,10 +62,6 @@ int network_accept_any(int fds[], unsigned int count,
 
 int main()
 {
-	// TODO: rework connection flow
-	// TODO: handle PUT
-	// TODO:
-
 	// * Signal handling: ^C to quit properly
 	struct sigaction act;
 	act.sa_handler = sign_handler;
@@ -146,35 +143,34 @@ int main()
 		}
 		std::cout << "incomming fd:" << incomming_fd << "\n";
 		int port = parray[incomming_fd - 3];
+		std::string brut_request;
+		get_next_request gnr(incomming_fd, brut_request);
+		while (gnr.next())
+		{
 
-		// Read from the connection
-		// * buffer to read request
-		char buffer[4096];
-		std::memset(buffer, 0, 2048);
-		// * read the data in the socket (cd comment in function)
-		socket_read(connection, buffer, 2048);
-		char hostname[30];
-		// * The gethostname function get the local computer's standard host name.
-		gethostname(hostname, 30);
-		std::cout << "------------------------------------------\n"
-				  << "socket port: " << port << "\n"
-				  << "hostname: " << hostname << "\n"
-				  << "------------------------------------------\n"
-				  << buffer << "\n"
-				  << "------------------------------------------" << std::endl;
+			char hostname[30];
+			// * The gethostname function get the local computer's standard host name.
+			gethostname(hostname, 30);
+			std::cout << "------------------------------------------\n"
+					  << "socket port: " << port << "\n"
+					  << "hostname: " << hostname << "\n"
+					  << "------------------------------------------\n"
+					  << brut_request << "\n"
+					  << "------------------------------------------" << std::endl;
 
-		// * Request class : parsew request
-		Request r(buffer, port);
-		std::cout << r;
-		std::cout << "------------------------------------------" << std::endl;
-		// * Response class :
-		Response resp(r, webserv);
-		std::cout << "--------------------START----------------------\n";
-		std::cout << resp;
-		std::cout << "--------------------END------------------------"
-				  << std::endl;
-		send(connection, resp.get_response().data(), resp.get_response().size(), 0);
-		close(connection);
+			// * Request class : parsew request
+			Request r(brut_request, port);
+			std::cout << r;
+			std::cout << "------------------------------------------" << std::endl;
+			// * Response class :
+			Response resp(r, webserv);
+			std::cout << "--------------------START----------------------\n";
+			std::cout << resp;
+			std::cout << "--------------------END------------------------"
+					  << std::endl;
+			send(connection, resp.get_response().data(), resp.get_response().size(), 0);
+		}
+		// close(connection);
 	}
 
 	// Close the connections
