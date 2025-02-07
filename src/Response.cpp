@@ -197,11 +197,11 @@ void Response::set_server_conf(Server &s)
 //  * can send 200, 202, 204
 bool Response::delete_file()
 {
-	int error_code = 0;
 
 	struct stat path_stat;
 
-	if (stat(file_path.c_str(), &path_stat) == -1) {
+	if (stat(file_path.c_str(), &path_stat) == -1)
+	{
 		std::cerr << "problem with path" << std::endl;
 	}
 
@@ -223,307 +223,324 @@ bool Response::delete_file()
 		}
 	}
 
-		// * si c un file
-		if (S_ISREG(path_stat.st_mode))
-		{
-			if (!std::remove(file_path.c_str()))
-				return false;
-		}
-
-		// * si c un dossier
-		else if (S_ISREG(path_stat.st_mode))
-		{
-			std::string cmd = "rm -rf" + file_path;
-			error_code = std::system(cmd.c_str());
-			if (error_code != 0)
-			{
-				std::cout << "pb with rm\n";
-				return false;
-			}
-		}
-
-		return true;
-}
-
-	bool Response::set_payload()
+	// * si c un file
+	if (S_ISREG(path_stat.st_mode))
 	{
-		if (!check_file())
-		{
-			if (_request.get_type() == PUT)
-			{
-				content_length = 0;
-				if (write_file())
-				{
-					return (true);
-				}
-				else
-					return (false);
-			}
-			else
-			{
-				http_error(403);
-			}
-			http_error(404);
-			return (false);
-		}
-
-		// ? on part du principe que ca a passe check_file et que le fichier existe
-		if (_request.get_type() == DELETE)
-		{
-			if (!delete_file())
-				return false;
-		}
-		else if (_request.get_type() == PUT)
-		{
-			http_error(403);
-			return (false);
-		}
-		if (autoindex && !foundIndex)
-			return (generate_autoindex());
-		// * call the cgi
-		if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
-			return CGI_from_file(PHP);
-		else if (file_path.substr(file_path.find_last_of('.')) == SH_ext)
-			return CGI_from_file(BASH);
-		else if (file_path.substr(file_path.find_last_of('.')) == PY_ext)
-			return CGI_from_file(PYTHON);
-		// * return de body
-		else
-			return read_payload_from_file();
+		if (!std::remove(file_path.c_str()))
+			return false;
 	}
 
-	std::string dir_listing(std::string root_dir)
+	// * si c un dossier
+	else if (S_ISDIR(path_stat.st_mode))
 	{
-		std::string html;
-		DIR *dir = opendir(root_dir.c_str());
-		struct dirent *entry;
+		std::cout << "je suis un dir" << std::endl;
+		http_error(403);
+		return false;
+	}
 
-		if (!dir)
-		{
-			html += "<p>Error opening directory</p>\n</body>\n</html>";
-			return html;
-		}
+	return true;
+}
 
-		html += "<ul>\n";
-		while ((entry = readdir(dir)) != NULL)
+bool is_dir(std::string file_path)
+{
+	struct stat path_stat;
+
+	if (stat(file_path.c_str(), &path_stat) == -1)
+	{
+		std::cerr << "problem with path" << std::endl;
+	}
+
+	// * si c un dossier
+	if (S_ISDIR(path_stat.st_mode))
+		return true;
+	return false;
+}
+
+bool Response::set_payload()
+{
+	if (!check_file())
+	{
+		if (_request.get_type() == PUT)
 		{
-			if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
+			content_length = 0;
+			if (write_file())
 			{
-				html += "<li><a href=\"" + std::string(entry->d_name) + "\">" + entry->d_name + "</a></li>\n";
+				return (true);
 			}
+			else
+				return (false);
 		}
-		html += "</ul>\n";
-		closedir(dir);
+		else
+		{
+			http_error(403);
+		}
+		http_error(404);
+		return (false);
+	}
+
+	// ? on part du principe que ca a passe check_file et que le fichier existe
+	if (_request.get_type() == DELETE)
+	{
+		if (!delete_file())
+			return false;
+	}
+	else if (_request.get_type() == PUT)
+	{
+		http_error(403);
+		return (false);
+	}
+	if (autoindex && !foundIndex)
+		return (generate_autoindex());
+	// * la si c un dossier ca va plus
+	if (is_dir(file_path))
+	{
+		http_error(403);
+		return false;
+	}
+	// * call the cgi
+	if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
+		return CGI_from_file(PHP);
+	else if (file_path.substr(file_path.find_last_of('.')) == SH_ext)
+		return CGI_from_file(BASH);
+	else if (file_path.substr(file_path.find_last_of('.')) == PY_ext)
+		return CGI_from_file(PYTHON);
+	// * return de body
+	else
+		return read_payload_from_file();
+}
+
+std::string dir_listing(std::string root_dir)
+{
+	std::string html;
+	DIR *dir = opendir(root_dir.c_str());
+	struct dirent *entry;
+
+	if (!dir)
+	{
+		html += "<p>Error opening directory</p>\n</body>\n</html>";
 		return html;
 	}
 
-	bool Response::generate_autoindex()
+	html += "<ul>\n";
+	while ((entry = readdir(dir)) != NULL)
 	{
-
-		std::string dir = dir_listing(root_dir);
-		std::string html_content =
-			"<!DOCTYPE html>"
-			"<html lang=\"en\">"
-			"<head>"
-			"<meta charset=\"UTF-8\">"
-			"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-			"<title>Simple Page</title>"
-			"</head>"
-			"<body>"
-			"<h1>Autoindex</h1>";
-		html_content += dir;
-		html_content += "</body>"
-						"</html>";
-
-		content_length = html_content.length();
-		payload = new char[html_content.length() + 1];
-
-		std::strcpy(payload, html_content.c_str());
-		std::cout << "Payload:\n"
-				  << payload << std::endl;
-		return true;
-	}
-
-	bool Response::CGI_from_file(CGI c)
-	{
-		std::cout << "---------CGI from file--------\n";
-		std::cout << "reading cgi: " << c << "\n";
-
-		payload = new char[client_size];
-		hm_popen hmpop(file_path, c, _request);
-		content_length = hmpop.read_out(payload, client_size);
-		if (!hmpop.is_good())
+		if (strcmp(entry->d_name, ".") != 0 && strcmp(entry->d_name, "..") != 0)
 		{
-			std::cerr << "----child error----\n"
-					  << payload << "\n--------------\n";
-			delete payload;
-			content_length = 0;
-			http_error(500);
-			return (false);
+			html += "<li><a href=\"" + std::string(entry->d_name) + "\">" + entry->d_name + "</a></li>\n";
 		}
-		// TODO: after error response rework -> handle good flag from popen
-		std::cout << "content length: " << content_length << "\n";
-		std::cout << "---------PAYLOAD--------\n"
-				  << payload;
+	}
+	html += "</ul>\n";
+	closedir(dir);
+	return html;
+}
+
+bool Response::generate_autoindex()
+{
+
+	std::string dir = dir_listing(root_dir);
+	std::string html_content =
+		"<!DOCTYPE html>"
+		"<html lang=\"en\">"
+		"<head>"
+		"<meta charset=\"UTF-8\">"
+		"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+		"<title>Simple Page</title>"
+		"</head>"
+		"<body>"
+		"<h1>Autoindex</h1>";
+	html_content += dir;
+	html_content += "</body>"
+					"</html>";
+
+	content_length = html_content.length();
+	payload = new char[html_content.length() + 1];
+
+	std::strcpy(payload, html_content.c_str());
+	std::cout << "Payload:\n"
+			  << payload << std::endl;
+	return true;
+}
+
+bool Response::CGI_from_file(CGI c)
+{
+	std::cout << "---------CGI from file--------\n";
+	std::cout << "reading cgi: " << c << "\n";
+
+	payload = new char[client_size];
+	hm_popen hmpop(file_path, c, _request);
+	content_length = hmpop.read_out(payload, client_size);
+	if (!hmpop.is_good())
+	{
+		std::cerr << "----child error----\n"
+				  << payload << "\n--------------\n";
+		delete payload;
+		content_length = 0;
+		http_error(500);
+		return (false);
+	}
+	// TODO: after error response rework -> handle good flag from popen
+	std::cout << "content length: " << content_length << "\n";
+	std::cout << "---------PAYLOAD--------\n"
+			  << payload;
+	return (true);
+}
+
+bool Response::read_payload_from_file()
+{
+	std::ifstream f;
+	// --------------- extension check ------------------------------
+	if (_is_binary)
+		f.open(file_path.c_str(), std::ifstream::binary);
+	else
+		f.open(file_path.c_str());
+	// --------------------------------------------------------------
+	std::cout << "is binary : " << _is_binary << "\n";
+	if (f.good())
+	{
+		f.ignore(std::numeric_limits<std::streamsize>::max());
+		content_length = f.gcount();
+		f.clear();
+		f.seekg(0, std::ios_base::beg);
+
+		payload = new char[content_length + 1];
+		bzero(payload, content_length + 1);
+		f.read(payload, content_length);
+		f.close();
 		return (true);
 	}
-
-	bool Response::read_payload_from_file()
+	else
 	{
-		std::ifstream f;
-		// --------------- extension check ------------------------------
-		if (_is_binary)
-			f.open(file_path.c_str(), std::ifstream::binary);
-		else
-			f.open(file_path.c_str());
-		// --------------------------------------------------------------
-		std::cout << "is binary : " << _is_binary << "\n";
-		if (f.good())
-		{
-			f.ignore(std::numeric_limits<std::streamsize>::max());
-			content_length = f.gcount();
-			f.clear();
-			f.seekg(0, std::ios_base::beg);
-
-			payload = new char[content_length + 1];
-			bzero(payload, content_length + 1);
-			f.read(payload, content_length);
-			f.close();
-			return (true);
-		}
-		else
-		{
-			std::cerr << "Reading error\n";
-			return (false);
-		}
+		std::cerr << "Reading error\n";
+		return (false);
 	}
+}
 
-	bool Response::error_path()
+bool Response::error_path()
+{
+
+	std::string dir;
+	size_t pos = file_path.rfind('/');
+	if (pos != std::string::npos)
 	{
-
-		std::string dir;
-		size_t pos = file_path.rfind('/');
-		if (pos != std::string::npos)
-		{
-			dir = file_path.substr(0, pos);
-		}
-		else
-			std::cout << dir << std::endl;
-
-		if (access(dir.c_str(), R_OK | X_OK))
-		{
-			if (errno == ENOENT)
-			{
-				std::cerr << "Error: not found\n";
-				http_error(404);
-				return false;
-			}
-			else if (errno == EACCES)
-			{
-				std::cerr << "Error: no permission to access\n";
-				http_error(403);
-				return false;
-			}
-		}
-		return true;
+		dir = file_path.substr(0, pos);
 	}
+	else
+		std::cout << dir << std::endl;
 
-	bool Response::write_file()
+	if (access(dir.c_str(), R_OK | X_OK))
 	{
-
-		if (!error_path())
+		if (errno == ENOENT)
+		{
+			std::cerr << "Error: not found\n";
+			http_error(404);
 			return false;
-
-		std::ofstream f;
-		std::ios_base::openmode m = std::ios::trunc;
-		if (_is_binary) // TODO: check ?
-			m = m | std::ios::binary;
-
-		std::cout << "CREATING: " << file_path << "\n";
-		f.open(file_path.c_str(), m);
-		if (f.good())
-		{
-			// TODO : segfault with bad request
-			std::cout << _request.get_request().find("Content-Length")->second.c_str() << std::endl;
-			f.write(_request.get_request().find("Payload")->second.c_str(),
-					std::atoi(_request.get_request().find("Content-Length")->second.c_str()));
 		}
-		else
-			return (false);
-		return (true);
-	}
-
-	void Response::cMap_str(Map & m, std::string & s)
-	{
-		for (Map::const_iterator it = m.begin(); it != m.end(); ++it)
+		else if (errno == EACCES)
 		{
-			s += it->first + ": ";
-			s += it->second;
-			if (++it != m.end())
-				s += '\n';
-			it--;
+			std::cerr << "Error: no permission to access\n";
+			http_error(403);
+			return false;
 		}
 	}
+	return true;
+}
 
-	void Response::http_error(int code)
+bool Response::write_file()
+{
+
+	if (!error_path())
+		return false;
+
+	std::ofstream f;
+	std::ios_base::openmode m = std::ios::trunc;
+	if (_is_binary) // TODO: check ?
+		m = m | std::ios::binary;
+
+	std::cout << "CREATING: " << file_path << "\n";
+	f.open(file_path.c_str(), m);
+	if (f.good())
 	{
-		// set env
-		status_code = code;
-		entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
-		// code
-		if (code == 505)
-			Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "HTTP Version not supported\r\n");
-		else if (code == 403)
-			Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Forbidden\r\n");
-		else if (code == 404)
-			Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Not Found\r\n");
-		else if (code == 500)
-			Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Internal Server Error\r\n");
-		else if (code == 400)
-			Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Bad Request\r\n");
-		else if (code == 204)
-			Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "No content\r\n");
-		// read error file if provided in server conf
-		_is_binary = false;
-		Map::iterator error_page = serv.find(SSTR(code));
-		if (error_page != serv.end())
-		{
-			// dynamic error page
-			file_path = serv.find("route")->second + serv.find("location")->second + "/" + error_page->second;
-			// eate_error_page(code);
-			read_payload_from_file();
-			entity_header["Content-Length"] = SSTR(content_length);
-		}
+		// TODO : segfault with bad request
+		std::cout << _request.get_request().find("Content-Length")->second.c_str() << std::endl;
+		f.write(_request.get_request().find("Payload")->second.c_str(),
+				std::atoi(_request.get_request().find("Content-Length")->second.c_str()));
 	}
+	else
+		return (false);
+	return (true);
+}
 
-	// void Response::create_error_page(int code) {
-	// 	//verifier le path et qu'il existe
-	// 	std::ifstream err_out;
-
-	// 	std::string replace;
-
-	// 	//avancer jusque body
-	// 	// Changer l'erreur
-	// }
-
-	const int &Response::get_status()
+void Response::cMap_str(Map &m, std::string &s)
+{
+	for (Map::const_iterator it = m.begin(); it != m.end(); ++it)
 	{
-		return (status_code);
+		s += it->first + ": ";
+		s += it->second;
+		if (++it != m.end())
+			s += '\n';
+		it--;
 	}
+}
 
-	Response::~Response()
+void Response::http_error(int code)
+{
+	// set env
+	status_code = code;
+	entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
+	// code
+	if (code == 505)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "HTTP Version not supported\r\n");
+	else if (code == 403)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Forbidden\r\n");
+	else if (code == 404)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Not Found\r\n");
+	else if (code == 500)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Internal Server Error\r\n");
+	else if (code == 400)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Bad Request\r\n");
+	else if (code == 204)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "No content\r\n");
+	// read error file if provided in server conf
+	_is_binary = false;
+	Map::iterator error_page = serv.find(SSTR(code));
+	if (error_page != serv.end())
 	{
-		if (payload)
-			delete[] payload;
+		// dynamic error page
+		file_path = serv.find("route")->second + serv.find("location")->second + "/" + error_page->second;
+		// eate_error_page(code);
+		read_payload_from_file();
+		entity_header["Content-Length"] = SSTR(content_length);
 	}
+}
 
-	const std::string &Response::get_response() const
-	{
-		return (_response);
-	}
+// void Response::create_error_page(int code) {
+// 	//verifier le path et qu'il existe
+// 	std::ifstream err_out;
 
-	std::ostream &operator<<(std::ostream &out, const Response &c)
-	{
-		out << c.get_response().c_str();
-		return (out);
-	}
+// 	std::string replace;
+
+// 	//avancer jusque body
+// 	// Changer l'erreur
+// }
+
+const int &Response::get_status()
+{
+	return (status_code);
+}
+
+Response::~Response()
+{
+	if (payload)
+		delete[] payload;
+}
+
+const std::string &Response::get_response() const
+{
+	return (_response);
+}
+
+std::ostream &operator<<(std::ostream &out, const Response &c)
+{
+	out << c.get_response().c_str();
+	return (out);
+}
