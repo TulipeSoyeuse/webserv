@@ -6,13 +6,17 @@ Request::Request(char *http_package, unsigned int port) : in_port(port), _status
 	parse();
 }
 
+Request::Request(std::string &s, unsigned int port) : in_port(port), _status(true)
+{
+	_brut_request.assign(s);
+	parse();
+}
+
 void Request::parse()
 {
 	std::stringstream s;
 	s.str(_brut_request);
 
-	std::cout << "\n\n"
-			  << _brut_request;
 	std::string line;
 	safeGetline(s, line);
 
@@ -33,7 +37,7 @@ void Request::parse()
 		_Type = POST;
 	else if (line.find("PUT") == 0)
 		_Type = PUT;
-	else if(line.find("DELETE") == 0)
+	else if (line.find("DELETE") == 0)
 		_Type = DELETE;
 	else
 		_Type = UNKNOWN;
@@ -110,7 +114,8 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 
 	for (std::map<std::string, std::string>::const_iterator it = c.get_request().begin();
 		 it != c.get_request().end(); ++it)
-		out << "[" << it->first << "]: \"" << it->second << "\"\n";
+		if (it->first != "Payload")
+			out << "[" << it->first << "]: \"" << it->second << "\"\n";
 
 	return (out);
 }

@@ -19,20 +19,30 @@ extern bool does_file_exist(const std::string &name)
 	return (access(name.c_str(), F_OK) != -1);
 }
 
-int socket_read(int fd, char *buffer, size_t size)
+int socket_read(int fd, std::string &s)
 {
 	// * data structure pollfd -> fd = file descriptor
 	// * short events -> request events
 	// * short revents -> returned events
 	pollfd pfd;
-
+	char *buffer[4096];
+	int _read = 0;
+	int i;
 	// * poll() -> similar to select(), take the data struct pollfd, the numbers of items in the fd array (nfds), and the number of millisec that poll should block waiting for a fd to become ready
 	// * POLL_IN -> there is data to read
 	// * POLL_PRI -> There is some exceptional condition on the file descriptor
 	pfd.events = POLL_IN | POLL_PRI;
 	pfd.fd = fd;
-	if (poll(&pfd, 1, 30) == 1)
-		return (read(fd, buffer, size));
+	while (poll(&pfd, 1, 300) == 1)
+	{
+		bzero(buffer, 4096);
+		i = read(fd, buffer, 4096);
+		_read += i;
+		std::cout << "PING " << i << "-" << _read << "\n";
+		s.append((const char *)buffer, i);
+		if (i == 0)
+			return (_read);
+	};
 	return (-1);
 }
 
@@ -166,22 +176,21 @@ int main()
 
 		// Read from the connection
 		// * buffer to read request
-		char buffer[4096];
-		std::memset(buffer, 0, 2048);
 		// * read the data in the socket (cd comment in function)
-		socket_read(connection, buffer, 2048);
+		std::string brut_request;
+		socket_read(connection, brut_request);
 		char hostname[30];
 		// * The gethostname function get the local computer's standard host name.
 		gethostname(hostname, 30);
 		std::cout << "------------------------------------------\n"
 				  << "socket port: " << port << "\n"
-				  << "hostname: " << hostname << "\n"
-				  << "------------------------------------------\n"
-				  << buffer << "\n"
-				  << "------------------------------------------" << std::endl;
+				  << "hostname: " << hostname << "\n";
+		//   << "------------------------------------------\n"
+		//   << brut_request << "\n"
+		//   << "------------------------------------------" << std::endl;
 
 		// * Request class : parsew request
-		Request r(buffer, port);
+		Request r(brut_request, port);
 		std::cout << r;
 		std::cout << "------------------------------------------" << std::endl;
 		// * Response class :

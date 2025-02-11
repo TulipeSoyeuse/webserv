@@ -28,6 +28,7 @@ private:
 
 public:
 	Request(char *http_package, unsigned int port);
+	Request(std::string &, unsigned int port);
 	~Request();
 
 	bool _status;
