@@ -38,7 +38,7 @@ private:
 	std::string file_path;
 
 	std::map<std::string, std::string> serv_param;
-	std::map<std::string, std::string> serv;
+	server_m serv;
 	size_t client_size;
 
 	// header ---------------------

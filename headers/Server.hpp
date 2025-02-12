@@ -3,7 +3,20 @@
 #include "includes.hpp"
 #include "config_string.hpp"
 
-typedef std::vector<std::map<std::string, std::string> > Server_lst;
+// dict of string match value
+typedef std::map<std::string, std::string> Map;
+
+// unique dict type entry in server, the value can be a string,
+// a dictionary or both
+// key is always a string
+typedef std::pair<std::string, std::pair<std::string, Map> > server_p;
+
+// unique server : dict of key (string) / v	value (server_p)
+typedef std::map<std::string, std::pair<std::string, Map> > server_m;
+
+// list of all different servers
+typedef std::vector<server_m> Server_lst;
+
 typedef std::vector<int> port_array;
 
 class Server
@@ -18,18 +31,22 @@ private:
 	bool read_config();
 	std::string _empty_res;
 	size_t server_count;
-	std::pair<std::string, std::string> parse_config_line(config_string);
+	server_p parse_config_line(config_string);
 	port_array port_lst;
 	// ------- ERROR CHECK ------
 	bool _valid_conf;
 	void configuration_checking();
 	// --------------------------
+	void insert(server_m &, std::string, std::string);
+	void insert(server_m &, std::string, Map);
+	void insert(server_m &m, server_p p);
 
 public:
 	Server(const char *config, bool debug);
 
 	const std::string &get_param(const std::string &, const std::string &);
-	const std::map<std::string, std::string> &get_config(std::string &, int) const;
+	const std::string &get_param(const std::string &, const std::string &, const std::string &);
+	const server_m &get_config(std::string &, int) const;
 	const size_t &get_server_count() const;
 	const port_array &get_ports() const;
 	const bool &is_conf_valid() const;

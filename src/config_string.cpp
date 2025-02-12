@@ -37,29 +37,33 @@ std::string config_string::get_next_word(const size_t pos) const
 			res.push_back(*it);
 		}
 	}
-
 	return (res);
 }
 
 std::string config_string::get_config_subpart(const size_t pos) const
 {
-	size_t cursor_start = in.find('{', pos) + 1;
-	size_t cursor_end;
+	size_t cursor_start = in.find('{', pos) + 1, c_open = 0, i = -1;
 
-	if (cursor_end = in.find('}', pos), cursor_end != in.npos)
+	for (std::string::const_iterator it = in.begin(); it != in.end(); ++it, i++)
 	{
-		if (in.at(cursor_start) == '\n' && (cursor_start + 1) < in.length())
-			cursor_start++;
-
-		std::string res = in.substr(cursor_start, cursor_end - cursor_start);
-		std::cout << "this is res" << res << std::endl;
-		return (res);
+		if (c_open == 0)
+		{
+			c_open = 1;
+			it += cursor_start;
+			i += cursor_start;
+		}
+		else if (*it == '{')
+			c_open++;
+		else if (*it == '}')
+		{
+			if (c_open == 1)
+				return (in.substr(cursor_start, i - cursor_start + 1));
+			else
+				c_open--;
+		}
 	}
-	else
-	{
-		std::string res;
-		return (res);
-	}
+	std::string res;
+	return (res);
 }
 
 size_t config_string::get_server_name(const size_t pos) const

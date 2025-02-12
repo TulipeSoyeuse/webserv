@@ -29,8 +29,8 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	{
 		// * link the right server for the current request (link on "serv" var)
 		set_server_conf(s);
-		std::map<std::string, std::string>::iterator it = serv.find("autoindex");
-		if (it != serv.end() && it->second == "on")
+		server_m::iterator it = serv.find("autoindex");
+		if (it != serv.end() && it->second.first == "on")
 			autoindex = true;
 		// * build header
 		build_header();
@@ -105,7 +105,7 @@ void Response::build_header()
 
 bool Response::match_file()
 {
-	const std::string root_dir = serv.find("route")->second + serv.find("location")->second;
+	const std::string root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
 	std::string uri = _request.get_request().find("URI")->second;
 	std::cout << "root dir : " << root_dir << std::endl;
 	DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
@@ -154,7 +154,7 @@ bool Response::match_file()
 bool Response::check_file()
 {
 	std::string uri(_request.get_request().find("URI")->second);
-	root_dir = serv.find("route")->second + serv.find("location")->second;
+	root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
 
 	if (uri == "/")
 	{
@@ -186,8 +186,8 @@ void Response::set_server_conf(Server &s)
 	// * get port
 	serv = s.get_config(host, _request.get_in_port());
 	// * get client_size
-	if (serv.find("client_size") != serv.end() && serv.find("client_size")->second != "0")
-		client_size = std::atoi(serv.find("client_size")->second.c_str());
+	if (serv.find("client_size") != serv.end() && serv.find("client_size")->second.first != "0")
+		client_size = std::atoi(serv.find("client_size")->second.first.c_str());
 	else
 		client_size = 4096;
 }
@@ -502,11 +502,12 @@ void Response::http_error(int code)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "No content\r\n");
 	// read error file if provided in server conf
 	_is_binary = false;
-	Map::iterator error_page = serv.find(SSTR(code));
+	server_m::iterator error_page = serv.find("error_page");
 	if (error_page != serv.end())
 	{
-		// dynamic error page
-		file_path = serv.find("route")->second + serv.find("location")->second + "/" + error_page->second;
+		if (error_page->second.second.find(ft_itoa(code)) != error_page->second.second.end())
+			// dynamic error page
+			file_path = serv.find("route")->second.first + serv.find("location")->second.first + "/" + error_page->second.second.find(ft_itoa(code))->second;
 		// eate_error_page(code);
 		read_payload_from_file();
 		entity_header["Content-Length"] = SSTR(content_length);
