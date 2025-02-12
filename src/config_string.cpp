@@ -145,7 +145,7 @@ std::string config_string::get_next_conf()
 	if (*it == '{')
 	{
 		result += key;
-		result.push_back(' '); // Ajouter un espace pour séparer la clé du bloc
+		result.push_back(' '); 
 		result += "{";
 		++it;
 		++count;

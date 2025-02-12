@@ -99,6 +99,64 @@ bool Server::read_config()
 	return (true);
 }
 
+std::string get_first_word(config_string l, std::string::iterator it, bool *start)
+{
+	std::string key;
+	while (++it, it != l.get_str().end())
+	{
+		if (isspace(*it))
+		{
+			if (*start)
+				break;
+		}
+		else
+		{
+			*start = true;
+			key.push_back(*it);
+		}
+	}
+	return key;
+}
+
+server_p parse_subpart_config_line(config_string l)
+{
+	std::string a;
+	bool start = false;
+	std::string::iterator it;
+	std::string key;
+
+	it = l.get_str().begin();
+	key = get_first_word(l, it, &start);
+	while (*it == ' ' || *it == '{' || *it == '\n')
+		it++;
+	std::string m;
+	config_string sub(l.get_str().substr(l.get_str().find('{') + 2, (l.get_str().find('}') - 1) - (l.get_str().find('{') + 1) - 1));
+	Map map;
+	while (m = sub.get_next_line(), !m.empty())
+	{
+		start = false;
+		std::string d;
+		std::string::iterator it2 = m.begin();
+		std::string c = get_first_word(sub, it2, &start);
+		while (true)
+		{
+			if (isspace(*it2))
+				it2++;
+			else
+				break;
+		}
+		while (it2 != m.end() && *it2 != '\n' && *it2 != ' ')
+		{
+			d.push_back(*it2);
+			it2++;
+		}
+
+		map.insert(std::make_pair(c, d));
+	}
+	server_p serv_p(key, std::pair<std::string, Map>("", map));
+	return serv_p;
+}
+
 server_p Server::parse_config_line(config_string l)
 {
 	std::string a;
@@ -107,72 +165,7 @@ server_p Server::parse_config_line(config_string l)
 	std::string::iterator it;
 
 	if (l.get_str().find('{') != l.get_str().npos)
-	{
-		std::string key;
-		for (it = l.get_str().begin(); it != l.get_str().end(); ++it)
-		{
-			if (isspace(*it))
-			{
-				if (start)
-					break;
-			}
-			else
-			{
-				start = true;
-				key.push_back(*it);
-			}
-		}
-
-		std::cout << "key = " << key;
-		while (*it == ' ' || *it == '{' || *it == '\n')
-			it++;
-		std::string m;
-		std::string sub_str = l.get_str().substr(l.get_str().find('{') + 2, (l.get_str().find('}') - 1) - (l.get_str().find('{') + 1) - 1);
-		config_string sub(sub_str);
-		Map map;
-		// std::cout << "SUB : ----" << sub_str << "-----\n";
-		while (m = sub.get_next_line(), !m.empty())
-		{
-			std::cout << "m = " << m << std::endl;
-			start = false;
-			std::string c;
-			std::string d;
-			std::string::iterator it2;
-
-			for (it2 = m.begin(); it2 != m.end(); ++it2)
-			{
-				if (isspace(*it2))
-				{
-					if (start == true)
-						break;
-				}
-				else
-				{
-					start = true;
-					if (*it2 != '\n' && !isspace(*it2))
-						c.push_back(*it2);
-				}
-			}
-			while (true)
-			{
-				if (isspace(*it2))
-					it2++;
-				else
-					break;
-			}
-			while (it2 != m.end() && *it2 != '\n' && *it2 != ' ')
-			{
-				d.push_back(*it2);
-				it2++;
-			}
-			std::cout << "this is a :" << c << std::endl;
-			std::cout << "this is b " << d << std::endl;
-
-			map.insert(std::make_pair(c, d));
-		}
-		server_p serv_p(key, std::pair<std::string, Map>("", map));
-		return serv_p;
-	}
+		return parse_subpart_config_line(l);
 
 	for (it = l.get_str().begin(); it != l.get_str().end(); ++it)
 	{

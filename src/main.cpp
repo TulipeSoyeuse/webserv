@@ -107,6 +107,8 @@ int main()
 		std::cerr << "exiting..." << std::endl;
 		return (1);
 	}
+
+	std::cout << "-------- listening ---------\n";
 	// Create a socket(IPv4, TCP)
 
 	// * get port parsed in config file
