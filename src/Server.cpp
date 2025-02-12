@@ -83,10 +83,10 @@ bool Server::read_config()
 
 		config_string server_conf(_config.get_config_subpart(cursor));
 		std::string l;
-		std::cout << server_conf.get_str();
-		while (l = server_conf.get_next_line(), !l.empty())
+		std::cout << "this is server conf :: -------- " << server_conf.get_str() << " ------------\n";
+
+		while (l = server_conf.get_next_conf(), !l.empty())
 		{
-			std::cout << l;
 			if (!is_string_empty(l))
 				insert(server, parse_config_line(l));
 		}
@@ -105,6 +105,75 @@ server_p Server::parse_config_line(config_string l)
 	bool start = false;
 	size_t i = 0;
 	std::string::iterator it;
+
+	if (l.get_str().find('{') != l.get_str().npos)
+	{
+		std::string key;
+		for (it = l.get_str().begin(); it != l.get_str().end(); ++it)
+		{
+			if (isspace(*it))
+			{
+				if (start)
+					break;
+			}
+			else
+			{
+				start = true;
+				key.push_back(*it);
+			}
+		}
+
+		std::cout << "key = " << key;
+		while (*it == ' ' || *it == '{' || *it == '\n')
+			it++;
+		std::string m;
+		std::string sub_str = l.get_str().substr(l.get_str().find('{') + 2, (l.get_str().find('}') - 1) - (l.get_str().find('{') + 1) - 1);
+		config_string sub(sub_str);
+		Map map;
+		// std::cout << "SUB : ----" << sub_str << "-----\n";
+		while (m = sub.get_next_line(), !m.empty())
+		{
+			std::cout << "m = " << m << std::endl;
+			start = false;
+			std::string c;
+			std::string d;
+			std::string::iterator it2;
+
+			for (it2 = m.begin(); it2 != m.end(); ++it2)
+			{
+				if (isspace(*it2))
+				{
+					if (start == true)
+						break;
+				}
+				else
+				{
+					start = true;
+					if (*it2 != '\n' && !isspace(*it2))
+						c.push_back(*it2);
+				}
+			}
+			while (true)
+			{
+				if (isspace(*it2))
+					it2++;
+				else
+					break;
+			}
+			while (it2 != m.end() && *it2 != '\n' && *it2 != ' ')
+			{
+				d.push_back(*it2);
+				it2++;
+			}
+			std::cout << "this is a :" << c << std::endl;
+			std::cout << "this is b " << d << std::endl;
+
+			map.insert(std::make_pair(c, d));
+		}
+		server_p serv_p(key, std::pair<std::string, Map>("", map));
+		return serv_p;
+	}
+
 	for (it = l.get_str().begin(); it != l.get_str().end(); ++it)
 	{
 		if (isspace(*it))
@@ -120,57 +189,60 @@ server_p Server::parse_config_line(config_string l)
 		}
 		i++;
 	}
-	if (a == "error")
-	{
-		a = l.get_next_word(i);
-		i++;
-		while (l.get_str()[i])
-		{
-			if (!isspace(l.get_str()[i]))
-				i++;
-			else
-				break;
-		}
-		// d::string b = l.get_str().get_next_word(i);
-		//  if (b.empty())
-		//  	std::cout << "parse error" << std::endl; // TODO : how manage error for error file ?
-		//  std::cout << b << std::endl;
-	}
+
 	while (true)
 		if (isspace(l.get_str()[i]))
 			i++;
 		else
 			break;
-
 	std::string b = l.get_next_word(i);
-	// std::pair<std::string, std::string> p(a, b);
 
 	Map m;
 	server_p p(a, std::pair<std::string, Map>(b, m));
-
-	// std::cout << "----------\n"
-	// 		  << "param: " << a << "\nvalue: \""
-	// 		  << b << "\"\n----------\n";
 
 	return (p);
 }
 
 void Server::display_params()
 {
-	std::cout << "-------------------\ndisplay webserv params and servers: " << _servers.size() << "\n";
-	for (Server_lst::iterator it1 = _servers.begin(); it1 != _servers.end(); ++it1)
+	std::cout << "Displaying all elements in the server structure:\n";
+
+	// Parcours de la liste des serveurs
+	for (Server_lst::const_iterator it1 = _servers.begin(); it1 != _servers.end(); ++it1)
 	{
-		std::cout << "Server 1:\n";
-		for (server_m::iterator it2 = (*it1).begin(); it2 != (*it1).end(); ++it2)
+		std::cout << "Server entry:\n";
+
+		for (server_m::const_iterator it2 = it1->begin(); it2 != it1->end(); ++it2)
 		{
-			if (it2->first.empty())
+			const std::string &key = it2->first;
+			const std::pair<std::string, Map> &value = it2->second;
+			const std::string &first_value = value.first;
+			const Map &second_value = value.second;
+
+			if (first_value.empty() && !second_value.empty())
 			{
-				std::cout << "[" << it2->first << "]:\n";
-				for (Map::iterator it3 = (*it2).second.second.begin(); it3 != (*it2).second.second.end(); ++it3)
-					std::cout << "\t| [" << it3->first << "]=\"" << it3->second << "\"\n";
+				std::cout << "[" << key << "] has empty string value and a non-empty map:\n";
+				for (Map::const_iterator it3 = second_value.begin(); it3 != second_value.end(); ++it3)
+				{
+					std::cout << "\t- [" << it3->first << "] -> \"" << it3->second << "\"\n";
+				}
+			}
+			else if (!first_value.empty() && second_value.empty())
+			{
+				std::cout << "[" << key << "]=\"" << first_value << "\"\n";
+			}
+			else if (first_value.empty() && second_value.empty())
+			{
+				std::cout << "[" << key << "] has empty string and empty map.\n";
 			}
 			else
-				std::cout << "[" << it2->first << "]=\"" << it2->second.first << "\"\n";
+			{
+				std::cout << "[" << key << "]=\"" << first_value << "\" with a non-empty map:\n";
+				for (Map::const_iterator it3 = second_value.begin(); it3 != second_value.end(); ++it3)
+				{
+					std::cout << "\t- [" << it3->first << "] -> \"" << it3->second << "\"\n";
+				}
+			}
 		}
 		std::cout << "\n";
 	}

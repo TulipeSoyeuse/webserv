@@ -1,4 +1,5 @@
 #include "config_string.hpp"
+#include "Server.hpp"
 
 config_string::config_string(std::ifstream &f) : c(0)
 {
@@ -16,6 +17,11 @@ config_string::config_string(std::ifstream &f) : c(0)
 	}
 	else
 		std::cerr << "filestream not good\n";
+}
+
+
+void config_string::set_c(size_t n) {
+	c = n;
 }
 
 std::string config_string::get_next_word(const size_t pos) const
@@ -87,18 +93,82 @@ std::string config_string::get_next_line()
 	size_t find_return = in.find('\n', c);
 	std::string res;
 
+	if(c == (size_t)-1)
+		return res;
+
 	if (find_return == in.npos)
 	{
+		c = -1;
 		if (c >= in.length())
+		{
 			return (res);
+		}
 		else
+		{
 			res = in.substr(c);
+			return res;
+		}
 	}
 	else
 		res = in.substr(c, find_return - c + 1);
-
 	c = find_return + 1;
 	return (res);
+}
+
+std::string config_string::get_next_conf()
+{
+	std::string key;
+	std::string result;
+	std::string::const_iterator it = in.begin() + c;
+	std::string::const_iterator end = in.end();
+	size_t count = c;
+	while (it != end && isspace(*it))
+	{
+		++it;
+		++count;
+	}
+	if (it == end)
+	{
+		return result;
+	}
+	while (it != end && !isspace(*it) && *it != '\n')
+	{
+		key.push_back(*it);
+		++it;
+		++count;
+	}
+	while (it != end && isspace(*it))
+	{
+		++it;
+		++count;
+	}
+	if (*it == '{')
+	{
+		result += key;
+		result.push_back(' '); // Ajouter un espace pour séparer la clé du bloc
+		result += "{";
+		++it;
+		++count;
+		while (it != end && *it != '}')
+		{
+			result.push_back(*it);
+			++it;
+			++count;
+		}
+
+		if (it != end && *it == '}')
+		{
+			result.push_back('}');
+			++it;
+			++count;
+		}
+	}
+	else
+	{
+		return (get_next_line());
+	}
+	c = count;
+	return result;
 }
 
 std::string &config_string::get_str()
