@@ -1,21 +1,17 @@
 #include "Request.hpp"
 
-Request::Request(char *http_package, unsigned int port) : in_port(port), _status(true)
+Request::Request(t_byte &s, unsigned int port) : in_port(port), _status(true)
 {
-	_brut_request = http_package;
-	parse();
-}
-
-Request::Request(std::string &s, unsigned int port) : in_port(port), _status(true)
-{
-	_brut_request.assign(s);
+	_brut_request.assign(s.begin(), s.end());
+	str_request.assign(s.begin(), s.end());
+	write(0, _brut_request.data(), 2000);
 	parse();
 }
 
 void Request::parse()
 {
 	std::stringstream s;
-	s.str(_brut_request);
+	s.str(str_request);
 
 	std::string line;
 	safeGetline(s, line);
@@ -63,8 +59,8 @@ void Request::parse_payload()
 	if (_request.find("Content-Length") != _request.end() &&
 		_request.find("Content-Length")->second != "0")
 	{
-		int f1 = _brut_request.find_last_of("\r\n") + 1;
-		_request["Payload"] = _brut_request.substr(f1);
+		int f1 = str_request.find_last_of("\r\n") + 1;
+		_request["Payload"] = str_request.substr(f1);
 	}
 }
 

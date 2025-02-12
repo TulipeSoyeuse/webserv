@@ -19,31 +19,41 @@ extern bool does_file_exist(const std::string &name)
 	return (access(name.c_str(), F_OK) != -1);
 }
 
-int socket_read(int fd, std::string &s)
+int socket_read(int fd, t_byte &s)
 {
 	// * data structure pollfd -> fd = file descriptor
 	// * short events -> request events
 	// * short revents -> returned events
 	pollfd pfd;
-	char *buffer[4096];
+	char buffer[4096];
 	int _read = 0;
 	int i;
 	// * poll() -> similar to select(), take the data struct pollfd, the numbers of items in the fd array (nfds), and the number of millisec that poll should block waiting for a fd to become ready
 	// * POLL_IN -> there is data to read
 	// * POLL_PRI -> There is some exceptional condition on the file descriptor
-	pfd.events = POLL_IN | POLL_PRI;
+	pfd.events = POLLIN | POLLPRI;
 	pfd.fd = fd;
-	while (poll(&pfd, 1, 300) == 1)
+	while (true)
 	{
-		bzero(buffer, 4096);
+		int pret;
+		if ((pret = poll(&pfd, 1, 30)) == -1)
+		{
+			perror("poll");
+			return -1;
+		}
+		else if (!(pfd.revents & POLLIN) || pret == 0)
+			break;
+
+		memset(buffer, 0, 4096);
+		std::cout << "READ CALLED" << "\n";
 		i = read(fd, buffer, 4096);
+		if (i <= 0)
+			break;
 		_read += i;
-		std::cout << "PING " << i << "-" << _read << "\n";
-		s.append((const char *)buffer, i);
-		if (i == 0)
-			return (_read);
+		std::cout << "BYTES_READ " << i << "-" << _read << "\n";
+		s.insert(s.end(), buffer, buffer + i);
 	};
-	return (-1);
+	return (_read);
 }
 
 int network_accept_any(int fds[], unsigned int count,
@@ -82,7 +92,7 @@ int network_accept_any(int fds[], unsigned int count,
 	{
 		incomming_fd = fd;
 		// * accept a connexion on a socket
-		return accept(fd, addr, addrlen);
+		return accept4(fd, addr, addrlen, SOCK_NONBLOCK);
 	}
 }
 
@@ -177,7 +187,7 @@ int main()
 		// Read from the connection
 		// * buffer to read request
 		// * read the data in the socket (cd comment in function)
-		std::string brut_request;
+		t_byte brut_request;
 		socket_read(connection, brut_request);
 		char hostname[30];
 		// * The gethostname function get the local computer's standard host name.
