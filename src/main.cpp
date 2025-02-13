@@ -196,20 +196,27 @@ int main()
 		gethostname(hostname, 30);
 		std::cout << "------------------------------------------\n"
 				  << "socket port: " << port << "\n"
-				  << "hostname: " << hostname << "\n";
-		//   << "------------------------------------------\n"
-		//   << brut_request << "\n"
-		//   << "------------------------------------------" << std::endl;
+				  << "hostname: " << hostname << "\n"
+
+				  // std::string s;
+				  // brut_request.safeGetline(s);
+				  // brut_request.safeGetline(s);
+				  // brut_request.safeGetline(s);
+				  // brut_request.safeGetline(s);
+				  << "------------- BRUT REQUEST ---------------\n"
+				  << brut_request << "\n"
+				  << "------------------------------------------" << std::endl;
 
 		// * Request class : parsew request
 		Request r(brut_request, port);
-		std::cout << r;
-		std::cout << "------------------------------------------" << std::endl;
+		std::cout << "-------------- PARSED REQUEST -----------\n"
+				  << r
+				  << "------------------------------------------" << std::endl;
 		// * Response class :
 		Response resp(r, webserv);
-		std::cout << "--------------------START----------------------\n";
+		std::cout << "---------------- RESPONSE ---------------\n";
 		std::cout << resp;
-		std::cout << "--------------------END------------------------"
+		std::cout << "------------------ END -------------------"
 				  << std::endl;
 		send(connection, resp.get_response().data(), resp.get_response().size(), 0);
 		close(connection);

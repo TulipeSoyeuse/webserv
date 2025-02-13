@@ -20,14 +20,14 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 	}
 	if (pid == 0)
 	{
-		build_env(f); 
+		build_env(f);
 		// Child process
-		close(stdin_pipe[1]); // <- on ne veut pas ecrire dans stdin
+		close(stdin_pipe[1]);  // <- on ne veut pas ecrire dans stdin
 		close(stdout_pipe[0]); // Close reading end of stdout pipe in child
 		close(stderr_pipe[0]); // Close reading end of stderr pipe in child
 
 		// Redirect stdout & stderr to stdout_pipe & stderr_pipe
-		dup2(stdin_pipe[0], STDIN_FILENO); 
+		dup2(stdin_pipe[0], STDIN_FILENO);
 		dup2(stdout_pipe[1], STDOUT_FILENO);
 		dup2(stderr_pipe[1], STDERR_FILENO);
 
@@ -74,10 +74,13 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 		close(stdin_pipe[0]);
 
 		// si la methode c post et que y'a un payload
-		if(_request.get_type() == POST && _request.get_request().find("Payload") != _request.get_request().end()) {
-			std::string payload = _request.get_request().find("Payload")->second;
-			write(stdin_pipe[1], payload.c_str(), payload.size());
+		Map::const_iterator clen = _request.get_headers().find("Content-Length");
+		if (_request.get_type() == POST &&
+			clen != _request.get_headers().end() && std::atoi(clen->second.c_str()) != 0)
+		{
+			write(stdin_pipe[1], _request.get_body().get_data(), std::atoi(clen->second.c_str()));
 		}
+
 		close(stdin_pipe[1]);
 		while (waitpid(pid, &status, WNOHANG) == 0)
 		{
@@ -102,7 +105,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 void hm_popen::build_env(std::string &f)
 {
 	std::ofstream test("prout");
-	Map R = _Request.get_request();
+	Map R = _Request.get_headers();
 	Map::iterator it = R.find("Cookie");
 	if (it != R.end())
 		setenv("HTTP_COOKIE", it->second.c_str(), 1);
@@ -116,7 +119,8 @@ void hm_popen::build_env(std::string &f)
 	{
 		setenv("REQUEST_METHOD", "GET", 1);
 		it = R.find("request_string");
-		if (it != R.end()) {
+		if (it != R.end())
+		{
 			test << "query = " << it->second.c_str() << std::endl;
 			setenv("QUERY_STRING", it->second.c_str(), 1);
 		}

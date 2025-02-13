@@ -20,7 +20,7 @@ private:
 
 	type_e _Type;
 	Map _request;
-	bytes_container payload;
+	bytes_container _payload;
 
 	const unsigned int in_port;
 
@@ -32,7 +32,8 @@ public:
 	~Request();
 
 	bool _status;
-	const Map &get_request() const;
+	const Map &get_headers() const;
+	const bytes_container &get_body() const;
 	const type_e &get_type() const;
 	const unsigned int &get_in_port() const;
 };

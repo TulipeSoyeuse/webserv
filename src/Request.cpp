@@ -55,7 +55,7 @@ void Request::parse_payload()
 		_request.find("Content-Length")->second != "0")
 	{
 		int f1 = _brut_request.find_last_of("\r\n") + 1;
-		payload = _brut_request.subcontainer(f1);
+		_payload = _brut_request.subcontainer(f1);
 	}
 }
 
@@ -77,7 +77,7 @@ void Request::parse_payload()
 // 	}
 // }
 
-const Map &Request::get_request() const
+const Map &Request::get_headers() const
 {
 	return (_request);
 }
@@ -85,6 +85,11 @@ const Map &Request::get_request() const
 const type_e &Request::get_type() const
 {
 	return (_Type);
+}
+
+const bytes_container &Request::get_body() const
+{
+	return (_payload);
 }
 
 const unsigned int &Request::get_in_port() const
@@ -103,11 +108,11 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 	else if (c.get_type() == POST)
 		out << "POST request" << "\n";
 
-	for (std::map<std::string, std::string>::const_iterator it = c.get_request().begin();
-		 it != c.get_request().end(); ++it)
-		if (it->first != "Payload")
-			out << "[" << it->first << "]: \"" << it->second << "\"\n";
+	for (std::map<std::string, std::string>::const_iterator it = c.get_headers().begin();
+		 it != c.get_headers().end(); ++it)
+		out << "[" << it->first << "]: \"" << it->second << "\"\n";
 
+	out << "[" << "body" << "]: \"" << c.get_body() << "\"\n";
 	return (out);
 }
 

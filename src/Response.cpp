@@ -13,7 +13,7 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	// TODO: rework error code and dedicated function
 	// TODO: POST handler for upload file
 	// --------------- HTTP version check ------------------------------
-	std::pair<std::string, std::string> proto = *_request.get_request().find("Protocol");
+	std::pair<std::string, std::string> proto = *_request.get_headers().find("Protocol");
 	// * check the http version
 	if (_request.get_type() != PUT)
 		Status_line = "HTTP/1.1 200 Sucess\r\n";
@@ -48,7 +48,7 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 // TODO: add in server multiple error page for error code
 void Response::MIME_attribute()
 {
-	std::string uri = ((Map)_request.get_request())["URI"];
+	std::string uri = ((Map)_request.get_headers())["URI"];
 	if (uri == "/")
 	{
 		entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
@@ -106,7 +106,7 @@ void Response::build_header()
 bool Response::match_file()
 {
 	const std::string root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
-	std::string uri = _request.get_request().find("URI")->second;
+	std::string uri = _request.get_headers().find("URI")->second;
 	std::cout << "root dir : " << root_dir << std::endl;
 	DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
 	struct dirent *diread;
@@ -153,7 +153,7 @@ bool Response::match_file()
 // setup file path and check his accessibility
 bool Response::check_file()
 {
-	std::string uri(_request.get_request().find("URI")->second);
+	std::string uri(_request.get_headers().find("URI")->second);
 	root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
 
 	if (uri == "/")
@@ -182,7 +182,7 @@ bool Response::check_file()
 void Response::set_server_conf(Server &s)
 {
 	// * get host
-	std::string host = _request.get_request().find("Host")->second;
+	std::string host = _request.get_headers().find("Host")->second;
 	// * get port
 	serv = s.get_config(host, _request.get_in_port());
 	// * get client_size
@@ -461,9 +461,9 @@ bool Response::write_file()
 	if (f.good())
 	{
 		// TODO : segfault with bad request
-		std::cout << _request.get_request().find("Content-Length")->second.c_str() << std::endl;
-		f.write(_request.get_request().find("Payload")->second.c_str(),
-				std::atoi(_request.get_request().find("Content-Length")->second.c_str()));
+		std::cout << _request.get_headers().find("Content-Length")->second.c_str() << std::endl;
+		f.write(_request.get_body().get_data(),
+				std::atoi(_request.get_headers().find("Content-Length")->second.c_str()));
 	}
 	else
 		return (false);
