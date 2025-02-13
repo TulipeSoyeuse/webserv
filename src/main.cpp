@@ -19,7 +19,7 @@ extern bool does_file_exist(const std::string &name)
 	return (access(name.c_str(), F_OK) != -1);
 }
 
-int socket_read(int fd, t_byte &s)
+int socket_read(int fd, bytes_container &s)
 {
 	// * data structure pollfd -> fd = file descriptor
 	// * short events -> request events
@@ -51,7 +51,7 @@ int socket_read(int fd, t_byte &s)
 			break;
 		_read += i;
 		std::cout << "BYTES_READ " << i << "-" << _read << "\n";
-		s.insert(s.end(), buffer, buffer + i);
+		s.fill(buffer, i);
 	};
 	return (_read);
 }
@@ -189,7 +189,7 @@ int main()
 		// Read from the connection
 		// * buffer to read request
 		// * read the data in the socket (cd comment in function)
-		t_byte brut_request;
+		bytes_container brut_request;
 		socket_read(connection, brut_request);
 		char hostname[30];
 		// * The gethostname function get the local computer's standard host name.

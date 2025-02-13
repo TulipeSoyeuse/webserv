@@ -1,20 +1,15 @@
 #include "Request.hpp"
 
-Request::Request(t_byte &s, unsigned int port) : in_port(port), _status(true)
+Request::Request(bytes_container &s, unsigned int port) : _brut_request(s), in_port(port), _status(true)
 {
-	_brut_request.assign(s.begin(), s.end());
-	str_request.assign(s.begin(), s.end());
-	write(0, _brut_request.data(), 2000);
 	parse();
 }
 
 void Request::parse()
 {
-	std::stringstream s;
-	s.str(str_request);
 
 	std::string line;
-	safeGetline(s, line);
+	_brut_request.safeGetline(line);
 
 	int f1 = line.find_first_of(' ');
 	int f2 = line.find_last_of(' ');
@@ -46,7 +41,7 @@ void Request::parse()
 		_request["URI"] = _request["URI"].substr(0, qs);
 	}
 	_request["Protocol"] = line.substr(f2 + 1);
-	while (safeGetline(s, line) && line.length() > 0)
+	while (_brut_request.safeGetline(line) && line.length() > 0)
 	{
 		_request[line.substr(0, line.find_first_of(':'))] =
 			line.substr(line.find_first_of(':') + 2);
@@ -59,8 +54,8 @@ void Request::parse_payload()
 	if (_request.find("Content-Length") != _request.end() &&
 		_request.find("Content-Length")->second != "0")
 	{
-		int f1 = str_request.find_last_of("\r\n") + 1;
-		_request["Payload"] = str_request.substr(f1);
+		int f1 = _brut_request.find_last_of("\r\n") + 1;
+		payload = _brut_request.subcontainer(f1);
 	}
 }
 

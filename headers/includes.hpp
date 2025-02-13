@@ -41,5 +41,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "bytes_container.hpp"
+
 extern char **environ;
 extern bool does_file_exist(const std::string &name);

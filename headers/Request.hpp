@@ -12,16 +12,15 @@ enum type_e
 };
 
 typedef std::map<std::string, std::string> Map;
-typedef std::vector<char> t_byte;
 
 class Request
 {
 private:
-	t_byte _brut_request;
-	std::string str_request;
+	bytes_container &_brut_request;
 
 	type_e _Type;
 	Map _request;
+	bytes_container payload;
 
 	const unsigned int in_port;
 
@@ -29,7 +28,7 @@ private:
 	void parse_payload();
 
 public:
-	Request(t_byte &, unsigned int port);
+	Request(bytes_container &, unsigned int port);
 	~Request();
 
 	bool _status;
