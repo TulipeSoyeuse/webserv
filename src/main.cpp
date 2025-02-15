@@ -197,12 +197,6 @@ int main()
 		std::cout << "------------------------------------------\n"
 				  << "socket port: " << port << "\n"
 				  << "hostname: " << hostname << "\n"
-
-				  // std::string s;
-				  // brut_request.safeGetline(s);
-				  // brut_request.safeGetline(s);
-				  // brut_request.safeGetline(s);
-				  // brut_request.safeGetline(s);
 				  << "------------- BRUT REQUEST ---------------\n"
 				  << brut_request << "\n"
 				  << "------------------------------------------" << std::endl;
