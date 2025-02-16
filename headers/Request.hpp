@@ -34,6 +34,7 @@ public:
 	bool _status;
 	const Map &get_headers() const;
 	const bytes_container &get_body() const;
+	const bytes_container &get_brut_request() const;
 	const type_e &get_type() const;
 	const unsigned int &get_in_port() const;
 };

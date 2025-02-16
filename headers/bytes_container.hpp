@@ -28,6 +28,7 @@ public:
 
 	// ------- substr ---------
 	bytes_container subcontainer(size_t);
+	bytes_container subcontainer();
 };
 
 std::ostream &operator<<(std::ostream &out, const bytes_container &c);

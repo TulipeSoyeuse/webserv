@@ -28,7 +28,8 @@ int socket_read(int fd, bytes_container &s)
 	char buffer[4096];
 	int _read = 0;
 	int i;
-	// * poll() -> similar to select(), take the data struct pollfd, the numbers of items in the fd array (nfds), and the number of millisec that poll should block waiting for a fd to become ready
+	// * poll() -> similar to select(), take the data struct pollfd, the numbers of items in the fd array
+	// (nfds), and the number of millisec that poll should block waiting for a fd to become ready
 	// * POLL_IN -> there is data to read
 	// * POLL_PRI -> There is some exceptional condition on the file descriptor
 	pfd.events = POLLIN | POLLPRI;
@@ -45,13 +46,12 @@ int socket_read(int fd, bytes_container &s)
 			break;
 
 		memset(buffer, 0, 4096);
-		std::cout << "READ CALLED" << "\n";
 		i = read(fd, buffer, 4096);
 		if (i <= 0)
 			break;
 		_read += i;
-		std::cout << "BYTES_READ " << i << "-" << _read << "\n";
 		s.fill(buffer, i);
+		std::cout << "bytes_read:" << i << "\nvector size:" << s.get_data_size() << "\n";
 	};
 	return (_read);
 }
@@ -194,18 +194,21 @@ int main()
 		char hostname[30];
 		// * The gethostname function get the local computer's standard host name.
 		gethostname(hostname, 30);
-		std::cout << "------------------------------------------\n"
-				  << "socket port: " << port << "\n"
-				  << "hostname: " << hostname << "\n"
-				  << "------------- BRUT REQUEST ---------------\n"
-				  << brut_request << "\n"
-				  << "------------------------------------------" << std::endl;
+		// std::cout << "------------------------------------------\n"
+		// 		  << "socket port: " << port << "\n"
+		// 		  << "hostname: " << hostname << "\n"
+		// 		  << "------------- BRUT REQUEST ---------------\n"
+		// 		  << brut_request << "\n"
+		// 		  << "------------------------------------------" << std::endl;
 
 		// * Request class : parsew request
+		std::cout << brut_request.get_data_size() << "\n";
 		Request r(brut_request, port);
-		std::cout << "-------------- PARSED REQUEST -----------\n"
-				  << r
-				  << "------------------------------------------" << std::endl;
+		std::cout << "body size:" << r.get_body().get_data_size() << "\n";
+		std::cout << "full request" << r.get_brut_request().get_data_size() << "\n";
+		// std::cout << "-------------- PARSED REQUEST -----------\n"
+		// 		  << r
+		// 		  << "------------------------------------------" << std::endl;
 		// * Response class :
 		Response resp(r, webserv);
 		std::cout << "---------------- RESPONSE ---------------\n";

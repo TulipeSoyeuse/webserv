@@ -40,7 +40,6 @@ size_t bytes_container::safeGetline(std::string &s)
 		_cursor++, i++;
 	}
 	s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
-	std::cout << "line :" << s << '\n';
 	return (i);
 }
 
@@ -76,6 +75,14 @@ bytes_container bytes_container::subcontainer(size_t t)
 {
 	bytes_container res;
 	res.fill(_data.begin() + t, _data.end());
+	return res;
+}
+
+bytes_container bytes_container::subcontainer()
+{
+	bytes_container res;
+	res.fill(_data.begin() + _cursor, _data.end());
+	_cursor = _data.size();
 	return res;
 }
 

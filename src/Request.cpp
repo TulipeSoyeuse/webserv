@@ -53,10 +53,7 @@ void Request::parse_payload()
 {
 	if (_request.find("Content-Length") != _request.end() &&
 		_request.find("Content-Length")->second != "0")
-	{
-		int f1 = _brut_request.find_last_of("\r\n") + 1;
-		_payload = _brut_request.subcontainer(f1);
-	}
+		_payload = _brut_request.subcontainer();
 }
 
 // void Request::parse_params()
@@ -76,6 +73,11 @@ void Request::parse_payload()
 // 		_request["URI"] = uri;
 // 	}
 // }
+
+const bytes_container &Request::get_brut_request() const
+{
+	return (_brut_request);
+}
 
 const Map &Request::get_headers() const
 {
