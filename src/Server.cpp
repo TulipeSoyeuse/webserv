@@ -102,7 +102,7 @@ bool Server::read_config()
 std::string get_first_word(config_string l, std::string::iterator it, bool *start)
 {
 	std::string key;
-	while (++it, it != l.get_str().end())
+	while (it != l.get_str().end())
 	{
 		if (isspace(*it))
 		{
@@ -114,6 +114,7 @@ std::string get_first_word(config_string l, std::string::iterator it, bool *star
 			*start = true;
 			key.push_back(*it);
 		}
+		it++;
 	}
 	return key;
 }
@@ -127,17 +128,35 @@ server_p parse_subpart_config_line(config_string l)
 
 	it = l.get_str().begin();
 	key = get_first_word(l, it, &start);
+
+	std::cout << "key = " << key << std::endl;
 	while (*it == ' ' || *it == '{' || *it == '\n')
 		it++;
 	std::string m;
-	config_string sub(l.get_str().substr(l.get_str().find('{') + 2, (l.get_str().find('}') - 1) - (l.get_str().find('{') + 1) - 1));
+	std::string sub_str = l.get_str().substr(l.get_str().find('{') + 2, (l.get_str().find('}') - 1) - (l.get_str().find('{') + 1) - 1);
+	config_string sub(sub_str);
 	Map map;
 	while (m = sub.get_next_line(), !m.empty())
 	{
 		start = false;
+		std::string c;
 		std::string d;
-		std::string::iterator it2 = m.begin();
-		std::string c = get_first_word(sub, it2, &start);
+		std::string::iterator it2;
+
+		for (it2 = m.begin(); it2 != m.end(); ++it2)
+		{
+			if (isspace(*it2))
+			{
+				if (start == true)
+					break;
+			}
+			else
+			{
+				start = true;
+				if (*it2 != '\n' && !isspace(*it2))
+					c.push_back(*it2);
+			}
+		}
 		while (true)
 		{
 			if (isspace(*it2))
@@ -312,7 +331,7 @@ void Server::configuration_checking()
 		{
 			for (Map::iterator it2 = val->second.second.begin(); it2 != val->second.second.end(); ++it2)
 			{
-				std::string f(it->find("route")->first + it->find("location")->second.first + "/" + it2->second);
+				std::string f(it->find("route")->second.first + it->find("location")->second.first + "/" + it2->second);
 				if (!does_file_exist(f))
 				{
 					std::cerr << "config error, file " << f << " don't exist\n"
