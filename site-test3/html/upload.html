@@ -1,18 +1,21 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/styles.css">
     <title>Upload your file</title>
 </head>
+
 <body>
 
     <form id="uploadForm">
         <h2>Upload your file</h2>
         <input type="file" id="postFile" placeholder="Upload your file" name="file1" required>
         <br>
-        <input type="text" id="destinationPath" placeholder="Enter the destination path (e.g., folder1/file.txt)" required>
+        <input type="text" id="destinationPath" placeholder="Enter the destination path (e.g., folder1/file.txt)"
+            required>
         <br>
         <button type="submit">Send</button>
     </form>
@@ -21,52 +24,83 @@
     <h2>Delete your file</h2>
     <input type="text" id="deletePath" placeholder="Enter path" required>
     <button id="deleteButton">Delete</button>
-
-    <script>
-        document.getElementById('uploadForm').addEventListener('submit', function(event) {
-            event.preventDefault(); 
-    
-            const fileInput = document.getElementById('postFile');
-            const destinationInput = document.getElementById('destinationPath');
-            const file = fileInput.files[0];
-            const destinationPath = destinationInput.value; 
-    
-            if (!file || !destinationPath) {
-                alert('Veuillez sélectionner un fichier et spécifier un chemin de destination.');
-                return;
-            }
-    
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const fileContent = e.target.result; 
-    
-                // Envoi du fichier via une requête PUT pour l'upload
-                fetch(`http://localhost:9997/upload/${destinationPath}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/octet-stream' 
-                    },
-                    body: fileContent 
-                })
-            };
-            reader.readAsArrayBuffer(file);
-        });
-    
-        // Script pour supprimer un fichier
-        document.getElementById('deleteButton').addEventListener('click', function() {
-            const deletePath = document.getElementById('deletePath').value;
-    
-            if (!deletePath) {
-                alert('Veuillez entrer le chemin du fichier à supprimer.');
-                return;
-            }
-    
-            fetch(`http://localhost:9997/${deletePath}`, {
-                method: 'DELETE'
-            })
-        });
-    </script>
-    
-
+    <div id="successMessage">✔️ Fichier envoyé avec succès !</div>
 </body>
+    <script>
+
+function showSuccessMessage() {
+    const message = document.getElementById('successMessage');
+    message.style.display = 'block';
+    setTimeout(() => {
+        message.style.display = 'none';
+    }, 3000);
+}
+
+// Gestion de l'upload
+document.getElementById('uploadForm').addEventListener('submit', function(event) {
+    event.preventDefault(); 
+
+    const fileInput = document.getElementById('postFile');
+    const destinationInput = document.getElementById('destinationPath');
+    const file = fileInput.files[0];
+    const destinationPath = destinationInput.value; 
+
+    if (!file || !destinationPath) {
+        alert('Enter file and destination path');
+        return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const fileContent = e.target.result; 
+
+        fetch(`http://localhost:9997/${destinationPath}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/octet-stream' 
+            },
+            body: fileContent 
+        })
+        .then(response => response.text().then(text => ({ status: response.status, text })))
+        .then(({ status, text }) => {
+            if (status === 200 || status === 201) {
+                showSuccessMessage();
+            } else {
+                document.open();
+                document.write(text);
+                document.close();
+            }
+        })
+        .catch(error => console.error('ERROR WITH UPLOAD', error));
+    };
+    reader.readAsArrayBuffer(file);
+});
+
+// Gestion de la suppression
+document.getElementById('deleteButton').addEventListener('click', function() {
+    const deletePath = document.getElementById('deletePath').value;
+
+    if (!deletePath) {
+        alert('Veuillez entrer le chemin du fichier à supprimer.');
+        return;
+    }
+
+    fetch(`http://localhost:9997/${deletePath}`, {
+        method: 'DELETE'
+    })
+    .then(response => response.text().then(text => ({ status: response.status, text })))
+    .then(({ status, text }) => {
+        if (status === 200 || status === 201) {
+            showSuccessMessage();
+        } else {
+            document.open();
+            document.write(text);
+            document.close();
+        }
+    })
+});
+
+
+    </script>
+
 </html>

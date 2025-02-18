@@ -109,3 +109,22 @@ h2 {
 #getResponse, #ciResponse {
     color: #f4a261; /* Light orange for warnings or errors */
 }
+
+#successMessage {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0, 255, 127, 0.9);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    font-size: 20px;
+    animation: fadeOut 3s forwards;
+}
+
+@keyframes fadeOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+}
