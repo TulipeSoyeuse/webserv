@@ -218,7 +218,7 @@ bool Response::delete_file()
 		if (errno == ENOENT)
 		{
 			std::cerr << "Error: file not found" << std::endl;
-			http_error(204);
+			http_error(404);
 			return false;
 		}
 	}
