@@ -206,8 +206,11 @@ server_p parse_subpart_config_line(config_string l)
 		}
 		map.insert(std::make_pair(c, d));
 	}
-
-	server_p serv_p(key, std::pair<std::string, Map>(key2, map));
+	if(key == "location") {
+		server_p serv_l(key2, std::pair<std::string, Map>("", map));
+		return serv_l;
+	}
+		server_p serv_p(key, std::pair<std::string, Map>(key2, map));
 	return serv_p;
 }
 
@@ -245,8 +248,11 @@ server_p Server::parse_config_line(config_string l)
 	std::string b = l.get_next_word(i);
 
 	Map m;
+	if(a == "location") {
+		server_p l(b, std::pair<std::string, Map>("", m));
+		return(l);
+	}
 	server_p p(a, std::pair<std::string, Map>(b, m));
-
 	return (p);
 }
 
