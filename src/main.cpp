@@ -36,13 +36,13 @@ int socket_read(int fd, bytes_container &s)
 	pfd.fd = fd;
 	while (true)
 	{
-		int pret;
-		if ((pret = poll(&pfd, 1, 30)) == -1)
+		int ready;
+		if ((ready = poll(&pfd, 1, 30)) == -1)
 		{
 			perror("poll");
 			return -1;
 		}
-		else if (!(pfd.revents & POLLIN) || pret == 0)
+		else if (!(pfd.revents & POLLIN) || ready == 0)
 			break;
 
 		memset(buffer, 0, 4096);
@@ -51,9 +51,40 @@ int socket_read(int fd, bytes_container &s)
 			break;
 		_read += i;
 		s.fill(buffer, i);
-		std::cout << "bytes_read:" << i << "\nvector size:" << s.get_data_size() << "\n";
 	};
 	return (_read);
+}
+
+int socket_write(int fd, bytes_container &b)
+{
+	pollfd pfd;
+	pfd.events = POLLOUT;
+	pfd.fd = fd;
+	int ready;
+	if ((ready = poll(&pfd, 1, 30)) == -1)
+	{
+		perror("poll");
+		return -1;
+	}
+	else if (!(pfd.revents & POLLOUT) || ready == 0)
+		return 0;
+	return (send(fd, b.get_data(), b.get_data_size(), 0));
+}
+
+int socket_write(int fd, const std::string &b)
+{
+	pollfd pfd;
+	pfd.events = POLLOUT;
+	pfd.fd = fd;
+	int ready;
+	if ((ready = poll(&pfd, 1, 30)) == -1)
+	{
+		perror("poll");
+		return -1;
+	}
+	else if (!(pfd.revents & POLLOUT) || ready == 0)
+		return 0;
+	return (send(fd, b.data(), b.size(), 0));
 }
 
 int network_accept_any(int fds[], unsigned int count,
@@ -215,7 +246,7 @@ int main()
 		std::cout << resp;
 		std::cout << "------------------ END -------------------"
 				  << std::endl;
-		send(connection, resp.get_response().data(), resp.get_response().size(), 0);
+		socket_write(connection, resp.get_response());
 		close(connection);
 	}
 
