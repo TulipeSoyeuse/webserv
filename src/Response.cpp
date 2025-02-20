@@ -36,16 +36,16 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 		build_header();
 		if (set_payload())
 			entity_header["Content-Length"] = SSTR(content_length);
-		_response.assign(Status_line.c_str());
+		_response.fill(Status_line.c_str(), Status_line.size());
 		cMap_str(general_header, _response);
 		cMap_str(response_header, _response);
 		cMap_str(entity_header, _response);
-		_response += "\r\n";
+		_response.fill("\r\n\r\n", 4);
 		if (payload)
-			_response.append(payload, content_length);
+			_response.fill(payload, content_length);
 	}
 }
-// TODO: add in server multiple error page for error code
+
 void Response::MIME_attribute()
 {
 	std::string uri = ((Map)_request.get_headers())["URI"];
@@ -453,7 +453,7 @@ bool Response::write_file()
 
 	std::ofstream f;
 	std::ios_base::openmode m = std::ios::trunc;
-	if (_is_binary) // TODO: check ?
+	if (_is_binary)
 		m = m | std::ios::binary;
 
 	std::cout << "CREATING: " << file_path << "\n";
@@ -470,14 +470,14 @@ bool Response::write_file()
 	return (true);
 }
 
-void Response::cMap_str(Map &m, std::string &s)
+void Response::cMap_str(Map &m, bytes_container &s)
 {
 	for (Map::const_iterator it = m.begin(); it != m.end(); ++it)
 	{
-		s += it->first + ": ";
-		s += it->second;
+		s.fill((it->first + ": ").c_str(), it->first.size() + 2);
+		s.fill(it->second.c_str(), it->second.length());
 		if (++it != m.end())
-			s += '\n';
+			s.fill('\n');
 		it--;
 	}
 }
@@ -535,13 +535,13 @@ Response::~Response()
 		delete[] payload;
 }
 
-const std::string &Response::get_response() const
+const bytes_container &Response::get_response() const
 {
 	return (_response);
 }
 
 std::ostream &operator<<(std::ostream &out, const Response &c)
 {
-	out << c.get_response().c_str();
+	out << c.get_response();
 	return (out);
 }

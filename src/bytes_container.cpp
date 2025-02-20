@@ -18,6 +18,11 @@ void bytes_container::fill(ct::iterator b, ct::iterator e)
 	_data.assign(b, e);
 }
 
+void bytes_container::fill(char c)
+{
+	_data.push_back(c);
+}
+
 void bytes_container::seek(unsigned int i)
 {
 	if (i < _data.size())

@@ -19,6 +19,7 @@ public:
 
 	void fill(const char *, size_t);
 	void fill(ct::iterator, ct::iterator);
+	void fill(char);
 	void seek(unsigned int);
 
 	size_t safeGetline(std::string &);

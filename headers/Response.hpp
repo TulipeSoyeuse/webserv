@@ -41,6 +41,8 @@ private:
 	server_m serv;
 	size_t client_size;
 
+	bytes_container _response;
+
 	// header ---------------------
 	void build_header();
 	bool match_file(); // deprecated
@@ -60,8 +62,7 @@ private:
 	bool delete_file();
 
 	// concat  --------------------------
-	void cMap_str(Map &m, std::string &s);
-	std::string _response;
+	void cMap_str(Map &m, bytes_container &s);
 
 	// error response handler --------------
 	void http_error(int);
@@ -77,7 +78,7 @@ public:
 
 	// getter -----------------------------
 	const int &get_status();
-	const std::string &get_response() const;
+	const bytes_container &get_response() const;
 };
 
 std::ostream &operator<<(std::ostream &out, const Response &c);

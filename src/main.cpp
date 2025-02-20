@@ -55,7 +55,7 @@ int socket_read(int fd, bytes_container &s)
 	return (_read);
 }
 
-int socket_write(int fd, bytes_container &b)
+int socket_write(int fd, const bytes_container &b)
 {
 	pollfd pfd;
 	pfd.events = POLLOUT;
@@ -145,8 +145,8 @@ int main()
 	Server webserv("test.conf", false);
 	if (!webserv.is_conf_valid())
 	{
-		std::cerr << "exiting..." << std::endl;
-		return (1);
+		std::cerr << "conf invalid..." << std::endl;
+		// return (1);
 	}
 
 	std::cout << "-------- listening ---------\n";
@@ -225,9 +225,9 @@ int main()
 		char hostname[30];
 		// * The gethostname function get the local computer's standard host name.
 		gethostname(hostname, 30);
-		// std::cout << "------------------------------------------\n"
-		// 		  << "socket port: " << port << "\n"
-		// 		  << "hostname: " << hostname << "\n"
+		std::cout << "------------------------------------------\n"
+				  << "socket port: " << port << "\n"
+				  << "hostname: " << hostname << "\n";
 		// 		  << "------------- BRUT REQUEST ---------------\n"
 		// 		  << brut_request << "\n"
 		// 		  << "------------------------------------------" << std::endl;
@@ -242,10 +242,10 @@ int main()
 		// 		  << "------------------------------------------" << std::endl;
 		// * Response class :
 		Response resp(r, webserv);
-		std::cout << "---------------- RESPONSE ---------------\n";
-		std::cout << resp;
-		std::cout << "------------------ END -------------------"
-				  << std::endl;
+		// std::cout << "---------------- RESPONSE ---------------\n";
+		// std::cout << resp;
+		// std::cout << "------------------ END -------------------"
+		// << std::endl;
 		socket_write(connection, resp.get_response());
 		close(connection);
 	}
