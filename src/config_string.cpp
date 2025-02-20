@@ -122,26 +122,27 @@ std::string config_string::get_next_conf()
 	std::string::const_iterator it = in.begin() + c;
 	std::string::const_iterator end = in.end();
 	size_t count = c;
+
+	// passe les espaces
 	while (it != end && isspace(*it))
 	{
 		++it;
 		++count;
 	}
+	// y'a que des espaces
 	if (it == end)
 	{
 		return result;
 	}
-	while (it != end && !isspace(*it) && *it != '\n')
+
+	// si c pas un espace et que c'est pas un \n
+	while (it != end && *it != '{' && *it != '\n')
 	{
 		key.push_back(*it);
 		++it;
 		++count;
 	}
-	while (it != end && isspace(*it))
-	{
-		++it;
-		++count;
-	}
+	// si on a une bracket ouvrante
 	if (*it == '{')
 	{
 		result += key;

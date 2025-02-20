@@ -53,7 +53,7 @@ Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_r
 	}
 	// * display info about all server
 	display_params();
-	configuration_checking();
+	//configuration_checking();
 }
 
 bool Server::read_config()
@@ -87,6 +87,7 @@ bool Server::read_config()
 
 		while (l = server_conf.get_next_conf(), !l.empty())
 		{
+			std::cout << "this is conf " << l << std::endl;
 			if (!is_string_empty(l))
 				insert(server, parse_config_line(l));
 		}
@@ -97,6 +98,40 @@ bool Server::read_config()
 			port_lst.push_back(std::atoi(server.find("port")->second.first.c_str()));
 	}
 	return (true);
+}
+
+std::string get_second_word(config_string l, std::string::iterator it, bool *start)
+{
+	(void)start;
+	bool second = false;
+	std::string key;
+	while (it != l.get_str().end())
+	{
+		if (isspace(*it))
+		{
+			if (second)
+				break;
+		}
+		else
+		{
+			second = true;
+		}
+		it++;
+	}
+
+	while (*it == ' ')
+		it++;
+	if (*it == '\n' || *it == '{')
+		return key;
+	else
+	{
+		while (!isspace(*it) && *it != '\n' && *it != '{')
+		{
+			key.push_back(*it);
+			it++;
+		}
+	}
+	return key;
 }
 
 std::string get_first_word(config_string l, std::string::iterator it, bool *start)
@@ -125,11 +160,11 @@ server_p parse_subpart_config_line(config_string l)
 	bool start = false;
 	std::string::iterator it;
 	std::string key;
+	std::string key2;
 
 	it = l.get_str().begin();
 	key = get_first_word(l, it, &start);
-
-	std::cout << "key = " << key << std::endl;
+	key2 = get_second_word(l, it, &start);
 	while (*it == ' ' || *it == '{' || *it == '\n')
 		it++;
 	std::string m;
@@ -169,10 +204,13 @@ server_p parse_subpart_config_line(config_string l)
 			d.push_back(*it2);
 			it2++;
 		}
-
 		map.insert(std::make_pair(c, d));
 	}
-	server_p serv_p(key, std::pair<std::string, Map>("", map));
+	if(key == "location") {
+		server_p serv_l(key2, std::pair<std::string, Map>("", map));
+		return serv_l;
+	}
+		server_p serv_p(key, std::pair<std::string, Map>(key2, map));
 	return serv_p;
 }
 
@@ -210,8 +248,11 @@ server_p Server::parse_config_line(config_string l)
 	std::string b = l.get_next_word(i);
 
 	Map m;
+	if(a == "location") {
+		server_p l(b, std::pair<std::string, Map>("", m));
+		return(l);
+	}
 	server_p p(a, std::pair<std::string, Map>(b, m));
-
 	return (p);
 }
 
