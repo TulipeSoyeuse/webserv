@@ -44,9 +44,6 @@ Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_r
 		std::cout << "server init...\n";
 	if (_config_file.open(config), _config_file.good())
 	{
-		if (_debug)
-			std::cout << "file found...\nreading...\n";
-
 		config_string s(_config_file);
 		_config = s;
 		read_config();
