@@ -2,7 +2,7 @@
 
 Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "),
 												  status_code(200), _is_binary(false),
-												  payload(NULL), autoindex(false), foundIndex(false)
+												  payload(NULL), config(s), autoindex(false), foundIndex(false)
 {
 	if (!_request._status)
 	{
@@ -12,38 +12,67 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 
 	// TODO: rework error code and dedicated function
 	// TODO: POST handler for upload file
-	// --------------- HTTP version check ------------------------------
-	std::pair<std::string, std::string> proto = *_request.get_headers().find("Protocol");
-	// * check the http version
 	if (_request.get_type() != PUT)
 		Status_line = "HTTP/1.1 200 Sucess\r\n";
 	else
 		Status_line = "HTTP/1.1 201 Created\r\n";
 
-	if (proto.second != "HTTP/1.1")
+	// * link the right server for the current request (link on "serv" var)
+	set_server_conf(s);
+
+	check_autoindex();
+	// * build header
+	build_header();
+	if (set_payload())
+		entity_header["Content-Length"] = SSTR(content_length);
+	_response.fill(Status_line.c_str(), Status_line.size());
+	cMap_str(general_header, _response);
+	cMap_str(response_header, _response);
+	cMap_str(entity_header, _response);
+	_response.fill("\r\n\r\n", 4);
+	if (payload)
+		_response.fill(payload, content_length);
+}
+
+bool Response::check_proto()
+{
+	p_location l = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
+
+	Map::iterator it = l.second.find("proto");
+	if (it != l.second.end())
 	{
-		http_error(505);
+		if (_request.get_type() == GET)
+		{
+			if (it->second.find("GET") != std::string::npos)
+				return true;
+		}
+		else if (_request.get_type() == POST)
+		{
+			if (it->second.find("POST") != std::string::npos)
+				return true;
+		}
+		else if (_request.get_type() == PUT)
+		{
+			if (it->second.find("PUT") != std::string::npos)
+				return true;
+		}
+		else if (_request.get_type() == DELETE)
+		{
+			if (it->second.find("DELETE") != std::string::npos)
+				return true;
+		}
+	}
+	return false;
+}
+
+void Response::check_autoindex()
+{
+	p_location loc = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
+	Map::iterator it;
+	if ((it = loc.second.find("autoindex")) == loc.second.end())
 		return;
-	}
-	else
-	{
-		// * link the right server for the current request (link on "serv" var)
-		set_server_conf(s);
-		server_m::iterator it = serv.find("autoindex");
-		if (it != serv.end() && it->second.first == "on")
-			autoindex = true;
-		// * build header
-		build_header();
-		if (set_payload())
-			entity_header["Content-Length"] = SSTR(content_length);
-		_response.fill(Status_line.c_str(), Status_line.size());
-		cMap_str(general_header, _response);
-		cMap_str(response_header, _response);
-		cMap_str(entity_header, _response);
-		_response.fill("\r\n\r\n", 4);
-		if (payload)
-			_response.fill(payload, content_length);
-	}
+	else if (it->second == "on")
+		autoindex = true;
 }
 
 void Response::MIME_attribute()
@@ -205,7 +234,7 @@ bool Response::delete_file()
 		std::cerr << "problem with path" << std::endl;
 	}
 
-	if (access(file_path.c_str(), R_OK | X_OK) == -1)
+	if (access(file_path.c_str(), R_OK | W_OK) == -1)
 	{
 		if (errno == EACCES)
 		{
@@ -258,6 +287,17 @@ bool is_dir(std::string file_path)
 
 bool Response::set_payload()
 {
+	std::pair<std::string, std::string> proto = *_request.get_headers().find("Protocol");
+	if (proto.second != "HTTP/1.1")
+	{
+		http_error(505);
+		return (false);
+	}
+	if (!check_proto())
+	{
+		http_error(403);
+		return (false);
+	}
 	if (!check_file())
 	{
 		if (_request.get_type() == PUT)

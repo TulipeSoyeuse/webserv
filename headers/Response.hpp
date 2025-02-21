@@ -20,6 +20,8 @@
 #define SH_ext ".sh"
 #define PY_ext ".py"
 
+typedef std::pair<std::string, Map> p_location;
+
 class Response
 {
 private:
@@ -32,6 +34,7 @@ private:
 
 	int status_code;
 	bool _is_binary;
+
 	std::streamsize content_length;
 
 	char *payload;
@@ -43,15 +46,20 @@ private:
 
 	bytes_container _response;
 
+	Server &config;
 	// header ---------------------
 	void build_header();
-	bool match_file(); // deprecated
+	// deprecated
+	bool match_file();
 	bool check_file();
 	void MIME_attribute();
 
 	// server config ----------------
 	void set_server_conf(Server &);
 
+	// checking ---------------------
+	void check_autoindex();
+	bool check_proto();
 	//  payload ----------------------
 	bool set_payload();
 	bool read_payload_from_file();

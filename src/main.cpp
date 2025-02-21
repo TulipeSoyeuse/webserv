@@ -237,15 +237,15 @@ int main()
 		Request r(brut_request, port);
 		std::cout << "body size:" << r.get_body().get_data_size() << "\n";
 		std::cout << "full request" << r.get_brut_request().get_data_size() << "\n";
-		// std::cout << "-------------- PARSED REQUEST -----------\n"
-		// 		  << r
-		// 		  << "------------------------------------------" << std::endl;
+		std::cout << "-------------- PARSED REQUEST -----------\n"
+				  << r
+				  << "------------------------------------------" << std::endl;
 		// * Response class :
 		Response resp(r, webserv);
-		// std::cout << "---------------- RESPONSE ---------------\n";
-		// std::cout << resp;
-		// std::cout << "------------------ END -------------------"
-		// << std::endl;
+		std::cout << "---------------- RESPONSE ---------------\n";
+		std::cout << resp;
+		std::cout << "------------------ END -------------------"
+				  << std::endl;
 		socket_write(connection, resp.get_response());
 		close(connection);
 	}

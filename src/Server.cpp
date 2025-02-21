@@ -53,7 +53,7 @@ Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_r
 	}
 	// * display info about all server
 	display_params();
-	//configuration_checking();
+	// configuration_checking();
 }
 
 bool Server::read_config()
@@ -206,11 +206,12 @@ server_p parse_subpart_config_line(config_string l)
 		}
 		map.insert(std::make_pair(c, d));
 	}
-	if(key == "location") {
+	if (key == "location")
+	{
 		server_p serv_l(key2, std::pair<std::string, Map>("", map));
 		return serv_l;
 	}
-		server_p serv_p(key, std::pair<std::string, Map>(key2, map));
+	server_p serv_p(key, std::pair<std::string, Map>(key2, map));
 	return serv_p;
 }
 
@@ -248,9 +249,10 @@ server_p Server::parse_config_line(config_string l)
 	std::string b = l.get_next_word(i);
 
 	Map m;
-	if(a == "location") {
+	if (a == "location")
+	{
 		server_p l(b, std::pair<std::string, Map>("", m));
-		return(l);
+		return (l);
 	}
 	server_p p(a, std::pair<std::string, Map>(b, m));
 	return (p);
@@ -394,6 +396,23 @@ const server_m &Server::get_config(std::string &host, int port) const
 			return (*it);
 	}
 	return ((*(_servers.begin()++)));
+}
+
+const std::pair<std::string, Map> &Server::get_location_subconf(const server_m &m, const std::string &uri) const
+{
+	size_t last;
+	std::string substr = uri;
+	while (last = substr.find_last_of('/'), last != uri.npos)
+	{
+		substr = uri.substr(0, last);
+		std::cout << "substr uri: " << substr << "\n";
+		for (server_m::const_iterator it = m.begin(); it != m.end(); ++it)
+		{
+			if (it->first == substr)
+				return (it->second);
+		}
+	}
+	return (m.find("/")->second);
 }
 
 const size_t &Server::get_server_count() const
