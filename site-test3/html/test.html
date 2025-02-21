@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Requêtes Malformées</title>
+</head>
+<body>
+    <h1>Test des Requêtes HTTP Malformées</h1>
+    <button onclick="testMalformedRequests()">Lancer les tests</button>
+    <pre id="output"></pre>
+
+    <script>
+        function logResult(testName, result) {
+            document.getElementById("output").innerText += `${testName}: ${result}\n`;
+        }
+
+        async function testMalformedRequests() {
+            document.getElementById("output").innerText = "Début des tests...\n";
+            
+            // 1️⃣ Méthode inconnue
+            try {
+                let res = await fetch("/", { method: "GOT" });
+                logResult("Méthode inconnue", res.status);
+            } catch (e) { logResult("Méthode inconnue", e); }
+            
+            // 2️⃣ Header malformé
+            try {
+                let res = await fetch("/", {
+                    headers: { "Host": "localhost", "Content-Length": "trop-long" }
+                });
+                logResult("Header malformé", res.status);
+            } catch (e) { logResult("Header malformé", e); }
+            
+            // 3️⃣ Body JSON corrompu
+            try {
+                let res = await fetch("/", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: "{malformed_json: true,"
+                });
+                logResult("Body corrompu", res.status);
+            } catch (e) { logResult("Body corrompu", e); }
+            
+            // 4️⃣ Requête incomplète (tentative via XHR)
+            try {
+                const xhr = new XMLHttpRequest();
+                xhr.open("GET", "/", true);
+                xhr.setRequestHeader("Host", "");
+                xhr.onload = () => logResult("Requête incomplète", xhr.status);
+                xhr.onerror = () => logResult("Requête incomplète", "Erreur");
+                xhr.send();
+            } catch (e) { logResult("Requête incomplète", e); }
+        }
+    </script>
+</body>
+</html>

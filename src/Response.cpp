@@ -19,7 +19,6 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 
 	// * link the right server for the current request (link on "serv" var)
 	set_server_conf(s);
-
 	check_autoindex();
 	// * build header
 	build_header();
@@ -295,7 +294,7 @@ bool Response::set_payload()
 	}
 	if (!check_proto())
 	{
-		http_error(403);
+		http_error(405);
 		return (false);
 	}
 	if (!check_file())
@@ -409,13 +408,16 @@ bool Response::CGI_from_file(CGI c)
 	payload = new char[client_size];
 	hm_popen hmpop(file_path, c, _request);
 	content_length = hmpop.read_out(payload, client_size);
-	if (!hmpop.is_good())
+	if (hmpop.is_good() != 0)
 	{
 		std::cerr << "----child error----\n"
 				  << payload << "\n--------------\n";
 		delete payload;
 		content_length = 0;
-		http_error(500);
+		if(hmpop.is_good() == 408)
+			http_error(408);
+		else
+			http_error(500);
 		return (false);
 	}
 	// TODO: after error response rework -> handle good flag from popen
@@ -441,7 +443,7 @@ bool Response::read_payload_from_file()
 		content_length = f.gcount();
 		f.clear();
 		f.seekg(0, std::ios_base::beg);
-
+		//TODO : check client size, si c trop petit je me casse 
 		payload = new char[content_length + 1];
 		bzero(payload, content_length + 1);
 		f.read(payload, content_length);
