@@ -1,7 +1,7 @@
 #include "Response.hpp"
 
 Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "),
-												  status_code(200), _is_binary(false),
+												  status_code(200), _is_binary(false), _error(false),
 												  payload(NULL), config(s), autoindex(false), foundIndex(false)
 {
 	if (!_request._status)
@@ -19,10 +19,11 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 
 	// * link the right server for the current request (link on "serv" var)
 	set_server_conf(s);
-
 	check_autoindex();
 	// * build header
 	build_header();
+	if (!is_body_size_valid())
+		http_error(413);
 	if (set_payload())
 		entity_header["Content-Length"] = SSTR(content_length);
 	_response.fill(Status_line.c_str(), Status_line.size());
@@ -32,6 +33,23 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	_response.fill("\r\n\r\n", 4);
 	if (payload)
 		_response.fill(payload, content_length);
+}
+
+bool Response::is_body_size_valid() const
+{
+	p_location loc = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
+	Map::iterator it;
+	if ((it = loc.second.find("client_size")) == loc.second.end() ||
+		(atoi(it->second.c_str()) == 0 || content_length <= atoi(it->second.c_str())))
+	{
+		std::cout << "body size: " << content_length << " valid (limit " << it->second << ")\n";
+		return true;
+	}
+	else
+	{
+		std::cout << "body size: " << content_length << " invalid (limit " << it->second << ")\n";
+		return false;
+	}
 }
 
 bool Response::check_proto()
@@ -287,6 +305,8 @@ bool is_dir(std::string file_path)
 
 bool Response::set_payload()
 {
+	if (_error)
+		return false;
 	std::pair<std::string, std::string> proto = *_request.get_headers().find("Protocol");
 	if (proto.second != "HTTP/1.1")
 	{
@@ -525,6 +545,7 @@ void Response::cMap_str(Map &m, bytes_container &s)
 void Response::http_error(int code)
 {
 	// set env
+	_error = true;
 	status_code = code;
 	entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
 	// code
@@ -553,16 +574,6 @@ void Response::http_error(int code)
 		entity_header["Content-Length"] = SSTR(content_length);
 	}
 }
-
-// void Response::create_error_page(int code) {
-// 	//verifier le path et qu'il existe
-// 	std::ifstream err_out;
-
-// 	std::string replace;
-
-// 	//avancer jusque body
-// 	// Changer l'erreur
-// }
 
 const int &Response::get_status()
 {

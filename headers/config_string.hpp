@@ -14,7 +14,7 @@ public:
 	config_string(std::ifstream &f);
 	config_string(const std::string &s);
 	~config_string();
-
+	config_string &operator=(const config_string &);
 
 	std::string get_next_word(const size_t pos) const;
 	std::string get_config_subpart(const size_t pos) const;

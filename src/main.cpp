@@ -127,6 +127,17 @@ int network_accept_any(int fds[], unsigned int count,
 	}
 }
 
+void close_connection(int *a, struct sockaddr_in *b, int num_fd, Server *s)
+{
+	for (int i = 0; i < num_fd; i++)
+	{
+		close(a[i]);
+	}
+	delete[] a;
+	delete[] b;
+	delete s;
+}
+
 int main()
 {
 	// TODO: rework connection flow
@@ -142,8 +153,8 @@ int main()
 	sigaction(SIGSTOP, &act, 0);
 
 	// * call webserv constructor -> parse config file
-	Server webserv("test.conf", false);
-	if (!webserv.is_conf_valid())
+	Server *webserv = new Server("test.conf", false);
+	if (!webserv->is_conf_valid())
 	{
 		std::cerr << "conf invalid..." << std::endl;
 		// return (1);
@@ -153,9 +164,9 @@ int main()
 	// Create a socket(IPv4, TCP)
 
 	// * get port parsed in config file
-	const port_array &parray = webserv.get_ports();
+	const port_array &parray = webserv->get_ports();
 	// * get number of port
-	int num_fd = webserv.get_server_count();
+	int num_fd = webserv->get_server_count();
 	// * struct SOCKADDR_IN to define transport adress and port for AF_INET family
 	struct sockaddr_in *sockaddr = new sockaddr_in[num_fd];
 	int *sockfd = new int[num_fd];
@@ -168,6 +179,7 @@ int main()
 		if (sockfd[i] == -1)
 		{
 			std::cout << "Failed to create socket n°" << i << " . errno: " << errno << std::endl;
+			close_connection(sockfd, sockaddr, num_fd, webserv);
 			exit(EXIT_FAILURE);
 		}
 		// Listen to port 9999 on any address
@@ -186,18 +198,21 @@ int main()
 		if (setsockopt(sockfd[i], SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
 		{
 			perror("setsockopt");
+			close_connection(sockfd, sockaddr, num_fd, webserv);
 			exit(EXIT_FAILURE);
 		}
 		// * It is necessary to assign a local address with bind() before a SOCK_STREAM socket can receive connections.
 		if (bind(sockfd[i], (struct sockaddr *)&(sockaddr[i]), sizeof(sockaddr[i])) < 0)
 		{
 			std::cout << "Failed to bind to port " << parray[i] << ". errno: " << errno << std::endl;
+			close_connection(sockfd, sockaddr, num_fd, webserv);
 			exit(EXIT_FAILURE);
 		}
 		// * listen() -> The listen function places a socket in a state in which it is listening for an incoming connection.
-		if (listen(sockfd[i], 10) < 0)
+		if (listen(sockfd[i], 20) < 0)
 		{
 			std::cout << "Failed to listen on socket n°" << i << ". errno: " << errno << std::endl;
+			close_connection(sockfd, sockaddr, num_fd, webserv);
 			exit(EXIT_FAILURE);
 		}
 	}
@@ -241,20 +256,15 @@ int main()
 				  << r
 				  << "------------------------------------------" << std::endl;
 		// * Response class :
-		Response resp(r, webserv);
-		std::cout << "---------------- RESPONSE ---------------\n";
-		std::cout << resp;
-		std::cout << "------------------ END -------------------"
-				  << std::endl;
+		Response resp(r, *webserv);
+		// std::cout << "---------------- RESPONSE ---------------\n";
+		// std::cout << resp;
+		// std::cout << "------------------ END -------------------"
+		//<< std::endl;
 		socket_write(connection, resp.get_response());
 		close(connection);
 	}
 
 	// Close the connections
-	for (int i = 0; i < num_fd; i++)
-	{
-		close(sockfd[i]);
-	}
-	delete[] sockfd;
-	delete[] sockaddr;
+	close_connection(sockfd, sockaddr, num_fd, webserv);
 }

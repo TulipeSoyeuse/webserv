@@ -19,8 +19,15 @@ config_string::config_string(std::ifstream &f) : c(0)
 		std::cerr << "filestream not good\n";
 }
 
+config_string &config_string::operator=(const config_string &cs)
+{
+	in = cs.in;
+	c = cs.c;
+	return (*this);
+}
 
-void config_string::set_c(size_t n) {
+void config_string::set_c(size_t n)
+{
 	c = n;
 }
 
@@ -93,7 +100,7 @@ std::string config_string::get_next_line()
 	size_t find_return = in.find('\n', c);
 	std::string res;
 
-	if(c == (size_t)-1)
+	if (c == (size_t)-1)
 		return res;
 
 	if (find_return == in.npos)
@@ -146,7 +153,7 @@ std::string config_string::get_next_conf()
 	if (*it == '{')
 	{
 		result += key;
-		result.push_back(' '); 
+		result.push_back(' ');
 		result += "{";
 		++it;
 		++count;

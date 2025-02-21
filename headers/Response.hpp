@@ -34,6 +34,7 @@ private:
 
 	int status_code;
 	bool _is_binary;
+	bool _error;
 
 	std::streamsize content_length;
 
@@ -61,6 +62,7 @@ private:
 	void check_autoindex();
 	bool check_proto();
 	//  payload ----------------------
+	bool is_body_size_valid() const;
 	bool set_payload();
 	bool read_payload_from_file();
 	bool CGI_from_file(CGI);
