@@ -262,6 +262,12 @@ int main()
 		// std::cout << "------------------ END -------------------"
 		//<< std::endl;
 		socket_write(connection, resp.get_response());
+		if (resp.is_chunked())
+		{
+			bytes_container b;
+			while (resp.get_next_chunk(b) != -1)
+				socket_write(connection, b);
+		}
 		close(connection);
 	}
 

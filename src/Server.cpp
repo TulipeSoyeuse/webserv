@@ -392,7 +392,7 @@ const server_m &Server::get_config(std::string &host, int port) const
 		if ((*it).find("port") != it->end() && atoi(((*it).find("port")->second.first.c_str())) == port)
 			return (*it);
 	}
-	return ((*(_servers.begin()++)));
+	return (*(_servers.end()));
 }
 
 const std::pair<std::string, Map> &Server::get_location_subconf(const server_m &m, const std::string &uri) const

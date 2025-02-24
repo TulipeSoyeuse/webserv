@@ -5,6 +5,8 @@
 #include "hm_popen.hpp"
 
 #define SSTR(x) static_cast<std::ostringstream &>(std::ostringstream() << std::dec << x).str()
+#define SSTRH(x) static_cast<std::ostringstream &>(std::ostringstream() << std::hex << x).str()
+
 #define AAC "audio/aac"
 #define BIN "application/octet-stream"
 #define CSV "text/csv"
@@ -20,6 +22,7 @@
 #define SH_ext ".sh"
 #define PY_ext ".py"
 
+#define CHUNK_MINI 2000;
 typedef std::pair<std::string, Map> p_location;
 
 class Response
@@ -35,6 +38,8 @@ private:
 	int status_code;
 	bool _is_binary;
 	bool _error;
+	bool _chunk;
+	size_t chunk_size;
 
 	std::streamsize content_length;
 
@@ -45,13 +50,12 @@ private:
 	server_m serv;
 	size_t client_size;
 
+	bytes_container _reste;
 	bytes_container _response;
 
 	Server &config;
 	// header ---------------------
-	void build_header();
-	// deprecated
-	bool match_file();
+	bool match_file(); // deprecated
 	bool check_file();
 	void MIME_attribute();
 
@@ -71,6 +75,9 @@ private:
 	bool error_path();
 	bool delete_file();
 
+	// chunk   --------------------------
+	void serv_by_chunk();
+
 	// concat  --------------------------
 	void cMap_str(Map &m, bytes_container &s);
 
@@ -89,6 +96,10 @@ public:
 	// getter -----------------------------
 	const int &get_status();
 	const bytes_container &get_response() const;
+
+	// chunk ------------------------------
+	const bool &is_chunked() const;
+	int get_next_chunk(bytes_container &);
 };
 
 std::ostream &operator<<(std::ostream &out, const Response &c);
