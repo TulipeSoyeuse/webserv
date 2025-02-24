@@ -8,19 +8,27 @@ bytes_container::~bytes_container()
 {
 }
 
+// @brief insert at the end
 void bytes_container::fill(const char *s, size_t i)
 {
 	_data.insert(_data.end(), s, s + i);
 }
 
+// @brief replace content
 void bytes_container::fill(ct::iterator b, ct::iterator e)
 {
 	_data.assign(b, e);
 }
 
+// @brief push back
 void bytes_container::fill(char c)
 {
 	_data.push_back(c);
+}
+
+void bytes_container::clear()
+{
+	_data.clear();
 }
 
 void bytes_container::seek(unsigned int i)
@@ -46,6 +54,36 @@ size_t bytes_container::safeGetline(std::string &s)
 	}
 	s.erase(std::remove(s.begin(), s.end(), '\r'), s.end());
 	return (i);
+}
+
+size_t bytes_container::read(std::string &res, size_t len)
+{
+	res.clear();
+	if (_cursor >= _data.size())
+		return (0);
+	for (ct::iterator it = _data.begin() + _cursor; it != _data.end() && len--; ++it)
+	{
+		res.push_back(*it);
+	}
+	_cursor += res.length();
+	return (res.length());
+}
+
+size_t bytes_container::read(bytes_container &res, size_t len)
+{
+	res.clear();
+	if (_cursor >= _data.size())
+		return (0);
+
+	ct::iterator it = _data.begin() + _cursor;
+	size_t i = 0;
+
+	for (; it != _data.end() && len--; ++it)
+		i++;
+
+	res.fill(_data.begin() + _cursor, it);
+	_cursor += i;
+	return (it - _data.begin() + _cursor);
 }
 
 int bytes_container::find_last_of(const char *p)

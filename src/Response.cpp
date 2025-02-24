@@ -1,7 +1,7 @@
 #include "Response.hpp"
 
-Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "),
-												  status_code(200), _is_binary(false), _error(false),
+Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "), status_code(200),
+												  _is_binary(false), _error(false), _chunk(false), content_length(0),
 												  payload(NULL), config(s), autoindex(false), foundIndex(false)
 {
 	if (!_request._status)
@@ -20,23 +20,50 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	// * link the right server for the current request (link on "serv" var)
 	set_server_conf(s);
 	check_autoindex();
+
 	// * build header
-	build_header();
-	if (!is_body_size_valid())
-		http_error(413);
+	general_header["Server"] = "webserv/0.1\n";
+	// * if i find the file
+	MIME_attribute();
+
 	if (set_payload())
+	{
 		entity_header["Content-Length"] = SSTR(content_length);
+		if (!is_body_size_valid())
+		{
+			// is size is greater than client_size, then process by chunk
+			serv_by_chunk();
+		}
+	}
+
 	_response.fill(Status_line.c_str(), Status_line.size());
+
 	cMap_str(general_header, _response);
 	cMap_str(response_header, _response);
 	cMap_str(entity_header, _response);
 	_response.fill("\r\n\r\n", 4);
-	if (payload)
+	if (payload && !_chunk)
 		_response.fill(payload, content_length);
+}
+
+// @brief update header and body to serv the new purpose and update the _reste variable
+void Response::serv_by_chunk()
+{
+	// header
+	entity_header["Transfer-Encoding"] = "chunked";
+	entity_header.erase("Content-Length");
+	_chunk = true;
+	_reste.fill(payload, content_length);
+	// size
+	chunk_size = CHUNK_MINI;
+	while (content_length / chunk_size > 20 && chunk_size < 1000000)
+		chunk_size += CHUNK_MINI;
 }
 
 bool Response::is_body_size_valid() const
 {
+	if (_error)
+		return true;
 	p_location loc = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
 	Map::iterator it;
 	if ((it = loc.second.find("client_size")) == loc.second.end() ||
@@ -141,13 +168,6 @@ void Response::MIME_attribute()
 		entity_header["Content-Type"] = CSS "; charset=UTF-8\n";
 	else
 		entity_header["Content-Type"] = TXT "; charset=UTF-8\n";
-}
-
-void Response::build_header()
-{
-	general_header["Server"] = "webserv/0.1\n";
-	// * if i find the file
-	MIME_attribute();
 }
 
 bool Response::match_file()
@@ -446,7 +466,6 @@ bool Response::CGI_from_file(CGI c)
 			http_error(500);
 		return (false);
 	}
-	// TODO: after error response rework -> handle good flag from popen
 	std::cout << "content length: " << content_length << "\n";
 	std::cout << "---------PAYLOAD--------\n"
 			  << payload;
@@ -569,18 +588,55 @@ void Response::http_error(int code)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Bad Request\r\n");
 	else if (code == 204)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "No content\r\n");
+	else if (code == 413)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Request Entity Too Large\r\n");
 	// read error file if provided in server conf
 	_is_binary = false;
 	server_m::iterator error_page = serv.find("error_page");
 	if (error_page != serv.end())
 	{
-		if (error_page->second.second.find(ft_itoa(code)) != error_page->second.second.end())
+		if (error_page->second.second.find(SSTR(0)) != error_page->second.second.end())
+		{
 			// dynamic error page
 			file_path = serv.find("route")->second.first + serv.find("location")->second.first + "/" + error_page->second.second.find(ft_itoa(code))->second;
-		// eate_error_page(code);
-		read_payload_from_file();
-		entity_header["Content-Length"] = SSTR(content_length);
+			read_payload_from_file();
+			entity_header["Content-Length"] = SSTR(content_length);
+		}
+		else
+		{
+			entity_header["Content-Length"] = SSTR(0);
+		}
 	}
+}
+
+const bool &Response::is_chunked() const
+{
+	return (_chunk);
+}
+
+int Response::get_next_chunk(bytes_container &res)
+{
+	static bool last = false;
+	res.clear();
+
+	bytes_container buf;
+	size_t l = _reste.read(buf, chunk_size);
+
+	std::string s(SSTRH(l) + "\r\n");
+	res.fill(s.c_str(), s.length());
+	res.fill(buf.get_data(), l);
+
+	std::cout << "chunk:\"" << res << "\"\n";
+
+	if (!last && l == 0)
+	{
+		res.clear();
+		last = true;
+		res.fill("0\r\n", 3);
+		std::cout << "last chunk:\"" << res << "\"\n";
+		return (-1);
+	}
+	return (1);
 }
 
 const int &Response::get_status()
