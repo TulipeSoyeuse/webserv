@@ -26,9 +26,9 @@
 
 #include <sys/socket.h> // For socket functions
 #include <netinet/in.h> // For sockaddr_in
-#include <cstdlib>		// For exit() and EXIT_FAILURE
-#include <iostream>		// For cout
-#include <unistd.h>		// For read
+#include <cstdlib>      // For exit() and EXIT_FAILURE
+#include <iostream>     // For cout
+#include <unistd.h>     // For read
 #include <sys/errno.h>
 #include <poll.h>
 #include <signal.h>
@@ -45,3 +45,5 @@
 
 extern char **environ;
 extern bool does_file_exist(const std::string &name);
+char **ft_split(char const *s, char c);
+char **ft_freestrs(char **strs, size_t words);

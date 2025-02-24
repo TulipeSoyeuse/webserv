@@ -46,7 +46,8 @@ public:
 
 	const std::string &get_param(const std::string &, const std::string &);
 	const std::string &get_param(const std::string &, const std::string &, const std::string &);
-	const server_m &get_config(std::string &, int) const;
+	const server_m *get_config(std::string &, int) const;
+	const Server_lst &get_servers() const;
 	const std::pair<std::string, Map> &get_location_subconf(const server_m &, const std::string &) const;
 	const size_t &get_server_count() const;
 	const port_array &get_ports() const;

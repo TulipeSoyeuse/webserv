@@ -229,9 +229,14 @@ bool Response::check_file()
 void Response::set_server_conf(Server &s)
 {
 	// * get host
+	const server_m *_server;
 	std::string host = _request.get_headers().find("Host")->second;
 	// * get port
-	serv = s.get_config(host, _request.get_in_port());
+	_server = s.get_config(host, _request.get_in_port());
+	if(!_server)
+		http_error(400);
+	else
+	serv = *_server;
 	// * get client_size
 	if (serv.find("client_size") != serv.end() && serv.find("client_size")->second.first != "0")
 		client_size = std::atoi(serv.find("client_size")->second.first.c_str());
