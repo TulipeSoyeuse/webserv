@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erreur 500</title>
+    <style>
+        @keyframes waves {
+            0% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0); }
+        }
+        body {
+            display: flex; justify-content: center; align-items: center; 
+            height: 100vh; background: linear-gradient(45deg, #ff6f00, #ff1744);
+            color: white; font-family: Arial, sans-serif; text-align: center;
+        }
+        .container { padding: 20px; }
+        h1 {
+            font-size: 100px; font-weight: bold;
+            animation: waves 1.5s infinite ease-in-out;
+        }
+        p { font-size: 22px; margin-bottom: 20px; }
+        a {
+            text-decoration: none; padding: 12px 24px; background: #1e88e5;
+            color: white; border-radius: 5px; font-size: 18px; transition: 0.3s;
+        }
+        a:hover { background: #1565c0; transform: scale(1.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>500</h1>
+        <p>There was an error on the server and the request could not be completed</p>
+        <a href="/">Retour à l'accueil</a>
+    </div>
+</body>
+</html>

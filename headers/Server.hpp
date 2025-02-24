@@ -33,6 +33,7 @@ private:
 	size_t server_count;
 	server_p parse_config_line(config_string);
 	port_array port_lst;
+	server_m _default;
 	// ------- ERROR CHECK ------
 	bool _valid_conf;
 	void configuration_checking();
@@ -46,7 +47,8 @@ public:
 
 	const std::string &get_param(const std::string &, const std::string &);
 	const std::string &get_param(const std::string &, const std::string &, const std::string &);
-	const server_m *get_config(std::string &, int) const;
+	const server_m &get_config(std::string &, int) ;
+	const server_m &create_default_config();
 	const Server_lst &get_servers() const;
 	const std::pair<std::string, Map> &get_location_subconf(const server_m &, const std::string &) const;
 	const size_t &get_server_count() const;

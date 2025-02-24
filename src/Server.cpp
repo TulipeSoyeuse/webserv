@@ -404,15 +404,30 @@ bool check_host(std::string &host, const std::string &hosts)
 	return false;
 }
 
-const server_m *Server::get_config(std::string &host, int port) const
+
+const server_m &Server::create_default_config() {
+	Map error_page;
+	error_page.insert(std::make_pair<std::string, std::string>("404", "error_page/404.html"));
+	error_page.insert(std::make_pair<std::string, std::string>("403", "error_page/403.html"));
+	error_page.insert(std::make_pair<std::string, std::string>("400", "error_page/400.html"));
+	error_page.insert(std::make_pair<std::string, std::string>("405", "error_page/405.html"));
+	error_page.insert(std::make_pair<std::string, std::string>("408", "error_page/408.html"));
+	error_page.insert(std::make_pair<std::string, std::string>("500", "error_page/500.html"));
+	error_page.insert(std::make_pair<std::string, std::string>("505", "error_page/505.html"));
+	server_p _p("error_page", make_pair("", error_page));
+	_default.insert(_p);
+	return _default;
+}
+
+const server_m &Server::get_config(std::string &host, int port) 
 {
 	for (Server_lst::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
 		bool match_host = check_host(host, (*it).find("host")->second.first);
 		if ((*it).find("port") != it->end() && atoi(((*it).find("port")->second.first.c_str())) == port && match_host)
-			return (&(*it));
+			return ((*it));
 	}
-	return (NULL);
+	return (create_default_config());
 }
 
 const std::pair<std::string, Map> &Server::get_location_subconf(const server_m &m, const std::string &uri) const
