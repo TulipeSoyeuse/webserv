@@ -83,7 +83,7 @@ size_t bytes_container::read(bytes_container &res, size_t len)
 
 	res.fill(_data.begin() + _cursor, it);
 	_cursor += i;
-	return (it - _data.begin() + _cursor);
+	return (i);
 }
 
 int bytes_container::find_last_of(const char *p)

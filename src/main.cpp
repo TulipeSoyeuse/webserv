@@ -257,16 +257,22 @@ int main()
 				  << "------------------------------------------" << std::endl;
 		// * Response class :
 		Response resp(r, *webserv);
-		// std::cout << "---------------- RESPONSE ---------------\n";
-		// std::cout << resp;
-		// std::cout << "------------------ END -------------------"
-		//<< std::endl;
+		std::cout << "---------------- RESPONSE ---------------\n";
+		std::cout << resp;
+		std::cout << "------------------ END -------------------"
+				  << std::endl;
 		socket_write(connection, resp.get_response());
 		if (resp.is_chunked())
 		{
 			bytes_container b;
 			while (resp.get_next_chunk(b) != -1)
+			{
+				std::string s;
+				b.safeGetline(s);
+				b.seek(0);
+				std::cout << s << '\n';
 				socket_write(connection, b);
+			}
 		}
 		close(connection);
 	}

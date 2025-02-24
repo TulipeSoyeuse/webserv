@@ -2,7 +2,9 @@
 
 Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "), status_code(200),
 												  _is_binary(false), _error(false), _chunk(false), content_length(0),
-												  payload(NULL), config(s), autoindex(false), foundIndex(false)
+												  payload(NULL), last(false), config(s), autoindex(false),
+												  foundIndex(false)
+
 {
 	if (!_request._status)
 	{
@@ -564,6 +566,8 @@ void Response::cMap_str(Map &m, bytes_container &s)
 void Response::http_error(int code)
 {
 	// set env
+	if (_error)
+		return;
 	_error = true;
 	status_code = code;
 	entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
@@ -587,8 +591,9 @@ void Response::http_error(int code)
 	server_m::iterator error_page = serv.find("error_page");
 	if (error_page != serv.end())
 	{
-		if (error_page->second.second.find(SSTR(0)) != error_page->second.second.end())
+		if (error_page->second.second.find(SSTR(code)) != error_page->second.second.end())
 		{
+			std::cout << "IF";
 			// dynamic error page
 			file_path = serv.find("route")->second.first + serv.find("location")->second.first + "/" + error_page->second.second.find(ft_itoa(code))->second;
 			read_payload_from_file();
@@ -608,8 +613,10 @@ const bool &Response::is_chunked() const
 
 int Response::get_next_chunk(bytes_container &res)
 {
-	static bool last = false;
 	res.clear();
+
+	if (last)
+		return (-1);
 
 	bytes_container buf;
 	size_t l = _reste.read(buf, chunk_size);
@@ -618,15 +625,12 @@ int Response::get_next_chunk(bytes_container &res)
 	res.fill(s.c_str(), s.length());
 	res.fill(buf.get_data(), l);
 
-	std::cout << "chunk:\"" << res << "\"\n";
-
 	if (!last && l == 0)
 	{
 		res.clear();
 		last = true;
 		res.fill("0\r\n", 3);
-		std::cout << "last chunk:\"" << res << "\"\n";
-		return (-1);
+		return (0);
 	}
 	return (1);
 }

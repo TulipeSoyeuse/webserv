@@ -53,6 +53,7 @@ private:
 	bytes_container _reste;
 	bytes_container _response;
 
+	bool last;
 	Server &config;
 	// header ---------------------
 	bool match_file(); // deprecated
