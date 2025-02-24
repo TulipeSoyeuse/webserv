@@ -1,6 +1,6 @@
 #include "hm_popen.hpp"
 
-hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(_request), all_read(false), good(true)
+hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(_request), all_read(false), good(1)
 {
 	int stdout_pipe[2];
 	int stderr_pipe[2];
@@ -8,6 +8,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 	if (pipe(stdout_pipe) == -1 || pipe(stderr_pipe) == -1 || pipe(stdin_pipe) == -1)
 	{
 		perror("pipe");
+		good = 500;
 		return;
 	}
 
@@ -15,7 +16,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 	if (pid == -1)
 	{
 		perror("fork");
-		good = false;
+		good = 500;
 		return;
 	}
 	if (pid == 0)
@@ -88,14 +89,14 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 			if (difftime(end, start) > 5)
 			{
 				kill(pid, 9);
-				good = false;
+				good = 408;
 				break;
 			}
 		}
 		if (WIFEXITED(status))
 		{
 			if (WEXITSTATUS(status) != 0)
-				good = false;
+				good = 408;
 		}
 		subprocess_stdout_fd = stdout_pipe[0];
 		subprocess_stderr_fd = stderr_pipe[0];
@@ -182,7 +183,7 @@ hm_popen::~hm_popen()
 	close(subprocess_stdout_fd);
 }
 
-const bool &hm_popen::is_good() const
+const int &hm_popen::is_good() const
 {
 	return (good);
 }

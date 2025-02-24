@@ -1,4 +1,4 @@
-FILES		=	main.cpp Request.cpp Response.cpp Server.cpp config_string.cpp hm_popen.cpp \
+FILES		=	main.cpp Request.cpp Response.cpp Server.cpp config_string.cpp hm_popen.cpp string_utils.cpp\
 				bytes_container.cpp
 HEADERS		=	$(addprefix $(HEADERS_DIR)/, Request.hpp Response.hpp Server.hpp\
 				 includes.hpp config_string.hpp hm_popen.hpp bytes_container.hpp)

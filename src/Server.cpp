@@ -216,6 +216,7 @@ server_p Server::parse_config_line(config_string l)
 {
 	std::string a;
 	bool start = false;
+	std::string b;
 	size_t i = 0;
 	std::string::iterator it;
 
@@ -237,13 +238,17 @@ server_p Server::parse_config_line(config_string l)
 		}
 		i++;
 	}
-
 	while (true)
 		if (isspace(l.get_str()[i]))
 			i++;
 		else
 			break;
-	std::string b = l.get_next_word(i);
+	if (a == "host")
+	{
+		b = l.get_str().substr(i, (l.get_str().size() - i) - 1);
+	}
+	else
+		b = l.get_next_word(i);
 
 	Map m;
 	if (a == "location")
@@ -384,15 +389,30 @@ void Server::configuration_checking()
 	_valid_conf = true;
 }
 
-const server_m &Server::get_config(std::string &host, int port) const
+bool check_host(std::string &host, const std::string &hosts)
 {
 	(void)host;
+	char **s_hosts = ft_split(hosts.c_str(), ' ');
+	std::cout << "THIS IS HOST : " << hosts << " and host : " << host << std::endl;
+	for(int i = 0; s_hosts[i]; i++) {
+		std::string h_str = s_hosts[i];
+		if(host.c_str() == h_str) {
+			ft_freestrs(s_hosts, (size_t)i);
+			return true;
+		}
+	}
+	return false;
+}
+
+const server_m *Server::get_config(std::string &host, int port) const
+{
 	for (Server_lst::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
-		if ((*it).find("port") != it->end() && atoi(((*it).find("port")->second.first.c_str())) == port)
-			return (*it);
+		bool match_host = check_host(host, (*it).find("host")->second.first);
+		if ((*it).find("port") != it->end() && atoi(((*it).find("port")->second.first.c_str())) == port && match_host)
+			return (&(*it));
 	}
-	return (*(_servers.end()));
+	return (NULL);
 }
 
 const std::pair<std::string, Map> &Server::get_location_subconf(const server_m &m, const std::string &uri) const
@@ -425,6 +445,10 @@ const port_array &Server::get_ports() const
 const bool &Server::is_conf_valid() const
 {
 	return (_valid_conf);
+}
+
+const Server_lst &Server::get_servers() const {
+	return (_servers);
 }
 
 Server::~Server()
