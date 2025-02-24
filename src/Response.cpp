@@ -112,6 +112,8 @@ bool Response::check_proto()
 
 void Response::check_autoindex()
 {
+	if(_error)
+		return ;
 	p_location loc = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
 	Map::iterator it;
 	if ((it = loc.second.find("autoindex")) == loc.second.end())
