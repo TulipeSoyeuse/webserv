@@ -21,6 +21,8 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 
 	// * link the right server for the current request (link on "serv" var)
 	set_server_conf(s);
+	if (!strcmp(serv.find("Host")->second.first.c_str(), "NOTFOUND"))
+		http_error(400);
 	check_autoindex();
 
 	// * build header
@@ -38,8 +40,8 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 		}
 	}
 
+	// assembly ----------------------------
 	_response.fill(Status_line.c_str(), Status_line.size());
-
 	cMap_str(general_header, _response);
 	cMap_str(response_header, _response);
 	cMap_str(entity_header, _response);
@@ -114,6 +116,9 @@ bool Response::check_proto()
 
 void Response::check_autoindex()
 {
+	if (_request.get_headers().find("URI") == _request.get_headers().end())
+		return;
+	std::cout << _request.get_headers().find("URI")->second << "\n";
 	p_location loc = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
 	Map::iterator it;
 	if ((it = loc.second.find("autoindex")) == loc.second.end())
@@ -251,19 +256,14 @@ bool Response::check_file()
 void Response::set_server_conf(Server &s)
 {
 	// * get host
-	const server_m *_server;
 	std::string host = _request.get_headers().find("Host")->second;
 	// * get port
-	_server = s.get_config(host, _request.get_in_port());
-	if(!_server)
-		http_error(400);
-	else
-	serv = *_server;
-	// * get client_size
+	serv = s.get_config(host, _request.get_in_port());
+
 	if (serv.find("client_size") != serv.end() && serv.find("client_size")->second.first != "0")
 		client_size = std::atoi(serv.find("client_size")->second.first.c_str());
 	else
-		client_size = 4096;
+		client_size = 65536;
 }
 
 // TODO : .conf authorise to delete ?
@@ -462,7 +462,7 @@ bool Response::CGI_from_file(CGI c)
 				  << payload << "\n--------------\n";
 		delete payload;
 		content_length = 0;
-		if(hmpop.is_good() == 408)
+		if (hmpop.is_good() == 408)
 			http_error(408);
 		else
 			http_error(500);
@@ -490,7 +490,7 @@ bool Response::read_payload_from_file()
 		content_length = f.gcount();
 		f.clear();
 		f.seekg(0, std::ios_base::beg);
-		//TODO : check client size, si c trop petit je me casse 
+		// TODO : check client size, si c trop petit je me casse
 		payload = new char[content_length + 1];
 		bzero(payload, content_length + 1);
 		f.read(payload, content_length);
@@ -599,16 +599,18 @@ void Response::http_error(int code)
 	server_m::iterator error_page = serv.find("error_page");
 	if (error_page != serv.end())
 	{
+		std::cout << "!!!!! 1\n";
 		if (error_page->second.second.find(SSTR(code)) != error_page->second.second.end())
 		{
-			std::cout << "IF";
+			std::cout << "!!!!! 2\n";
 			// dynamic error page
-			file_path = serv.find("route")->second.first + serv.find("location")->second.first + "/" + error_page->second.second.find(ft_itoa(code))->second;
+			file_path = serv.find("route")->second.first + serv.find("location")->second.first + "/" + error_page->second.second.find(SSTR(code))->second;
 			read_payload_from_file();
 			entity_header["Content-Length"] = SSTR(content_length);
 		}
 		else
 		{
+			std::cout << "!!!!! 3\n";
 			entity_header["Content-Length"] = SSTR(0);
 		}
 	}

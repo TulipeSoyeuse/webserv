@@ -215,7 +215,7 @@ char *ft_itoa(int n)
 		str[0] = '-';
 		n = -n;
 	}
-
+	// unconditional jump valgrind
 	while (len-- && str[len] != '-')
 	{
 		str[len] = (n % 10) + '0';

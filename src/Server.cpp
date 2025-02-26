@@ -50,6 +50,7 @@ Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_r
 	}
 	// * display info about all server
 	display_params();
+	init_default();
 	// configuration_checking();
 }
 
@@ -389,14 +390,16 @@ void Server::configuration_checking()
 	_valid_conf = true;
 }
 
-bool check_host(std::string &host, const std::string &hosts)
+inline bool check_host(std::string &host, const std::string &hosts)
 {
 	(void)host;
 	char **s_hosts = ft_split(hosts.c_str(), ' ');
 	std::cout << "THIS IS HOST : " << hosts << " and host : " << host << std::endl;
-	for(int i = 0; s_hosts[i]; i++) {
+	for (int i = 0; s_hosts[i]; i++)
+	{
 		std::string h_str = s_hosts[i];
-		if(host.c_str() == h_str) {
+		if (host.c_str() == h_str)
+		{
 			ft_freestrs(s_hosts, (size_t)i);
 			return true;
 		}
@@ -404,15 +407,15 @@ bool check_host(std::string &host, const std::string &hosts)
 	return false;
 }
 
-const server_m *Server::get_config(std::string &host, int port) const
+const server_m &Server::get_config(std::string &host, int port) const
 {
 	for (Server_lst::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
 		bool match_host = check_host(host, (*it).find("host")->second.first);
 		if ((*it).find("port") != it->end() && atoi(((*it).find("port")->second.first.c_str())) == port && match_host)
-			return (&(*it));
+			return (*it);
 	}
-	return (NULL);
+	return _default_server;
 }
 
 const std::pair<std::string, Map> &Server::get_location_subconf(const server_m &m, const std::string &uri) const
@@ -432,9 +435,28 @@ const std::pair<std::string, Map> &Server::get_location_subconf(const server_m &
 	return (m.find("/")->second);
 }
 
+void Server::init_default()
+{
+	_default_server["Host"] = server_m_pair("NOTFOUND", Map());
+
+	Map error_pages;
+	error_pages["400"] = "error_pages/error_400.html";
+	error_pages["403"] = "error_pages/error_403.html";
+	error_pages["404"] = "error_pages/error_404.html";
+	error_pages["408"] = "error_pages/error_408.html";
+	error_pages["500"] = "error_pages/error_500.html";
+	error_pages["505"] = "error_pages/error_505.html";
+	_default_server["error_page"] = server_m_pair(std::string(), error_pages);
+}
+
 const size_t &Server::get_server_count() const
 {
 	return (server_count);
+}
+
+const server_m &Server::get_default_config() const
+{
+	return (_default_server);
 }
 
 const port_array &Server::get_ports() const
@@ -447,7 +469,8 @@ const bool &Server::is_conf_valid() const
 	return (_valid_conf);
 }
 
-const Server_lst &Server::get_servers() const {
+const Server_lst &Server::get_servers() const
+{
 	return (_servers);
 }
 
