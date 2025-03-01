@@ -15,13 +15,13 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	// TODO: rework error code and dedicated function
 	// TODO: POST handler for upload file
 	if (_request.get_type() != PUT)
-		Status_line = "HTTP/1.1 200 Sucess\r\n";
+		Status_line = "HTTP/1.1 200 OK\r\n";
 	else
 		Status_line = "HTTP/1.1 201 Created\r\n";
 
 	// * link the right server for the current request (link on "serv" var)
 	set_server_conf(s);
-	if (!strcmp(serv.find("Host")->second.first.c_str(), "NOTFOUND"))
+	if (!strcmp(serv.find("host")->second.first.c_str(), "NOTFOUND"))
 		http_error(400);
 	check_autoindex();
 
@@ -45,7 +45,7 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	cMap_str(general_header, _response);
 	cMap_str(response_header, _response);
 	cMap_str(entity_header, _response);
-	_response.fill("\r\n\r\n", 4);
+	_response.fill("\r\n", 2);
 	if (payload && !_chunk)
 		_response.fill(payload, content_length);
 }
@@ -597,22 +597,22 @@ void Response::http_error(int code)
 	// read error file if provided in server conf
 	_is_binary = false;
 	server_m::iterator error_page = serv.find("error_page");
-	if (error_page != serv.end())
+	if (error_page != serv.end() &&
+		serv.find("host")->first != "NOTFOUND" &&
+		error_page->second.second.find(SSTR(code)) != error_page->second.second.end())
 	{
-		std::cout << "!!!!! 1\n";
-		if (error_page->second.second.find(SSTR(code)) != error_page->second.second.end())
-		{
-			std::cout << "!!!!! 2\n";
-			// dynamic error page
-			file_path = serv.find("route")->second.first + serv.find("location")->second.first + "/" + error_page->second.second.find(SSTR(code))->second;
-			read_payload_from_file();
-			entity_header["Content-Length"] = SSTR(content_length);
-		}
-		else
-		{
-			std::cout << "!!!!! 3\n";
-			entity_header["Content-Length"] = SSTR(0);
-		}
+		// dynamic error page
+		file_path = serv.find("route")->second.first + serv.find("location")->second.first + "/" + error_page->second.second.find(SSTR(code))->second;
+		std::cout << "file_path:" << file_path << '\n';
+		read_payload_from_file();
+		entity_header["Content-Length"] = SSTR(content_length);
+	}
+	else
+	{
+		file_path = config.get_default_config().find("error_page")->second.second.find(SSTR(code))->second;
+		std::cout << "file_path:" << file_path << '\n';
+		read_payload_from_file();
+		entity_header["Content-Length"] = SSTR(content_length);
 	}
 }
 

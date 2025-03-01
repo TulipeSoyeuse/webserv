@@ -81,11 +81,9 @@ bool Server::read_config()
 
 		config_string server_conf(_config.get_config_subpart(cursor));
 		std::string l;
-		std::cout << "this is server conf :: -------- " << server_conf.get_str() << " ------------\n";
 
 		while (l = server_conf.get_next_conf(), !l.empty())
 		{
-			std::cout << "this is conf " << l << std::endl;
 			if (!is_string_empty(l))
 				insert(server, parse_config_line(l));
 		}
@@ -394,7 +392,6 @@ inline bool check_host(std::string &host, const std::string &hosts)
 {
 	(void)host;
 	char **s_hosts = ft_split(hosts.c_str(), ' ');
-	std::cout << "THIS IS HOST : " << hosts << " and host : " << host << std::endl;
 	for (int i = 0; s_hosts[i]; i++)
 	{
 		std::string h_str = s_hosts[i];
@@ -418,7 +415,7 @@ const server_m &Server::get_config(std::string &host, int port) const
 	return _default_server;
 }
 
-const std::pair<std::string, Map> &Server::get_location_subconf(const server_m &m, const std::string &uri) const
+const server_m_pair &Server::get_location_subconf(const server_m &m, const std::string &uri) const
 {
 	size_t last;
 	std::string substr = uri;
@@ -437,7 +434,8 @@ const std::pair<std::string, Map> &Server::get_location_subconf(const server_m &
 
 void Server::init_default()
 {
-	_default_server["Host"] = server_m_pair("NOTFOUND", Map());
+	_default_server["host"] = server_m_pair("NOTFOUND", Map());
+	_default_server["route"] = server_m_pair(".", Map());
 
 	Map error_pages;
 	error_pages["400"] = "error_pages/error_400.html";
@@ -447,6 +445,12 @@ void Server::init_default()
 	error_pages["500"] = "error_pages/error_500.html";
 	error_pages["505"] = "error_pages/error_505.html";
 	_default_server["error_page"] = server_m_pair(std::string(), error_pages);
+
+	Map def_loc;
+	def_loc["index"] = "index.html";
+	def_loc["proto"] = "PUT,DELETE,GET";
+	def_loc["autoindex"] = "off";
+	_default_server["/"] = server_m_pair(std::string(), def_loc);
 }
 
 const size_t &Server::get_server_count() const
