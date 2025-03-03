@@ -39,27 +39,27 @@ Server::Server(const char *config, bool debug = false) : _debug(debug), _empty_r
 {
 	std::ifstream _config_file;
 
-	// TODO: regular path "/tmp/www"
-	if (_debug)
-		std::cout << "server init...\n";
 	if (_config_file.open(config), _config_file.good())
 	{
 		config_string s(_config_file);
 		_config = s;
 		read_config();
 	}
+	else
+	{
+		std::cerr << "can't open config file\n";
+		return;
+	}
 	// * display info about all server
 	display_params();
 	init_default();
-	// configuration_checking();
+	configuration_checking();
 }
 
 bool Server::read_config()
 {
 	size_t cursor = 0;
 
-	if (_debug)
-		std::cout << "parsing config...\n";
 	while (cursor = _config.get_str().find("server", cursor), cursor != std::string::npos)
 	{
 		server_m server;
@@ -204,7 +204,7 @@ server_p parse_subpart_config_line(config_string l)
 	}
 	if (key == "location")
 	{
-		server_p serv_l(key2, std::pair<std::string, Map>("", map));
+		server_p serv_l(key2, std::pair<std::string, Map>("location", map));
 		return serv_l;
 	}
 	server_p serv_p(key, std::pair<std::string, Map>(key2, map));
@@ -366,20 +366,73 @@ const std::string &Server::get_param(const std::string &s, const std::string &ho
 
 void Server::configuration_checking()
 {
-	server_m::iterator val;
+	if (_servers.empty())
+		return;
+
 	for (Server_lst::iterator it = _servers.begin(); it != _servers.end(); ++it)
 	{
+		// ---------------------- HOST ------------------------------
+		server_m::iterator val = it->find("host");
+		if (val == it->end())
+		{
+			std::cerr << "no host config parameter " << "for server \""
+					  << it->find("name")->second.first << "\"\n";
+			return;
+		}
+		// ---------------------- PORT ------------------------------
+		val = it->find("port");
+		if (val == it->end())
+		{
+			std::cerr << "no port config parameter " << "for server \""
+					  << it->find("name")->second.first << "\"\n";
+			return;
+		}
+		// ----------------- ROOT LOCATION --------------------------
+		val = it->find("/");
+		if (val == it->end())
+		{
+			std::cerr << "no root location config parameter " << "for server \""
+					  << it->find("name")->second.first << "\"\n";
+			return;
+		}
+		// --------------------- ROUTE ------------------------------
+		val = it->find("route");
+		if (val == it->end())
+		{
+			std::cerr << "no route config parameter " << "for server \""
+					  << it->find("name")->second.first << "\"\n";
+			return;
+		}
+		else if (!does_file_exist(val->second.first))
+		{
+			std::cerr << "route directory don't exist or is inaccessible " << "for server \""
+					  << it->find("name")->second.first << "\"\n";
+			return;
+		}
+		std::string route = val->second.first;
 		// ------------------ ERROR PAGE ----------------------------
 		val = it->find("error_page");
 		if (val != it->end())
 		{
 			for (Map::iterator it2 = val->second.second.begin(); it2 != val->second.second.end(); ++it2)
 			{
-				std::string f(it->find("route")->second.first + it->find("location")->second.first + "/" + it2->second);
+				std::string f(route + "/" + it2->second);
 				if (!does_file_exist(f))
 				{
-					std::cerr << "config error, file " << f << " don't exist\n"
+					std::cerr << "file " << f << " don't exist "
 							  << "from server: " << it->find("name")->second.first << "\n";
+					return;
+				}
+			}
+		}
+		// -------------------- LOCATION -----------------------------
+		for (server_m::iterator it2 = it->begin(); it2 != it->end(); ++it2)
+		{
+			if (it2->second.first == "location")
+			{
+				if (!does_file_exist(route + it2->first))
+				{
+					std::cerr << "location: " << it2->first << " dont exist or is inaccessible\n";
 					return;
 				}
 			}

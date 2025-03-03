@@ -16,7 +16,7 @@ void sign_handler(int sig)
 
 extern bool does_file_exist(const std::string &name)
 {
-	return (access(name.c_str(), F_OK) != -1);
+	return (access(name.c_str(), R_OK) == 0);
 }
 
 int socket_read(int fd, bytes_container &s)
@@ -138,12 +138,8 @@ void close_connection(int *a, struct sockaddr_in *b, int num_fd, Server *s)
 	delete s;
 }
 
-int main()
+int main(int ac, char **argv)
 {
-	// TODO: rework connection flow
-	// TODO: handle PUT
-	// TODO:
-
 	// * Signal handling: ^C to quit properly
 	struct sigaction act;
 	act.sa_handler = sign_handler;
@@ -153,11 +149,20 @@ int main()
 	sigaction(SIGSTOP, &act, 0);
 
 	// * call webserv constructor -> parse config file
-	Server *webserv = new Server("test.conf", false);
+	Server *webserv;
+	if (ac == 1)
+		webserv = new Server("default.conf", false);
+	else if (ac == 2)
+		webserv = new Server(argv[1], false);
+	else
+	{
+		std::cerr << "invalid number of argument\nUsage: ./webserv <optional: config file path>\n";
+	}
+
 	if (!webserv->is_conf_valid())
 	{
-		std::cerr << "conf invalid..." << std::endl;
-		// return (1);
+		std::cerr << "Usage: ./webserv <optional: config file path>\n";
+		return (1);
 	}
 
 	std::cout << "-------- listening ---------\n";

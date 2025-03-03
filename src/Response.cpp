@@ -47,7 +47,10 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	cMap_str(entity_header, _response);
 	_response.fill("\r\n", 2);
 	if (payload && !_chunk)
+	{
+		//_response.fill("\r\n", 2);
 		_response.fill(payload, content_length);
+	}
 }
 
 // @brief update header and body to serv the new purpose and update the _reste variable
