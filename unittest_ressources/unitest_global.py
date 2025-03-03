@@ -13,3 +13,6 @@ Donec sed eros a mauris dapibus suscipit non id sapien.
 Nulla quis gravida elit.
 Mauris quis nisl semper, venenatis enim a, vulputate erat.
 Fusce varius enim vitae sem volutpat vehicula."""
+
+PUT_FILE1 = "/home/tulipe/code/42/webserv/site-test3/upload/.unittest_upload_file1.txt"
+PUT_FILE2 = "/home/tulipe/code/42/webserv/site-test3/upload/.unittest_upload_file2.jpg"
