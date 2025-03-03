@@ -256,11 +256,9 @@ int main(int ac, char **argv)
 		// * Request class : parsew request
 		std::cout << brut_request.get_data_size() << "\n";
 		Request r(brut_request, port);
-		std::cout << "body size:" << r.get_body().get_data_size() << "\n";
-		std::cout << "full request" << r.get_brut_request().get_data_size() << "\n";
-		// std::cout << "-------------- PARSED REQUEST -----------\n"
-		// 		  << r
-		// 		  << "------------------------------------------" << std::endl;
+		std::cout << "-------------- PARSED REQUEST -----------\n"
+				  << r
+				  << "------------------------------------------" << std::endl;
 		// * Response class :
 		Response resp(r, *webserv);
 		// std::cout << "---------------- RESPONSE ---------------\n";

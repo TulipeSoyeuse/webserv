@@ -13,7 +13,7 @@ from unittest_ressources.unitest_global import *
 BASE_URL = "http://localhost:9997"
 
 
-class TestRequestMethods(unittest.TestCase):
+class TestRequest(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         self.maxDiff = None
@@ -53,7 +53,7 @@ class TestRequestMethods(unittest.TestCase):
         with open("unittest_ressources/get_query_string_2.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
-    # ------------------------------------ TEST POST -----------------------------------
+    # ------------------------------------- TEST POST -----------------------------------
     def test_POST1(self):
         "LOREM IPSUM + right test"
         response = requests.post(
@@ -73,9 +73,9 @@ class TestRequestMethods(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual("", response.content.decode())
 
-    # ------------------------------------ TEST CONF -----------------------------------
+    # ----------------------------------- TEST AUTOINDEX ---------------------------------
     def test_autoindex1(self):
-        "functioning autoindex"
+        "autoindex on allowed directory"
         response = requests.get(
             urljoin(BASE_URL, "cgi-bin/"), headers={"Host": "www.webserv_test.fr"}
         )
@@ -92,11 +92,28 @@ class TestRequestMethods(unittest.TestCase):
         with open("site-test3/error/error_403.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
+    # ------------------------------------ TEST ERROR ------------------------------------
+    def test_error1(self):
+        "404"
+        response = requests.get(
+            urljoin(BASE_URL, "this page does not exits"),
+            headers={"Host": "www.webserv_test.fr"},
+        )
+        self.assertEqual(response.status_code, 404)
+        with open("site-test3/error/error_404.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
+
+    def test_error2(self):
+        "400"
+        pass
+
     # ------------------------------------ TEST UPLOAD -----------------------------------
     def test_upload1(self):
         "simple txt file (authorized)"
         response = requests.put(
-            urljoin(BASE_URL, "upload/.unittest_upload_file1.txt"), data=LOREM_IPSUM
+            urljoin(BASE_URL, "upload/.unittest_upload_file1.txt"),
+            headers={"Host": "www.webserv_test.fr"},
+            data=LOREM_IPSUM,
         )
         self.assertEqual(response.status_code, 201)
         self.assertTrue(os.path.exists(PUT_FILE1))
@@ -107,15 +124,23 @@ class TestRequestMethods(unittest.TestCase):
             os.remove(PUT_FILE1)
 
     def test_upload2(self):
-        "upload twice upload"
+        "upload twice"
         response = requests.put(
-            urljoin(BASE_URL, "upload/.unittest_upload_file1.txt"), data=LOREM_IPSUM
+            urljoin(BASE_URL, "upload/.unittest_upload_file1.txt"),
+            headers={"Host": "www.webserv_test.fr"},
+            data=LOREM_IPSUM,
         )
         self.assertEqual(response.status_code, 201)
         self.assertTrue(os.path.exists(PUT_FILE1))
         try:
             with open(PUT_FILE1) as f:
                 self.assertEqual(LOREM_IPSUM, f.read())
+            response = requests.put(
+                urljoin(BASE_URL, "upload/.unittest_upload_file1.txt"),
+                headers={"Host": "www.webserv_test.fr"},
+                data=LOREM_IPSUM,
+            )
+            self.assertEqual(response.status_code, 403)
         finally:
             os.remove(PUT_FILE1)
 
@@ -124,7 +149,9 @@ class TestRequestMethods(unittest.TestCase):
         with open("unittest_ressources/kitten.jpg", "br") as f:
             kitten = f.read()
         response = requests.put(
-            urljoin(BASE_URL, "upload/.unittest_upload_file2.jpg"), data=kitten
+            urljoin(BASE_URL, "upload/.unittest_upload_file2.jpg"),
+            headers={"Host": "www.webserv_test.fr"},
+            data=kitten,
         )
         self.assertEqual(response.status_code, 201)
         self.assertTrue(os.path.exists(PUT_FILE2))
@@ -133,6 +160,20 @@ class TestRequestMethods(unittest.TestCase):
                 self.assertEqual(kitten, f.read())
         finally:
             os.remove(PUT_FILE2)
+
+    def test_upload4(self):
+        "unauthorized upload"
+        response = requests.put(
+            urljoin(BASE_URL, "unittest_upload_file1.txt"),
+            headers={"Host": "www.webserv_test.fr"},
+            data=LOREM_IPSUM,
+        )
+        self.assertEqual(response.status_code, 405)
+        try:
+            self.assertFalse(os.path.exists("site-test3/unittest_upload_file1.txt"))
+        except Exception as e:
+            os.remove("site-test3/unittest_upload_file1.txt")
+            raise e
 
 
 if __name__ == "__main__":

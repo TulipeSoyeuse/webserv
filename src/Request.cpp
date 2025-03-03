@@ -114,7 +114,9 @@ std::ostream &operator<<(std::ostream &out, const Request &c)
 		 it != c.get_headers().end(); ++it)
 		out << "[" << it->first << "]: \"" << it->second << "\"\n";
 
-	out << "[" << "body" << "]: \"" << c.get_body() << "\"\n";
+	if (c.get_body().get_data_size() < 1000)
+		out << "[" << "body" << "]: \"" << c.get_body() << "\"\n";
+
 	return (out);
 }
 

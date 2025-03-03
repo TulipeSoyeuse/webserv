@@ -1,11 +1,11 @@
 #include "Response.hpp"
 
 Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "), status_code(200),
-												  _is_binary(false), _error(false), _chunk(false), content_length(0),
-												  payload(NULL), last(false), config(s), autoindex(false),
-												  foundIndex(false)
-
+												  _is_binary(false), _error(false), _chunk(false),
+												  _isdir(false), content_length(0),
+												  payload(NULL), last(false), config(s), autoindex(false)
 {
+	// foundIndex(false)
 	if (!_request._status)
 	{
 		http_error(400);
@@ -76,12 +76,12 @@ bool Response::is_body_size_valid() const
 	if ((it = loc.second.find("client_size")) == loc.second.end() ||
 		(atoi(it->second.c_str()) == 0 || content_length <= atoi(it->second.c_str())))
 	{
-		std::cout << "body size: " << content_length << " valid (limit " << it->second << ")\n";
+		std::cout << "body size: " << content_length << " valid (limit :" << it->second << ")\n";
 		return true;
 	}
 	else
 	{
-		std::cout << "body size: " << content_length << " invalid (limit " << it->second << ")\n";
+		std::cout << "body size: " << content_length << " invalid (limit :" << it->second << ")\n";
 		return false;
 	}
 }
@@ -230,26 +230,24 @@ bool Response::check_file()
 {
 	std::string uri(_request.get_headers().find("URI")->second);
 	root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
-	// Mstd::cout << "PING : " << *(uri.end() - 1) << std::endl;
+
 	if (*--uri.end() == '/')
 	{
-		DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
+		DIR *dir = opendir((root_dir + uri).c_str());
+		if (dir)
+			_isdir = true;
 		struct dirent *diread;
 		while ((diread = readdir(dir)) != NULL)
 			if (std::strncmp(diread->d_name, "index", 5) == 0)
-			{
-				file_path = root_dir + "/" + diread->d_name;
-				foundIndex = true;
-			}
+				file_path = root_dir + uri + diread->d_name;
 	}
 	else
 	{
 		file_path = root_dir + uri;
-		foundIndex = true;
 	}
-	std::cout << "index is " << foundIndex << " auto is " << autoindex << std::endl;
-	if (autoindex && !foundIndex)
-		return true;
+	if (autoindex && _isdir && file_path == "")
+		return false;
+
 	std::cout << "file requested: \"" << file_path << "\"\n";
 	return (does_file_exist(file_path));
 }
@@ -360,12 +358,19 @@ bool Response::set_payload()
 		}
 		else
 		{
-			http_error(403);
+			// TODO: change error from 403 to 404, dit i miss something ? autoindex ?
+			if (_isdir)
+			{
+				if (autoindex)
+					return (generate_autoindex());
+				else
+					http_error(403);
+			}
+			else
+				http_error(404);
 		}
-		http_error(404);
 		return (false);
 	}
-
 	// ? on part du principe que ca a passe check_file et que le fichier existe
 	if (_request.get_type() == DELETE)
 	{
@@ -377,14 +382,14 @@ bool Response::set_payload()
 		http_error(403);
 		return (false);
 	}
-	if (autoindex && !foundIndex)
-		return (generate_autoindex());
+	// * Pardon j'avais pas vu cette fonction avant de faire mon refacto, j'ai integré la logique au dessus
 	// * la si c un dossier ca va plus
-	if (is_dir(file_path))
-	{
-		http_error(403);
-		return false;
-	}
+	// if (is_dir(file_path))
+	// {
+	// 	http_error(403);
+	// 	return false;
+	// }
+
 	// * call the cgi
 	if (file_path.substr(file_path.find_last_of('.')) == PHP_ext)
 		return CGI_from_file(PHP);

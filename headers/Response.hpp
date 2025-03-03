@@ -39,6 +39,7 @@ private:
 	bool _is_binary;
 	bool _error;
 	bool _chunk;
+	bool _isdir;
 	size_t chunk_size;
 
 	std::streamsize content_length;
@@ -87,7 +88,6 @@ private:
 	// id create_error_page(int code);
 
 	bool autoindex;
-	bool foundIndex;
 	std::string root_dir;
 
 public:
