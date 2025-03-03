@@ -1,6 +1,6 @@
 #include "hm_popen.hpp"
 
-hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(_request), all_read(false), good(1)
+hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(_request), all_read(false), good(200)
 {
 	int stdout_pipe[2];
 	int stderr_pipe[2];
@@ -105,7 +105,6 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 
 void hm_popen::build_env(std::string &f)
 {
-	std::ofstream test("prout");
 	Map R = _Request.get_headers();
 	Map::iterator it = R.find("Cookie");
 	if (it != R.end())
@@ -121,15 +120,12 @@ void hm_popen::build_env(std::string &f)
 		setenv("REQUEST_METHOD", "GET", 1);
 		it = R.find("request_string");
 		if (it != R.end())
-		{
-			test << "query = " << it->second.c_str() << std::endl;
 			setenv("QUERY_STRING", it->second.c_str(), 1);
-		}
 	}
 
 	if (_Request.get_type() == POST)
 	{
-		setenv("REQUEST_METHOD", "GET", 1);
+		setenv("REQUEST_METHOD", "POST", 1);
 		it = R.find("Content-Type");
 		if (it != R.end())
 			setenv("CONTENT_TYPE", it->second.c_str(), 1);

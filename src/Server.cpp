@@ -494,6 +494,7 @@ void Server::init_default()
 	error_pages["400"] = "error_pages/error_400.html";
 	error_pages["403"] = "error_pages/error_403.html";
 	error_pages["404"] = "error_pages/error_404.html";
+	error_pages["405"] = "error_pages/error_405.html";
 	error_pages["408"] = "error_pages/error_408.html";
 	error_pages["500"] = "error_pages/error_500.html";
 	error_pages["505"] = "error_pages/error_505.html";

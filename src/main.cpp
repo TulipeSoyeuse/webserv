@@ -241,7 +241,8 @@ int main(int ac, char **argv)
 		// * buffer to read request
 		// * read the data in the socket (cd comment in function)
 		bytes_container brut_request;
-		socket_read(connection, brut_request);
+		if (socket_read(connection, brut_request) == -1)
+			continue;
 		char hostname[30];
 		// * The gethostname function get the local computer's standard host name.
 		gethostname(hostname, 30);
@@ -266,7 +267,9 @@ int main(int ac, char **argv)
 		std::cout << resp;
 		std::cout << "------------------ END -------------------"
 				  << std::endl;
-		socket_write(connection, resp.get_response());
+		int bw = socket_write(connection, resp.get_response());
+		if (bw == -1 || bw == 0)
+			continue;
 		if (resp.is_chunked())
 		{
 			bytes_container b;
@@ -276,7 +279,9 @@ int main(int ac, char **argv)
 				b.safeGetline(s);
 				b.seek(0);
 				std::cout << s << '\n';
-				socket_write(connection, b);
+				bw = socket_write(connection, b);
+				if (bw == -1 || bw == 0)
+					break;
 			}
 		}
 		close(connection);

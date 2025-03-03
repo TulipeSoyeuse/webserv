@@ -121,7 +121,6 @@ void Response::check_autoindex()
 {
 	if (_request.get_headers().find("URI") == _request.get_headers().end())
 		return;
-	std::cout << _request.get_headers().find("URI")->second << "\n";
 	p_location loc = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
 	Map::iterator it;
 	if ((it = loc.second.find("autoindex")) == loc.second.end())
@@ -184,7 +183,6 @@ bool Response::match_file()
 {
 	const std::string root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
 	std::string uri = _request.get_headers().find("URI")->second;
-	std::cout << "root dir : " << root_dir << std::endl;
 	DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
 	struct dirent *diread;
 
@@ -232,8 +230,8 @@ bool Response::check_file()
 {
 	std::string uri(_request.get_headers().find("URI")->second);
 	root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
-
-	if (uri == "/")
+	// Mstd::cout << "PING : " << *(uri.end() - 1) << std::endl;
+	if (*--uri.end() == '/')
 	{
 		DIR *dir = opendir((root_dir + uri.substr(0, uri.find_last_of('/'))).c_str());
 		struct dirent *diread;
@@ -249,7 +247,7 @@ bool Response::check_file()
 		file_path = root_dir + uri;
 		foundIndex = true;
 	}
-	std::cout << "index is " << foundIndex << "auto is " << autoindex << std::endl;
+	std::cout << "index is " << foundIndex << " auto is " << autoindex << std::endl;
 	if (autoindex && !foundIndex)
 		return true;
 	std::cout << "file requested: \"" << file_path << "\"\n";
@@ -401,6 +399,7 @@ bool Response::set_payload()
 
 std::string dir_listing(std::string root_dir)
 {
+	std::cout << "dir:" << root_dir << "\n";
 	std::string html;
 	DIR *dir = opendir(root_dir.c_str());
 	struct dirent *entry;
@@ -427,7 +426,8 @@ std::string dir_listing(std::string root_dir)
 bool Response::generate_autoindex()
 {
 
-	std::string dir = dir_listing(root_dir);
+	entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
+	std::string dir = dir_listing(root_dir + _request.get_headers().find("URI")->second);
 	std::string html_content =
 		"<!DOCTYPE html>"
 		"<html lang=\"en\">"
@@ -443,6 +443,8 @@ bool Response::generate_autoindex()
 					"</html>";
 
 	content_length = html_content.length();
+	if (payload)
+		delete payload;
 	payload = new char[html_content.length() + 1];
 
 	std::strcpy(payload, html_content.c_str());
@@ -459,7 +461,7 @@ bool Response::CGI_from_file(CGI c)
 	payload = new char[client_size];
 	hm_popen hmpop(file_path, c, _request);
 	content_length = hmpop.read_out(payload, client_size);
-	if (hmpop.is_good() != 0)
+	if (hmpop.is_good() != 200)
 	{
 		std::cerr << "----child error----\n"
 				  << payload << "\n--------------\n";
@@ -597,6 +599,8 @@ void Response::http_error(int code)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "No content\r\n");
 	else if (code == 413)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Request Entity Too Large\r\n");
+	else if (code == 405)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Method Not Allowed\r\n");
 	// read error file if provided in server conf
 	_is_binary = false;
 	server_m::iterator error_page = serv.find("error_page");

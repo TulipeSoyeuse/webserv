@@ -1,8 +1,11 @@
 import sys
+from urllib.parse import parse_qs
 
 # Lire le stdin
 data = sys.stdin.read()
 
-# Afficher les données reçues
-print("Données reçues sur stdin :")
-print(data)
+if parse_qs(data):
+    for k, v in parse_qs(data).items():
+        print(k, ":", v)
+else:
+    print(data, end="")
