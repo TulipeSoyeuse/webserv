@@ -175,6 +175,32 @@ class TestRequest(unittest.TestCase):
             os.remove("site-test3/unittest_upload_file1.txt")
             raise e
 
+    # ------------------------------------ TEST CHUNK -----------------------------------
+
+    def test_chunk(self):
+        "GET on chunk on a big file"
+        with open("unittest_ressources/kitten.jpg", "br") as f:
+            kitten = f.read()
+        response = requests.put(
+            urljoin(BASE_URL, "upload/dirchunk/.unittest_chunk_file1.jpg"),
+            headers={"Host": "www.webserv_test.fr"},
+            data=kitten,
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(os.path.exists(CHUNK_FILE1))
+        try:
+            response = requests.get(
+                urljoin(BASE_URL, "upload/dirchunk/.unittest_chunk_file1.jpg"),
+                headers={"Host": "www.webserv_test.fr"},
+            )
+            self.assertEqual(kitten, response.content)
+        finally:
+            os.remove(CHUNK_FILE1)
+
 
 if __name__ == "__main__":
+    try:
+        os.mkdir("webserv/site-test3/upload/dirchunk")
+    except OSError:
+        pass
     unittest.main()

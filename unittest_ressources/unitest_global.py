@@ -14,5 +14,6 @@ Nulla quis gravida elit.
 Mauris quis nisl semper, venenatis enim a, vulputate erat.
 Fusce varius enim vitae sem volutpat vehicula."""
 
-PUT_FILE1 = "/home/tulipe/code/42/webserv/site-test3/upload/.unittest_upload_file1.txt"
-PUT_FILE2 = "/home/tulipe/code/42/webserv/site-test3/upload/.unittest_upload_file2.jpg"
+PUT_FILE1 = "site-test3/upload/.unittest_upload_file1.txt"
+PUT_FILE2 = "site-test3/upload/.unittest_upload_file2.jpg"
+CHUNK_FILE1 = "site-test3/upload/dirchunk/.unittest_chunk_file1.jpg"

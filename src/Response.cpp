@@ -48,7 +48,6 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	_response.fill("\r\n", 2);
 	if (payload && !_chunk)
 	{
-		//_response.fill("\r\n", 2);
 		_response.fill(payload, content_length);
 	}
 }
@@ -240,6 +239,7 @@ bool Response::check_file()
 		while ((diread = readdir(dir)) != NULL)
 			if (std::strncmp(diread->d_name, "index", 5) == 0)
 				file_path = root_dir + uri + diread->d_name;
+		closedir(dir);
 	}
 	else
 	{

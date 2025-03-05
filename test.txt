@@ -1,1 +1,0 @@
-http://localhost:9997/cgi-bin/cgi-py.py?test_param=test_value&test_param=test_value_2&test+param=an+encoded+value

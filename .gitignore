@@ -1,3 +1,4 @@
 .vscode
 webserv
 obj
+__pycache__
