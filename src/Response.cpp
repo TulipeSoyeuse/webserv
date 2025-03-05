@@ -74,10 +74,16 @@ bool Response::is_body_size_valid() const
 		return true;
 	p_location loc = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
 	Map::iterator it;
-	if ((it = loc.second.find("client_size")) == loc.second.end() ||
-		(atoi(it->second.c_str()) == 0 || content_length <= atoi(it->second.c_str())))
+	it = loc.second.find("client_size");
+
+	if (it == loc.second.end())
 	{
-		std::cout << "body size: " << content_length << " valid (limit :" << it->second << ")\n";
+		std::cout << "body size valid (no param)\n";
+		return true;
+	}
+	else if (atoi(it->second.c_str()) == 0 || content_length <= atoi(it->second.c_str()))
+	{
+		std::cout << "body size: " << content_length << " valid (limit : undefined )\n";
 		return true;
 	}
 	else

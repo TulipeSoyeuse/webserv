@@ -215,6 +215,7 @@ class TestRequest(unittest.TestCase):
                 for k, v in response.headers.items():
                     w.write(f"{k}:{v}\n")
                 w.write(response.content.decode())
+            response.raise_for_status()
             self.assertEqual(loip, response.content.decode())
         finally:
             os.remove(CHUNK_FILE1)
@@ -235,6 +236,7 @@ class TestRequest(unittest.TestCase):
                 urljoin(BASE_URL, "upload/dirchunk/.unittest_chunk_file2.jpg"),
                 headers={"Host": "www.webserv_test.fr"},
             )
+            response.raise_for_status()
             self.assertEqual(kitten, response.content)
         finally:
             os.remove(CHUNK_FILE2)
