@@ -92,6 +92,24 @@ class TestRequest(unittest.TestCase):
         with open("site-test3/error/error_403.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
+    def test_autoindex3(self):
+        "tricky fordibben autoindex"
+        response = requests.get(
+            urljoin(BASE_URL, "html"), headers={"Host": "www.webserv_test.fr"}
+        )
+        self.assertEqual(response.status_code, 403)
+        with open("site-test3/error/error_403.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
+
+    def test_autoindex4(self):
+        "tricky allowed autoindex"
+        response = requests.get(
+            urljoin(BASE_URL, "cgi-bin"), headers={"Host": "www.webserv_test.fr"}
+        )
+        self.assertEqual(response.status_code, 403)
+        with open("site-test3/error/error_403.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
+
     # ------------------------------------ TEST ERROR ------------------------------------
     def test_error1(self):
         "404"
@@ -177,25 +195,49 @@ class TestRequest(unittest.TestCase):
 
     # ------------------------------------ TEST CHUNK -----------------------------------
 
-    def test_chunk(self):
-        "GET on chunk on a big file"
-        with open("unittest_ressources/kitten.jpg", "br") as f:
-            kitten = f.read()
+    def test_chunk1(self):
+        "GET on chunk on a big txt file"
+        with open("unittest_ressources/lorem_ipsum.txt") as f:
+            loip = f.read()
         response = requests.put(
-            urljoin(BASE_URL, "upload/dirchunk/.unittest_chunk_file1.jpg"),
+            urljoin(BASE_URL, "upload/dirchunk/.unittest_chunk_file1.txt"),
             headers={"Host": "www.webserv_test.fr"},
-            data=kitten,
+            data=loip,
         )
         self.assertEqual(response.status_code, 201)
         self.assertTrue(os.path.exists(CHUNK_FILE1))
         try:
             response = requests.get(
-                urljoin(BASE_URL, "upload/dirchunk/.unittest_chunk_file1.jpg"),
+                urljoin(BASE_URL, "upload/dirchunk/.unittest_chunk_file1.txt"),
+                headers={"Host": "www.webserv_test.fr"},
+            )
+            with open("unittest_ressources/response_file.txt", "w") as w:
+                for k, v in response.headers.items():
+                    w.write(f"{k}:{v}\n")
+                w.write(response.content.decode())
+            self.assertEqual(loip, response.content.decode())
+        finally:
+            os.remove(CHUNK_FILE1)
+
+    def test_chunk2(self):
+        "GET on chunk on a big binary file"
+        with open("unittest_ressources/kitten.jpg", "br") as f:
+            kitten = f.read()
+        response = requests.put(
+            urljoin(BASE_URL, "upload/dirchunk/.unittest_chunk_file2.jpg"),
+            headers={"Host": "www.webserv_test.fr"},
+            data=kitten,
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertTrue(os.path.exists(CHUNK_FILE2))
+        try:
+            response = requests.get(
+                urljoin(BASE_URL, "upload/dirchunk/.unittest_chunk_file2.jpg"),
                 headers={"Host": "www.webserv_test.fr"},
             )
             self.assertEqual(kitten, response.content)
         finally:
-            os.remove(CHUNK_FILE1)
+            os.remove(CHUNK_FILE2)
 
 
 if __name__ == "__main__":

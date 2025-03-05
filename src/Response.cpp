@@ -50,6 +50,8 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	{
 		_response.fill(payload, content_length);
 	}
+	else if (_chunk)
+		_response.fill("\r\n", 2);
 }
 
 // @brief update header and body to serv the new purpose and update the _reste variable
@@ -643,15 +645,19 @@ int Response::get_next_chunk(bytes_container &res)
 	bytes_container buf;
 	size_t l = _reste.read(buf, chunk_size);
 
-	std::string s(SSTRH(l) + "\r\n");
-	res.fill(s.c_str(), s.length());
+	{
+		std::string s(SSTRH(l));
+		res.fill(s.c_str(), s.length());
+	}
+	res.fill("\r\n", 2);
 	res.fill(buf.get_data(), l);
+	res.fill("\r\n", 2);
 
 	if (!last && l == 0)
 	{
 		res.clear();
 		last = true;
-		res.fill("0\r\n", 3);
+		res.fill("0\r\n\r\n", 5);
 		return (0);
 	}
 	return (1);
