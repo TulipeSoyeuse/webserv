@@ -236,25 +236,21 @@ bool Response::check_file()
 	std::string uri(_request.get_headers().find("URI")->second);
 	root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
 
-	if (*--uri.end() == '/')
+	DIR *dir = opendir((root_dir + uri).c_str());
+	if (!dir)
+		file_path = root_dir + uri;
+	else
 	{
-		DIR *dir = opendir((root_dir + uri).c_str());
-		if (dir)
-			_isdir = true;
+		_isdir = true;
 		struct dirent *diread;
 		while ((diread = readdir(dir)) != NULL)
 			if (std::strncmp(diread->d_name, "index", 5) == 0)
 				file_path = root_dir + uri + diread->d_name;
 		closedir(dir);
 	}
-	else
-	{
-		file_path = root_dir + uri;
-	}
 	if (autoindex && _isdir && file_path == "")
 		return false;
 
-	std::cout << "file requested: \"" << file_path << "\"\n";
 	return (does_file_exist(file_path));
 }
 
@@ -436,8 +432,7 @@ std::string dir_listing(std::string root_dir)
 
 bool Response::generate_autoindex()
 {
-
-	_header["Content-Type"] = "text/html ; charset=UTF-8\n";
+	_header["Content-Type"] = "text/html ; charset=UTF-8";
 	std::string dir = dir_listing(root_dir + _request.get_headers().find("URI")->second);
 	std::string html_content =
 		"<!DOCTYPE html>"
