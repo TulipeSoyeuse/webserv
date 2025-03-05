@@ -31,9 +31,7 @@ private:
 	const Request &_request;
 
 	std::string Status_line;
-	Map general_header;
-	Map response_header;
-	Map entity_header;
+	Map _header;
 
 	int status_code;
 	bool _is_binary;
@@ -97,7 +95,7 @@ public:
 	// getter -----------------------------
 	const int &get_status();
 	const bytes_container &get_response() const;
-
+	const bool &is_binary() const;
 	// chunk ------------------------------
 	const bool &is_chunked() const;
 	int get_next_chunk(bytes_container &);

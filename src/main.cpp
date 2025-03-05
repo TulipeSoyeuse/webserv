@@ -261,10 +261,10 @@ int main(int ac, char **argv)
 				  << "------------------------------------------" << std::endl;
 		// * Response class :
 		Response resp(r, *webserv);
-		// std::cout << "---------------- RESPONSE ---------------\n";
-		// std::cout << resp;
-		// std::cout << "------------------ END -------------------"
-		// << std::endl;
+		std::cout << "---------------- RESPONSE ---------------\n";
+		std::cout << resp;
+		std::cout << "------------------ END -------------------"
+				  << std::endl;
 		int bw = socket_write(connection, resp.get_response());
 		if (bw == -1 || bw == 0)
 			continue;

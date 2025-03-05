@@ -16,7 +16,7 @@ BASE_URL = "http://localhost:9997"
 class TestRequest(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        self.maxDiff = None
+        self.maxDiff = 80
 
     # ------------------------------------ TEST GET -----------------------------------
     def test_GET1(self):
@@ -47,8 +47,6 @@ class TestRequest(unittest.TestCase):
                 "test param": "an encoded value",
             },
         )
-        with open("test.txt", "w") as f:
-            f.write(response.url)
         self.assertEqual(response.status_code, 200)
         with open("unittest_ressources/get_query_string_2.html") as f:
             self.assertEqual(f.read(), response.content.decode())

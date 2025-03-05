@@ -26,13 +26,13 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	check_autoindex();
 
 	// * build header
-	general_header["Server"] = "webserv/0.1\n";
+	_header["Server"] = "webserv/0.1";
 	// * if i find the file
 	MIME_attribute();
 
 	if (set_payload())
 	{
-		entity_header["Content-Length"] = SSTR(content_length);
+		_header["Content-Length"] = SSTR(content_length);
 		if (!is_body_size_valid())
 		{
 			// is size is greater than client_size, then process by chunk
@@ -42,24 +42,22 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 
 	// assembly ----------------------------
 	_response.fill(Status_line.c_str(), Status_line.size());
-	cMap_str(general_header, _response);
-	cMap_str(response_header, _response);
-	cMap_str(entity_header, _response);
+	cMap_str(_header, _response);
 	_response.fill("\r\n", 2);
 	if (payload && !_chunk)
 	{
 		_response.fill(payload, content_length);
 	}
-	else if (_chunk)
-		_response.fill("\r\n", 2);
+	// else if (_chunk)
+	// 	_response.fill("\r\n", 2);
 }
 
 // @brief update header and body to serv the new purpose and update the _reste variable
 void Response::serv_by_chunk()
 {
 	// header
-	entity_header["Transfer-Encoding"] = "chunked";
-	entity_header.erase("Content-Length");
+	_header["Transfer-Encoding"] = "chunked";
+	_header.erase("Content-Length");
 	_chunk = true;
 	_reste.fill(payload, content_length);
 	// size
@@ -141,7 +139,7 @@ void Response::MIME_attribute()
 	std::string uri = ((Map)_request.get_headers())["URI"];
 	if (uri == "/")
 	{
-		entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
+		_header["Content-Type"] = HTML "; charset=UTF-8";
 		return;
 	}
 	std::string file_format = uri.substr(uri.find_last_of('.') + 1);
@@ -149,41 +147,41 @@ void Response::MIME_attribute()
 	std::cout << "file format: " << file_format << std::endl;
 
 	if (file_format == "aac")
-		entity_header["Content-Type"] = AAC "; charset=UTF-8\n";
+		_header["Content-Type"] = AAC "; charset=UTF-8";
 	// ! Rajout de cette ligne pour tester le script bash et php
 	if (file_format == "php")
-		entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
+		_header["Content-Type"] = "text/html ; charset=UTF-8";
 
 	else if (file_format == "py")
-		entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
+		_header["Content-Type"] = "text/html ; charset=UTF-8";
 
 	else if (file_format == "sh")
-		entity_header["Content-Type"] = "text/plain ; charset=UTF-8\n";
+		_header["Content-Type"] = "text/plain ; charset=UTF-8";
 	else if (file_format == "svg")
 	{
-		entity_header["Content-Type"] = SVG;
+		_header["Content-Type"] = SVG;
 		_is_binary = true;
 	}
 	else if (file_format == "png")
 	{
-		entity_header["Content-Type"] = PNG;
+		_header["Content-Type"] = PNG;
 		_is_binary = true;
 	}
 	else if (file_format == "jpg" || file_format == "jpeg")
 	{
-		entity_header["Content-Type"] = JPEG;
+		_header["Content-Type"] = JPEG;
 		_is_binary = true;
 	}
 	else if (file_format == "html")
-		entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
+		_header["Content-Type"] = HTML "; charset=UTF-8";
 	else if (file_format == "txt")
-		entity_header["Content-Type"] = TXT "; charset=UTF-8\n";
+		_header["Content-Type"] = TXT "; charset=UTF-8";
 	else if (file_format == "js")
-		entity_header["Content-Type"] = JS "; charset=UTF-8\n";
+		_header["Content-Type"] = JS "; charset=UTF-8";
 	else if (file_format == "css")
-		entity_header["Content-Type"] = CSS "; charset=UTF-8\n";
+		_header["Content-Type"] = CSS "; charset=UTF-8";
 	else
-		entity_header["Content-Type"] = TXT "; charset=UTF-8\n";
+		_header["Content-Type"] = TXT "; charset=UTF-8";
 }
 
 bool Response::match_file()
@@ -439,7 +437,7 @@ std::string dir_listing(std::string root_dir)
 bool Response::generate_autoindex()
 {
 
-	entity_header["Content-Type"] = "text/html ; charset=UTF-8\n";
+	_header["Content-Type"] = "text/html ; charset=UTF-8\n";
 	std::string dir = dir_listing(root_dir + _request.get_headers().find("URI")->second);
 	std::string html_content =
 		"<!DOCTYPE html>"
@@ -583,9 +581,7 @@ void Response::cMap_str(Map &m, bytes_container &s)
 	{
 		s.fill((it->first + ": ").c_str(), it->first.size() + 2);
 		s.fill(it->second.c_str(), it->second.length());
-		if (++it != m.end())
-			s.fill('\n');
-		it--;
+		s.fill("\r\n", 2);
 	}
 }
 
@@ -596,7 +592,7 @@ void Response::http_error(int code)
 		return;
 	_error = true;
 	status_code = code;
-	entity_header["Content-Type"] = HTML "; charset=UTF-8\n";
+	_header["Content-Type"] = HTML "; charset=UTF-8";
 	// code
 	if (code == 505)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "HTTP Version not supported\r\n");
@@ -625,14 +621,14 @@ void Response::http_error(int code)
 		file_path = serv.find("route")->second.first + serv.find("location")->second.first + "/" + error_page->second.second.find(SSTR(code))->second;
 		std::cout << "file_path:" << file_path << '\n';
 		read_payload_from_file();
-		entity_header["Content-Length"] = SSTR(content_length);
+		_header["Content-Length"] = SSTR(content_length);
 	}
 	else
 	{
 		file_path = config.get_default_config().find("error_page")->second.second.find(SSTR(code))->second;
 		std::cout << "file_path:" << file_path << '\n';
 		read_payload_from_file();
-		entity_header["Content-Length"] = SSTR(content_length);
+		_header["Content-Length"] = SSTR(content_length);
 	}
 }
 
@@ -667,6 +663,11 @@ int Response::get_next_chunk(bytes_container &res)
 		return (0);
 	}
 	return (1);
+}
+
+const bool &Response::is_binary() const
+{
+	return (_is_binary);
 }
 
 const int &Response::get_status()
