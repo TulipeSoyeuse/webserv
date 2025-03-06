@@ -7,11 +7,13 @@
 
 int incomming_fd = 0;
 
+bool must_quit = false;
+
 void sign_handler(int sig)
 {
 	(void)sig;
 	std::cerr << "\nSIGINT " << " recevied closing server....\n";
-	exit(EXIT_SUCCESS);
+	must_quit = true;
 }
 
 extern bool does_file_exist(const std::string &name)
@@ -201,23 +203,11 @@ int main(int ac, char **argv)
 	// * -> get size of all sockadress
 	socklen_t addrlen = sizeof(t.sockaddr) * parray.size();
 
-	std::cout << "Enter 'exit' to quit, or anything else to continue: ";
+	std::string userInput;
 	while (1)
 	{
-		// std::string userInput;
-		// if (std::cin.rdbuf()->in_avail())
-		// {
-		// 	std::getline(std::cin, userInput);
-		// 	if (userInput == "exit")
-		// 	{
-		// 		std::cout << "Exiting loop..." << std::endl;
-		// 		break; // Exit the loop
-		// 	}
-		// 	else
-		// 	{
-		// 		std::cout << "You entered: " << userInput << std::endl;
-		// 	}
-		// }
+		if (must_quit)
+			break;
 		// * accept the connexion with a ready socket
 		int connection = network_accept_any(t.sockfd, (struct sockaddr *)t.sockaddr, &addrlen);
 		if (connection == INVALID_SOCKET)
