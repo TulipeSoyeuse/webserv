@@ -139,7 +139,13 @@ class TestRequestERROR(unittest.TestCase):
 
     def test_error2(self):
         "400"
-        pass
+        response = requests.get(
+            urljoin(BASE_URL, "this page does not exits"),
+            headers={"Host": "www.this_is_not_a_valid_host.fr"},
+        )
+        self.assertEqual(response.status_code, 400)
+        with open("site-test3/error/error_400.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
 
 
 class TestRequestPUT(unittest.TestCase):
