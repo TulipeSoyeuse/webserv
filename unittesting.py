@@ -147,6 +147,16 @@ class TestRequestERROR(unittest.TestCase):
         with open("site-test3/error/error_400.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
+    def test_error3(self):
+        "405"
+        response = requests.post(
+            BASE_URL,
+            headers={"Host": "www.webserv_test.fr"},
+        )
+        self.assertEqual(response.status_code, 405)
+        with open("site-test3/error/error_405.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
+
 
 class TestRequestPUT(unittest.TestCase):
     def __init__(self, methodName="runTest"):
