@@ -20,10 +20,10 @@ public:
 	void clear();
 	// put method ---------------------
 	void fill(const char *, size_t);
-	void fill(ct::iterator, ct::iterator);
+	void assign(ct::iterator, ct::iterator);
 	void fill(char);
 	void seek(unsigned int);
-
+	void fill(bytes_container &b, std::streamsize e);
 	// read method ---------------------
 	size_t safeGetline(std::string &);
 	size_t read(std::string &, size_t);

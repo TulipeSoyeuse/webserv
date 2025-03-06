@@ -147,24 +147,26 @@ const char *hm_popen::get_CGI_exec(const CGI &cgi) const
 		return "";
 }
 
-size_t hm_popen::read_out(char *buffer, const size_t buffer_size)
+size_t hm_popen::read_out(bytes_container &b)
 {
+	char buffer[4096];
 	if (!good)
 		return (0);
-	size_t nbytes = read(subprocess_stdout_fd, buffer, buffer_size - 1);
-	buffer[nbytes] = 0;
-	if (nbytes < buffer_size - 1)
-		all_read = true;
-	// std::cout << buffer;
-	return (nbytes);
+	size_t nbytes;
+	while ((nbytes = read(subprocess_stdout_fd, buffer, 4096)) > 0)
+		b.fill(buffer, nbytes);
+	std::cout << "nbytes: " << nbytes << "\n";
+	return (b.get_data_size());
 }
 
-size_t hm_popen::read_err(char *buffer, const size_t buffer_size)
+size_t hm_popen::read_err(bytes_container &b)
 {
-	size_t nbytes = read(subprocess_stderr_fd, buffer, buffer_size - 1);
-	buffer[nbytes] = 0;
-	if (nbytes < buffer_size - 1)
-		all_read = true;
+	char buffer[4096];
+	if (!good)
+		return (0);
+	size_t nbytes;
+	while ((nbytes = read(subprocess_stderr_fd, buffer, 4096)) > 0)
+		b.fill(buffer, nbytes);
 	return (nbytes);
 }
 

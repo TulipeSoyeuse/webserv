@@ -15,9 +15,14 @@ void bytes_container::fill(const char *s, size_t i)
 }
 
 // @brief replace content
-void bytes_container::fill(ct::iterator b, ct::iterator e)
+void bytes_container::assign(ct::iterator b, ct::iterator e)
 {
 	_data.assign(b, e);
+}
+
+void bytes_container::fill(bytes_container &b, std::streamsize e)
+{
+	fill(b.get_data(), e);
 }
 
 // @brief push back
@@ -81,7 +86,7 @@ size_t bytes_container::read(bytes_container &res, size_t len)
 	for (; it != _data.end() && len--; ++it)
 		i++;
 
-	res.fill(_data.begin() + _cursor, it);
+	res.assign(_data.begin() + _cursor, it);
 	_cursor += i;
 	return (i);
 }
@@ -117,14 +122,14 @@ int bytes_container::find_last_of(const char c)
 bytes_container bytes_container::subcontainer(size_t t)
 {
 	bytes_container res;
-	res.fill(_data.begin() + t, _data.end());
+	res.assign(_data.begin() + t, _data.end());
 	return res;
 }
 
 bytes_container bytes_container::subcontainer()
 {
 	bytes_container res;
-	res.fill(_data.begin() + _cursor, _data.end());
+	res.assign(_data.begin() + _cursor, _data.end());
 	_cursor = _data.size();
 	return res;
 }
@@ -141,6 +146,6 @@ int bytes_container::get_data_size() const
 
 std::ostream &operator<<(std::ostream &out, const bytes_container &c)
 {
-	out.write(c.get_data(), (c.get_data_size() > 200) ? 200 : c.get_data_size());
+	out.write(c.get_data(), (c.get_data_size() > 1000) ? 300 : c.get_data_size());
 	return (out);
 }

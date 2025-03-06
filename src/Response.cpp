@@ -3,7 +3,7 @@
 Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP/1.1 "), status_code(200),
 												  _is_binary(false), _error(false), _chunk(false),
 												  _isdir(false), content_length(0),
-												  payload(NULL), last(false), config(s), autoindex(false)
+												  last(false), config(s), autoindex(false)
 {
 	// foundIndex(false)
 	if (!_request._status)
@@ -44,7 +44,7 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	_response.fill(Status_line.c_str(), Status_line.size());
 	cMap_str(_header, _response);
 	_response.fill("\r\n", 2);
-	if (payload && !_chunk)
+	if (payload.get_data_size() != 0 && !_chunk)
 	{
 		_response.fill(payload, content_length);
 	}
@@ -449,11 +449,8 @@ bool Response::generate_autoindex()
 					"</html>";
 
 	content_length = html_content.length();
-	if (payload)
-		delete payload;
-	payload = new char[html_content.length() + 1];
-
-	std::strcpy(payload, html_content.c_str());
+	payload.clear();
+	payload.fill(html_content.c_str(), content_length);
 	std::cout << "Payload:\n"
 			  << payload << std::endl;
 	return true;
@@ -462,24 +459,17 @@ bool Response::generate_autoindex()
 bool Response::CGI_from_file(CGI c)
 {
 	std::cout << "---------CGI from file--------\n";
-	std::cout << "reading cgi: " << c << "\n";
-
-	payload = new char[client_size];
 	hm_popen hmpop(file_path, c, _request);
-	content_length = hmpop.read_out(payload, client_size);
+	content_length = hmpop.read_out(payload);
 	if (hmpop.is_good() != 200)
 	{
-		std::cerr << "----child error----\n"
-				  << payload << "\n--------------\n";
-		delete payload;
+		payload.clear();
 		content_length = 0;
-		if (hmpop.is_good() == 408)
-			http_error(408);
-		else
-			http_error(500);
+		http_error(hmpop.is_good());
 		return (false);
 	}
-	std::cout << "content length: " << content_length << "\n";
+	std::cout << "content length: "
+			  << content_length << "\n";
 	std::cout << "---------PAYLOAD--------\n"
 			  << payload;
 	return (true);
@@ -490,22 +480,21 @@ bool Response::read_payload_from_file()
 	std::ifstream f;
 	// --------------- extension check ------------------------------
 	if (_is_binary)
-		f.open(file_path.c_str(), std::ifstream::binary);
+		f.open(file_path.c_str(), std::ifstream::binary | std::ifstream::ate);
 	else
-		f.open(file_path.c_str());
+		f.open(file_path.c_str(), std::ifstream::ate);
 	// --------------------------------------------------------------
-	std::cout << "is binary : " << _is_binary << "\n";
 	if (f.good())
 	{
-		f.ignore(std::numeric_limits<std::streamsize>::max());
-		content_length = f.gcount();
+		content_length = f.tellg();
 		f.clear();
 		f.seekg(0, std::ios_base::beg);
-		// TODO : check client size, si c trop petit je me casse
-		payload = new char[content_length + 1];
-		bzero(payload, content_length + 1);
-		f.read(payload, content_length);
+		char *buffer = new char[content_length];
+		f.read(buffer, content_length);
 		f.close();
+
+		payload.fill(buffer, content_length);
+		delete[] buffer;
 		return (true);
 	}
 	else
@@ -591,20 +580,22 @@ void Response::http_error(int code)
 	// code
 	if (code == 505)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "HTTP Version not supported\r\n");
+	else if (code == 204)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "No content\r\n");
+	else if (code == 400)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Bad Request\r\n");
 	else if (code == 403)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Forbidden\r\n");
 	else if (code == 404)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Not Found\r\n");
-	else if (code == 500)
-		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Internal Server Error\r\n");
-	else if (code == 400)
-		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Bad Request\r\n");
-	else if (code == 204)
-		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "No content\r\n");
-	else if (code == 413)
-		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Request Entity Too Large\r\n");
 	else if (code == 405)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Method Not Allowed\r\n");
+	else if (code == 408)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Request Time-out\r\n");
+	else if (code == 413)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Request Entity Too Large\r\n");
+	else if (code == 500)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Internal Server Error\r\n");
 	// read error file if provided in server conf
 	_is_binary = false;
 	server_m::iterator error_page = serv.find("error_page");
@@ -672,8 +663,6 @@ const int &Response::get_status()
 
 Response::~Response()
 {
-	if (payload)
-		delete[] payload;
 }
 
 const bytes_container &Response::get_response() const

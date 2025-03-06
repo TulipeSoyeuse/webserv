@@ -42,7 +42,7 @@ private:
 
 	std::streamsize content_length;
 
-	char *payload;
+	bytes_container payload;
 	std::string file_path;
 
 	std::map<std::string, std::string> serv_param;

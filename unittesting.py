@@ -157,6 +157,16 @@ class TestRequestERROR(unittest.TestCase):
         with open("site-test3/error/error_405.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
+    def test_error3(self):
+        "408"
+        response = requests.get(
+            urljoin(BASE_URL, "cgi-bin/infinite.py"),
+            headers={"Host": "www.webserv_test.fr"},
+        )
+        self.assertEqual(response.status_code, 408)
+        with open("site-test3/error/error_408.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
+
 
 class TestRequestPUT(unittest.TestCase):
     def __init__(self, methodName="runTest"):
