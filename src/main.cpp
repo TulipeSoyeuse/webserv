@@ -253,8 +253,10 @@ int main(int ac, char **argv)
 		// * buffer to read request
 		// * read the data in the socket (cd comment in function)
 		bytes_container brut_request;
-		if (socket_read(connection, brut_request) == -1)
+		if (!socket_read(connection, brut_request)) {
+			close(connection);
 			continue;
+		}
 		char hostname[30];
 		// * The gethostname function get the local computer's standard host name.
 		gethostname(hostname, 30);
