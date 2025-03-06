@@ -204,27 +204,27 @@ int main(int ac, char **argv)
 	std::cout << "Enter 'exit' to quit, or anything else to continue: ";
 	while (1)
 	{
-		std::string userInput;
-		if (std::cin.rdbuf()->in_avail())
-		{
-			std::getline(std::cin, userInput);
-			if (userInput == "exit")
-			{
-				std::cout << "Exiting loop..." << std::endl;
-				break; // Exit the loop
-			}
-			else
-			{
-				std::cout << "You entered: " << userInput << std::endl;
-			}
-		}
+		// std::string userInput;
+		// if (std::cin.rdbuf()->in_avail())
+		// {
+		// 	std::getline(std::cin, userInput);
+		// 	if (userInput == "exit")
+		// 	{
+		// 		std::cout << "Exiting loop..." << std::endl;
+		// 		break; // Exit the loop
+		// 	}
+		// 	else
+		// 	{
+		// 		std::cout << "You entered: " << userInput << std::endl;
+		// 	}
+		// }
 		// * accept the connexion with a ready socket
 		int connection = network_accept_any(t.sockfd, (struct sockaddr *)t.sockaddr, &addrlen);
 		if (connection == INVALID_SOCKET)
 			continue;
 
 		std::cout << "incomming fd:" << incomming_fd << "\n";
-		int port = parray[incomming_fd - 3];
+		int port = parray[incomming_fd];
 
 		// Read from the connection
 		// * buffer to read request
