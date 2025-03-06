@@ -26,9 +26,9 @@
 
 #include <sys/socket.h> // For socket functions
 #include <netinet/in.h> // For sockaddr_in
-#include <cstdlib>      // For exit() and EXIT_FAILURE
-#include <iostream>     // For cout
-#include <unistd.h>     // For read
+#include <cstdlib>		// For exit() and EXIT_FAILURE
+#include <iostream>		// For cout
+#include <unistd.h>		// For read
 #include <sys/errno.h>
 #include <poll.h>
 #include <signal.h>
@@ -42,6 +42,15 @@
 #include <sys/wait.h>
 
 #include "bytes_container.hpp"
+#include "Server.hpp"
+
+struct t_clean_p
+{
+	Server *webserv;
+	struct sockaddr_in *sockaddr;
+	int *sockfd;
+	int num_fd;
+};
 
 extern char **environ;
 extern bool does_file_exist(const std::string &name);

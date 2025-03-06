@@ -127,39 +127,38 @@ int network_accept_any(int fds[], unsigned int count,
 	}
 }
 
-void close_connection(int *a, struct sockaddr_in *b, int num_fd, Server *s)
+void close_connection(struct t_clean_p t)
 {
-	for (int i = 0; i < num_fd; i++)
+	for (int i = 0; i < t.num_fd; i++)
 	{
-		close(a[i]);
+		close(t.sockfd[i]);
 	}
-	delete[] a;
-	delete[] b;
-	delete s;
+	delete[] t.sockfd;
+	delete[] t.sockaddr;
+	delete t.webserv;
 }
 
 int main(int ac, char **argv)
 {
 	// * Signal handling: ^C to quit properly
+	t_clean_p t;
 	struct sigaction act;
 	act.sa_handler = sign_handler;
 	sigemptyset(&act.sa_mask);
 	act.sa_flags = 0;
 	sigaction(SIGINT, &act, 0);
-	sigaction(SIGSTOP, &act, 0);
 
 	// * call webserv constructor -> parse config file
-	Server *webserv;
 	if (ac == 1)
-		webserv = new Server("default.conf", false);
+		t.webserv = new Server("default.conf", false);
 	else if (ac == 2)
-		webserv = new Server(argv[1], false);
+		t.webserv = new Server(argv[1], false);
 	else
 	{
 		std::cerr << "invalid number of argument\nUsage: ./webserv <optional: config file path>\n";
 	}
 
-	if (!webserv->is_conf_valid())
+	if (!t.webserv->is_conf_valid())
 	{
 		std::cerr << "Usage: ./webserv <optional: config file path>\n";
 		return (1);
@@ -169,14 +168,14 @@ int main(int ac, char **argv)
 	// Create a socket(IPv4, TCP)
 
 	// * get port parsed in config file
-	const port_array &parray = webserv->get_ports();
+	const port_array &parray = t.webserv->get_ports();
 	// * get number of port
-	int num_fd = webserv->get_server_count();
+	t.num_fd = t.webserv->get_server_count();
 	// * struct SOCKADDR_IN to define transport adress and port for AF_INET family
-	struct sockaddr_in *sockaddr = new sockaddr_in[num_fd];
-	int *sockfd = new int[num_fd];
+	struct sockaddr_in *sockaddr = new sockaddr_in[t.num_fd];
+	int *sockfd = new int[t.num_fd];
 
-	for (int i = 0; i < num_fd; i++)
+	for (int i = 0; i < t.num_fd; i++)
 	{
 		// * AF_INET = used to designate the type of adresses that your socket can communicate with (Protocol v4)
 		// * SOCK_STREAM -> for TCP
@@ -184,7 +183,7 @@ int main(int ac, char **argv)
 		if (sockfd[i] == -1)
 		{
 			std::cout << "Failed to create socket n°" << i << " . errno: " << errno << std::endl;
-			close_connection(sockfd, sockaddr, num_fd, webserv);
+			close_connection(t);
 			exit(EXIT_FAILURE);
 		}
 		// Listen to port 9999 on any address
@@ -203,31 +202,46 @@ int main(int ac, char **argv)
 		if (setsockopt(sockfd[i], SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
 		{
 			perror("setsockopt");
-			close_connection(sockfd, sockaddr, num_fd, webserv);
+			close_connection(t);
 			exit(EXIT_FAILURE);
 		}
 		// * It is necessary to assign a local address with bind() before a SOCK_STREAM socket can receive connections.
 		if (bind(sockfd[i], (struct sockaddr *)&(sockaddr[i]), sizeof(sockaddr[i])) < 0)
 		{
 			std::cout << "Failed to bind to port " << parray[i] << ". errno: " << errno << std::endl;
-			close_connection(sockfd, sockaddr, num_fd, webserv);
+			close_connection(t);
 			exit(EXIT_FAILURE);
 		}
 		// * listen() -> The listen function places a socket in a state in which it is listening for an incoming connection.
 		if (listen(sockfd[i], 20) < 0)
 		{
 			std::cout << "Failed to listen on socket n°" << i << ". errno: " << errno << std::endl;
-			close_connection(sockfd, sockaddr, num_fd, webserv);
+			close_connection(t);
 			exit(EXIT_FAILURE);
 		}
 	}
 	// * -> get size of all sockadress
-	socklen_t addrlen = sizeof(sockaddr) * num_fd;
+	socklen_t addrlen = sizeof(sockaddr) * t.num_fd;
 
+	std::cout << "Enter 'exit' to quit, or anything else to continue: ";
 	while (1)
 	{
+		std::string userInput;
+		if (std::cin.rdbuf()->in_avail())
+		{
+			std::getline(std::cin, userInput);
+			if (userInput == "exit")
+			{
+				std::cout << "Exiting loop..." << std::endl;
+				break; // Exit the loop
+			}
+			else
+			{
+				std::cout << "You entered: " << userInput << std::endl;
+			}
+		}
 		// * accept the connexion with a ready socket
-		int connection = network_accept_any(sockfd, num_fd, (struct sockaddr *)sockaddr, &addrlen);
+		int connection = network_accept_any(sockfd, t.num_fd, (struct sockaddr *)sockaddr, &addrlen);
 		if (connection == INVALID_SOCKET)
 		{
 			std::cout << "Failed to grab connection. errno: " << errno
@@ -260,7 +274,7 @@ int main(int ac, char **argv)
 				  << r
 				  << "------------------------------------------" << std::endl;
 		// * Response class :
-		Response resp(r, *webserv);
+		Response resp(r, *t.webserv);
 		std::cout << "---------------- RESPONSE ---------------\n";
 		std::cout << resp;
 		std::cout << "------------------ END -------------------"
@@ -286,5 +300,5 @@ int main(int ac, char **argv)
 	}
 
 	// Close the connections
-	close_connection(sockfd, sockaddr, num_fd, webserv);
+	close_connection(t);
 }

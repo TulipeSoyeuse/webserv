@@ -13,7 +13,7 @@ from unittest_ressources.unitest_global import *
 BASE_URL = "http://localhost:9997"
 
 
-class TestRequest(unittest.TestCase):
+class TestRequestGET(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         self.maxDiff = 80
@@ -51,6 +51,12 @@ class TestRequest(unittest.TestCase):
         with open("unittest_ressources/get_query_string_2.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
+
+class TestRequestPOST(unittest.TestCase):
+    def __init__(self, methodName="runTest"):
+        super().__init__(methodName)
+        self.maxDiff = 80
+
     # ------------------------------------- TEST POST -----------------------------------
     def test_POST1(self):
         "LOREM IPSUM + right test"
@@ -70,6 +76,12 @@ class TestRequest(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual("", response.content.decode())
+
+
+class TestRequestAUTO(unittest.TestCase):
+    def __init__(self, methodName="runTest"):
+        super().__init__(methodName)
+        self.maxDiff = 80
 
     # ----------------------------------- TEST AUTOINDEX ---------------------------------
     def test_autoindex1(self):
@@ -108,6 +120,12 @@ class TestRequest(unittest.TestCase):
         with open("site-test3/error/error_403.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
+
+class TestRequestERROR(unittest.TestCase):
+    def __init__(self, methodName="runTest"):
+        super().__init__(methodName)
+        self.maxDiff = 80
+
     # ------------------------------------ TEST ERROR ------------------------------------
     def test_error1(self):
         "404"
@@ -122,6 +140,12 @@ class TestRequest(unittest.TestCase):
     def test_error2(self):
         "400"
         pass
+
+
+class TestRequestPUT(unittest.TestCase):
+    def __init__(self, methodName="runTest"):
+        super().__init__(methodName)
+        self.maxDiff = 80
 
     # ------------------------------------ TEST UPLOAD -----------------------------------
     def test_upload1(self):
@@ -190,6 +214,12 @@ class TestRequest(unittest.TestCase):
         except Exception as e:
             os.remove("site-test3/unittest_upload_file1.txt")
             raise e
+
+
+class TestRequestCHUNK(unittest.TestCase):
+    def __init__(self, methodName="runTest"):
+        super().__init__(methodName)
+        self.maxDiff = 80
 
     # ------------------------------------ TEST CHUNK -----------------------------------
 
