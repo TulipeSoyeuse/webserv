@@ -127,6 +127,7 @@ class TestRequestERROR(unittest.TestCase):
         self.maxDiff = 80
 
     # ------------------------------------ TEST ERROR ------------------------------------
+        # 404
     def test_error1(self):
         "404"
         response = requests.get(
@@ -136,7 +137,7 @@ class TestRequestERROR(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         with open("site-test3/error/error_404.html") as f:
             self.assertEqual(f.read(), response.content.decode())
-
+        # 404 - Bad Request with host
     def test_error2(self):
         "400"
         response = requests.get(
@@ -148,6 +149,16 @@ class TestRequestERROR(unittest.TestCase):
             self.assertEqual(f.read(), response.content.decode())
 
     def test_error3(self):
+        response = requests.get(
+            urljoin(BASE_URL, "site-test3/index.html"),
+            headers={"Host": ""}
+        )
+        self.assertEqual(response.status_code, 400)
+        with open("site-test3/error/error_400.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
+
+        # 405 - Method not allowed
+    def test_error4(self):
         "405"
         response = requests.post(
             BASE_URL,
@@ -156,8 +167,8 @@ class TestRequestERROR(unittest.TestCase):
         self.assertEqual(response.status_code, 405)
         with open("site-test3/error/error_405.html") as f:
             self.assertEqual(f.read(), response.content.decode())
-
-    def test_error3(self):
+        # 408 - Time out
+    def test_error5(self):
         "408"
         response = requests.get(
             urljoin(BASE_URL, "cgi-bin/infinite.py"),
@@ -166,7 +177,8 @@ class TestRequestERROR(unittest.TestCase):
         self.assertEqual(response.status_code, 408)
         with open("site-test3/error/error_408.html") as f:
             self.assertEqual(f.read(), response.content.decode())
-    def test_error5(self):
+        # 500 - internal server
+    def test_error6(self):
         "500"
         response = requests.get(
             urljoin(BASE_URL, "/cgi-bin/internal-error.py"),

@@ -40,6 +40,7 @@ int socket_read(int fd, bytes_container &s)
 		if ((ready = poll(&pfd, 1, 30)) == -1)
 		{
 			perror("poll");
+			close(ready);
 			return -1;
 		}
 		else if (!(pfd.revents & POLLIN) || ready == 0)
@@ -222,7 +223,6 @@ int main(int ac, char **argv)
 	}
 	// * -> get size of all sockadress
 	socklen_t addrlen = sizeof(sockaddr) * t.num_fd;
-
 	std::cout << "Enter 'exit' to quit, or anything else to continue: ";
 	while (1)
 	{
@@ -250,8 +250,6 @@ int main(int ac, char **argv)
 		}
 		std::cout << "incomming fd:" << incomming_fd << "\n";
 		int port = parray[incomming_fd - 3];
-
-		// Read from the connection
 		// * buffer to read request
 		// * read the data in the socket (cd comment in function)
 		bytes_container brut_request;
@@ -263,9 +261,6 @@ int main(int ac, char **argv)
 		std::cout << "------------------------------------------\n"
 				  << "socket port: " << port << "\n"
 				  << "hostname: " << hostname << "\n";
-		// 		  << "------------- BRUT REQUEST ---------------\n"
-		// 		  << brut_request << "\n"
-		// 		  << "------------------------------------------" << std::endl;
 
 		// * Request class : parsew request
 		std::cout << brut_request.get_data_size() << "\n";
@@ -298,7 +293,5 @@ int main(int ac, char **argv)
 		}
 		close(connection);
 	}
-
-	// Close the connections
 	close_connection(t);
 }
