@@ -450,10 +450,11 @@ inline bool check_host(std::string &host, const std::string &hosts)
 		std::string h_str = s_hosts[i];
 		if (host.c_str() == h_str)
 		{
-			ft_freestrs(s_hosts, (size_t)i);
+			free_split(s_hosts);
 			return true;
 		}
 	}
+	free_split(s_hosts);
 	return false;
 }
 

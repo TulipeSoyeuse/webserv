@@ -166,6 +166,15 @@ class TestRequestERROR(unittest.TestCase):
         self.assertEqual(response.status_code, 408)
         with open("site-test3/error/error_408.html") as f:
             self.assertEqual(f.read(), response.content.decode())
+    def test_error5(self):
+        "500"
+        response = requests.get(
+            urljoin(BASE_URL, "/cgi-bin/internal-error.py"),
+            headers={"Host": "www.webserv_test.fr"},
+        )
+        self.assertEqual(response.status_code, 500)
+        with open("site-test3/error/error_500.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
 
 
 class TestRequestPUT(unittest.TestCase):

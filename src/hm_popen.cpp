@@ -96,7 +96,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 		if (WIFEXITED(status))
 		{
 			if (WEXITSTATUS(status) != 0)
-				good = 408;
+				good = 500;
 		}
 		subprocess_stdout_fd = stdout_pipe[0];
 		subprocess_stderr_fd = stderr_pipe[0];

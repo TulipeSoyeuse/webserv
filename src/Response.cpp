@@ -250,7 +250,6 @@ bool Response::check_file()
 	}
 	if (autoindex && _isdir && file_path == "")
 		return false;
-
 	return (does_file_exist(file_path));
 }
 

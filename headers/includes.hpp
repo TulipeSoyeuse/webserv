@@ -41,8 +41,10 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include "config_string.hpp"
 #include "bytes_container.hpp"
-#include "Server.hpp"
+
+class Server;
 
 struct t_clean_p
 {
@@ -56,3 +58,4 @@ extern char **environ;
 extern bool does_file_exist(const std::string &name);
 char **ft_split(char const *s, char c);
 char **ft_freestrs(char **strs, size_t words);
+void free_split(char **strs);
