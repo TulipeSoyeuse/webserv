@@ -87,53 +87,35 @@ int socket_write(int fd, const std::string &b)
 	return (send(fd, b.data(), b.size(), 0));
 }
 
-int network_accept_any(int fds[], unsigned int count,
-					   struct sockaddr *addr, socklen_t *addrlen)
+int network_accept_any(fd_vecset &fds, struct sockaddr *addr, socklen_t *addrlen)
 {
-	fd_set readfds;
-	int maxfd, fd;
-	unsigned int i;
-	int status;
-
-	// * -> FD_ZERO -> like memset
-	FD_ZERO(&readfds);
-	maxfd = -1;
-	for (i = 0; i < count; i++)
+	std::vector<struct pollfd> pollfds(fds.size());
+	for (size_t i = 0; i < fds.size(); ++i)
 	{
-		// * ajoute un descripteur de fichier a readfds. Si le descripteur de fichier existe déjà dans le jeu et que fd_count du fd_set est inférieur à FD_SETSIZE, un doublon est ajouté.
-		FD_SET(fds[i], &readfds);
-		if (fds[i] > maxfd)
-			maxfd = fds[i];
+		pollfds[i].fd = fds[i];
+		pollfds[i].events = POLLIN;
 	}
-	// *  select -> use to supervise efficiently fds to check if one of them is ready(=if enter and exit become possible)
-	status = select(maxfd + 1, &readfds, NULL, NULL, NULL);
+
+	int status = poll(pollfds.data(), fds.size(), 0);
 	if (status < 0)
 		return INVALID_SOCKET;
-	fd = INVALID_SOCKET;
-	for (i = 0; i < count; i++)
-		// * FD_ISSETtest to see if a fd is part of the set
-		if (FD_ISSET(fds[i], &readfds))
-		{
-			fd = fds[i];
-			break;
-		}
-	if (fd == INVALID_SOCKET)
-		return INVALID_SOCKET;
-	else
-	{
-		incomming_fd = fd;
-		// * accept a connexion on a socket
-		return accept4(fd, addr, addrlen, SOCK_NONBLOCK);
-	}
+
+	// Look for the first file descriptor that is ready to read
+	for (size_t i = 0; i < fds.size(); ++i)
+		if (pollfds[i].revents & POLLIN)
+			return accept4(fds[i], addr, addrlen, SOCK_NONBLOCK);
+
+	return INVALID_SOCKET;
 }
 
-void close_connection(struct t_clean_p t)
+void close_connection(t_clean_p &t)
 {
-	for (int i = 0; i < t.num_fd; i++)
+	for (fd_vecset::iterator it = t.sockfd.begin(); it < t.sockfd.end(); ++it)
 	{
-		close(t.sockfd[i]);
+		if (*it > 0)
+			close(*it);
 	}
-	delete[] t.sockfd;
+
 	delete[] t.sockaddr;
 	delete t.webserv;
 }
@@ -169,59 +151,55 @@ int main(int ac, char **argv)
 
 	// * get port parsed in config file
 	const port_array &parray = t.webserv->get_ports();
-	// * get number of port
-	t.num_fd = t.webserv->get_server_count();
 	// * struct SOCKADDR_IN to define transport adress and port for AF_INET family
-	struct sockaddr_in *sockaddr = new sockaddr_in[t.num_fd];
-	int *sockfd = new int[t.num_fd];
+	t.sockaddr = new sockaddr_in[parray.size()];
 
-	for (int i = 0; i < t.num_fd; i++)
+	for (int i = 0; i < (int)parray.size(); i++)
 	{
 		// * AF_INET = used to designate the type of adresses that your socket can communicate with (Protocol v4)
 		// * SOCK_STREAM -> for TCP
-		sockfd[i] = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-		if (sockfd[i] == -1)
+		t.sockfd.push_back(socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0));
+		if (t.sockfd[i] == -1)
 		{
 			std::cout << "Failed to create socket n°" << i << " . errno: " << errno << std::endl;
 			close_connection(t);
-			exit(EXIT_FAILURE);
+			return (1);
 		}
-		// Listen to port 9999 on any address
 		// * sin family = family adresses for tranort adress. Always be define on AF_INET
-		sockaddr[i].sin_family = AF_INET;
+		t.sockaddr[i].sin_family = AF_INET;
 		// * struct SIN_ADDR qui contient une adresse de transport IPv4 and INADDR_ANY flag can accept any incoming messages
-		sockaddr[i].sin_addr.s_addr = INADDR_ANY;
+		t.sockaddr[i].sin_addr.s_addr = INADDR_ANY;
 		// * sin_port = port number of transport protocol
 		// * The htons() function converts the unsigned short integer hostshort from host byte order to network byte order.
-		sockaddr[i].sin_port = htons(parray[i]);
+		t.sockaddr[i].sin_port = htons(parray[i]);
 
 		int yes = 1;
-		// * manipulate option for the socket referred to by the fd sockfd,
+		// * manipulate option for the socket referred to by the fd t.sockfd,
 		// * SOL_SOCKET -> to manipulate options at the socket API level
 		// * SO_REUSEADDR -> can force a socket to link to a port used by another socket. (for details https://learn.microsoft.com/fr-fr/windows/win32/winsock/using-so-reuseaddr-and-so-exclusiveaddruse)
-		if (setsockopt(sockfd[i], SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
+		if (setsockopt(t.sockfd[i], SOL_SOCKET, SO_REUSEADDR, &yes, sizeof yes) == -1)
 		{
 			perror("setsockopt");
 			close_connection(t);
-			exit(EXIT_FAILURE);
+			return (1);
 		}
 		// * It is necessary to assign a local address with bind() before a SOCK_STREAM socket can receive connections.
-		if (bind(sockfd[i], (struct sockaddr *)&(sockaddr[i]), sizeof(sockaddr[i])) < 0)
+		if (bind(t.sockfd[i], (struct sockaddr *)(&t.sockaddr[i]), sizeof(t.sockaddr[i])) < 0)
 		{
 			std::cout << "Failed to bind to port " << parray[i] << ". errno: " << errno << std::endl;
 			close_connection(t);
-			exit(EXIT_FAILURE);
+			return (1);
 		}
 		// * listen() -> The listen function places a socket in a state in which it is listening for an incoming connection.
-		if (listen(sockfd[i], 20) < 0)
+		if (listen(t.sockfd[i], 20) < 0)
 		{
 			std::cout << "Failed to listen on socket n°" << i << ". errno: " << errno << std::endl;
 			close_connection(t);
-			exit(EXIT_FAILURE);
+			return (1);
 		}
 	}
 	// * -> get size of all sockadress
-	socklen_t addrlen = sizeof(sockaddr) * t.num_fd;
+	socklen_t addrlen = sizeof(t.sockaddr) * parray.size();
 
 	std::cout << "Enter 'exit' to quit, or anything else to continue: ";
 	while (1)
@@ -241,13 +219,10 @@ int main(int ac, char **argv)
 			}
 		}
 		// * accept the connexion with a ready socket
-		int connection = network_accept_any(sockfd, t.num_fd, (struct sockaddr *)sockaddr, &addrlen);
+		int connection = network_accept_any(t.sockfd, (struct sockaddr *)t.sockaddr, &addrlen);
 		if (connection == INVALID_SOCKET)
-		{
-			std::cout << "Failed to grab connection. errno: " << errno
-					  << std::endl;
 			continue;
-		}
+
 		std::cout << "incomming fd:" << incomming_fd << "\n";
 		int port = parray[incomming_fd - 3];
 
