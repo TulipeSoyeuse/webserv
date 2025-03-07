@@ -11,6 +11,8 @@ bool must_quit = false;
 
 void sign_handler(int sig)
 {
+	if (must_quit)
+		exit(EXIT_FAILURE);
 	(void)sig;
 	std::cerr << "\nSIGINT " << " recevied closing server....\n";
 	must_quit = true;
@@ -72,22 +74,6 @@ int socket_write(int fd, const bytes_container &b)
 	else if (!(pfd.revents & POLLOUT) || ready == 0)
 		return 0;
 	return (send(fd, b.get_data(), b.get_data_size(), 0));
-}
-
-int socket_write(int fd, const std::string &b)
-{
-	pollfd pfd;
-	pfd.events = POLLOUT;
-	pfd.fd = fd;
-	int ready;
-	if ((ready = poll(&pfd, 1, 30)) == -1)
-	{
-		perror("poll");
-		return -1;
-	}
-	else if (!(pfd.revents & POLLOUT) || ready == 0)
-		return 0;
-	return (send(fd, b.data(), b.size(), 0));
 }
 
 int network_accept_any(fd_vecset &fds, struct sockaddr *addr, socklen_t *addrlen)
