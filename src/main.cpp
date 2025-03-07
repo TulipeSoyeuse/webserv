@@ -42,6 +42,7 @@ int socket_read(int fd, bytes_container &s)
 		if ((ready = poll(&pfd, 1, 30)) == -1)
 		{
 			perror("poll");
+			close(ready);
 			return -1;
 		}
 		else if (!(pfd.revents & POLLIN) || ready == 0)
@@ -220,17 +221,16 @@ int main(int ac, char **argv)
 		// * buffer to read request
 		// * read the data in the socket (cd comment in function)
 		bytes_container brut_request;
-		if (socket_read(connection, brut_request) == -1)
+		if (!socket_read(connection, brut_request)) {
+			close(connection);
 			continue;
+		}
 		char hostname[30];
 		// * The gethostname function get the local computer's standard host name.
 		gethostname(hostname, 30);
 		std::cout << "------------------------------------------\n"
 				  << "socket port: " << port << "\n"
 				  << "hostname: " << hostname << "\n";
-		// 		  << "------------- BRUT REQUEST ---------------\n"
-		// 		  << brut_request << "\n"
-		// 		  << "------------------------------------------" << std::endl;
 
 		// * Request class : parsew request
 		std::cout << brut_request.get_data_size() << "\n";
@@ -263,7 +263,5 @@ int main(int ac, char **argv)
 		}
 		close(connection);
 	}
-
-	// Close the connections
 	close_connection(t);
 }

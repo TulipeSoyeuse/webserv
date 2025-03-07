@@ -68,6 +68,17 @@ static size_t	ft_countwords(char const *s, char c)
 	return (words);
 }
 
+void free_split(char **strs)
+{
+	int i = 0;
+	while (strs[i])
+	{
+		free(strs[i]);
+		i++;
+	}
+	free(strs);
+}
+
 char	**ft_split(char const *s, char c)
 {
 	size_t	words;

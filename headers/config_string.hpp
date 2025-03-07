@@ -1,5 +1,4 @@
 #pragma once
-#define CONFIG_STRING_HPP
 
 #include "includes.hpp"
 
