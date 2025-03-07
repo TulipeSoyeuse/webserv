@@ -471,9 +471,10 @@ const server_m &Server::get_config(std::string &host, int port) const
 
 const server_m_pair &Server::get_location_subconf(const server_m &m, const std::string &uri) const
 {
-	size_t last;
-	std::string substr = uri;
-	while (last = substr.find_last_of('/'), last != uri.npos)
+	size_t last = uri.size();
+	std::string substr;
+
+	do
 	{
 		substr = uri.substr(0, last);
 		std::cout << "substr uri: " << substr << "\n";
@@ -482,7 +483,7 @@ const server_m_pair &Server::get_location_subconf(const server_m &m, const std::
 			if (it->first == substr)
 				return (it->second);
 		}
-	}
+	} while (last = substr.find_last_of('/'), last != uri.npos);
 	return (m.find("/")->second);
 }
 

@@ -114,10 +114,10 @@ class TestRequestAUTO(unittest.TestCase):
     def test_autoindex4(self):
         "tricky allowed autoindex"
         response = requests.get(
-            urljoin(BASE_URL, "cgi-bin"), headers={"Host": "www.webserv_test.fr"}
+            BASE_URL + "/cgi-bin", headers={"Host": "www.webserv_test.fr"}
         )
-        self.assertEqual(response.status_code, 403)
-        with open("site-test3/error/error_403.html") as f:
+        self.assertEqual(response.status_code, 200)
+        with open("unittest_ressources/autoindex_cgi.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
 
@@ -127,7 +127,7 @@ class TestRequestERROR(unittest.TestCase):
         self.maxDiff = 80
 
     # ------------------------------------ TEST ERROR ------------------------------------
-        # 404
+    # 404
     def test_error1(self):
         "404"
         response = requests.get(
@@ -135,9 +135,10 @@ class TestRequestERROR(unittest.TestCase):
             headers={"Host": "www.webserv_test.fr"},
         )
         self.assertEqual(response.status_code, 404)
-        with open("site-test3/error/error_404.html") as f:
+        with open("error_pages/error_404.html") as f:
             self.assertEqual(f.read(), response.content.decode())
         # 404 - Bad Request with host
+
     def test_error2(self):
         "400"
         response = requests.get(
@@ -150,14 +151,14 @@ class TestRequestERROR(unittest.TestCase):
 
     def test_error3(self):
         response = requests.get(
-            urljoin(BASE_URL, "site-test3/index.html"),
-            headers={"Host": ""}
+            urljoin(BASE_URL, "site-test3/index.html"), headers={"Host": ""}
         )
         self.assertEqual(response.status_code, 400)
         with open("site-test3/error/error_400.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
         # 405 - Method not allowed
+
     def test_error4(self):
         "405"
         response = requests.post(
@@ -168,6 +169,7 @@ class TestRequestERROR(unittest.TestCase):
         with open("site-test3/error/error_405.html") as f:
             self.assertEqual(f.read(), response.content.decode())
         # 408 - Time out
+
     def test_error5(self):
         "408"
         response = requests.get(
@@ -178,6 +180,7 @@ class TestRequestERROR(unittest.TestCase):
         with open("site-test3/error/error_408.html") as f:
             self.assertEqual(f.read(), response.content.decode())
         # 500 - internal server
+
     def test_error6(self):
         "500"
         response = requests.get(

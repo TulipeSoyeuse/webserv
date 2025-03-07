@@ -235,6 +235,7 @@ bool Response::check_file()
 {
 	std::string uri(_request.get_headers().find("URI")->second);
 	root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
+	file_path.clear();
 
 	DIR *dir = opendir((root_dir + uri).c_str());
 	if (!dir)
