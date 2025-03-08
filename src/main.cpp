@@ -175,14 +175,14 @@ int main(int ac, char **argv)
 		// * It is necessary to assign a local address with bind() before a SOCK_STREAM socket can receive connections.
 		if (bind(t.sockfd[i], (struct sockaddr *)(&t.sockaddr[i]), sizeof(t.sockaddr[i])) < 0)
 		{
-			std::cout << "Failed to bind to port " << parray[i] << ". errno: " << errno << std::endl;
+			perror("Failed to listen on socket");
 			close_connection(t);
 			return (1);
 		}
 		// * listen() -> The listen function places a socket in a state in which it is listening for an incoming connection.
 		if (listen(t.sockfd[i], 20) < 0)
 		{
-			std::cout << "Failed to listen on socket n°" << i << ". errno: " << errno << std::endl;
+			perror("Failed to listen on socket");
 			close_connection(t);
 			return (1);
 		}
@@ -207,7 +207,8 @@ int main(int ac, char **argv)
 		// * buffer to read request
 		// * read the data in the socket (cd comment in function)
 		bytes_container brut_request;
-		if (!socket_read(connection, brut_request)) {
+		if (!socket_read(connection, brut_request))
+		{
 			close(connection);
 			continue;
 		}

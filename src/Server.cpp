@@ -91,7 +91,16 @@ bool Server::read_config()
 		server_count++;
 		// * get port
 		if (server.find("port") != server.end())
-			port_lst.push_back(std::atoi(server.find("port")->second.first.c_str()));
+		{
+			bool _found = false;
+			for (port_array::iterator it = port_lst.begin(); it != port_lst.end(); ++it)
+			{
+				if (*it == atoi(server.find("port")->second.first.c_str()))
+					_found = true;
+			}
+			if (!_found)
+				port_lst.push_back(std::atoi(server.find("port")->second.first.c_str()));
+		}
 	}
 	return (true);
 }

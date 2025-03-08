@@ -10,8 +10,6 @@ from urllib.parse import urljoin
 
 from unittest_ressources.unitest_global import *
 
-BASE_URL = "http://localhost:9997"
-
 
 class TestRequestGET(unittest.TestCase):
     def __init__(self, methodName="runTest"):
@@ -49,6 +47,13 @@ class TestRequestGET(unittest.TestCase):
         )
         self.assertEqual(response.status_code, 200)
         with open("unittest_ressources/get_query_string_2.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
+
+    def test_GET4(self):
+        "GET REQUEST : index (testing 3)"
+        response = requests.get(BASE_URL2, headers={"Host": "www.webserv_test_demo.fr"})
+        self.assertEqual(response.status_code, 200)
+        with open("site-test3/index.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
 
@@ -318,6 +323,8 @@ class TestRequestCHUNK(unittest.TestCase):
             self.assertEqual(kitten, response.content)
         finally:
             os.remove(CHUNK_FILE2)
+
+    # TODO: test all site
 
 
 if __name__ == "__main__":

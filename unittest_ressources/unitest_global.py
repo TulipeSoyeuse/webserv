@@ -19,3 +19,6 @@ PUT_FILE2 = "site-test3/upload/.unittest_upload_file2.jpg"
 
 CHUNK_FILE1 = "site-test3/upload/dirchunk/.unittest_chunk_file1.txt"
 CHUNK_FILE2 = "site-test3/upload/dirchunk/.unittest_chunk_file2.jpg"
+
+BASE_URL = "http://localhost:9997"
+BASE_URL2 = "http://localhost:9998"
