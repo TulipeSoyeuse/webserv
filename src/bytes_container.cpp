@@ -146,6 +146,12 @@ int bytes_container::get_data_size() const
 
 std::ostream &operator<<(std::ostream &out, const bytes_container &c)
 {
-	out.write(c.get_data(), (c.get_data_size() > 1000) ? 300 : c.get_data_size());
+	if (c.get_data_size() > 1000)
+	{
+		out.write(c.get_data(), 300);
+		out.write("...\n", 4);
+	}
+	else
+		out.write(c.get_data(), c.get_data_size());
 	return (out);
 }

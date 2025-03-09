@@ -11,12 +11,12 @@ from urllib.parse import urljoin
 from unittest_ressources.unitest_global import *
 
 
+# ------------------------------------ TEST GET -----------------------------------
 class TestRequestGET(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         self.maxDiff = 80
 
-    # ------------------------------------ TEST GET -----------------------------------
     def test_GET1(self):
         "GET REQUEST : index"
         response = requests.get(BASE_URL, headers={"Host": "www.webserv_test.fr"})
@@ -53,8 +53,11 @@ class TestRequestGET(unittest.TestCase):
         "GET REQUEST : index (testing 3)"
         response = requests.get(BASE_URL2, headers={"Host": "www.webserv_test_demo.fr"})
         self.assertEqual(response.status_code, 200)
-        with open("site-test3/index.html") as f:
+        with open("site-test2/index.html") as f:
             self.assertEqual(f.read(), response.content.decode())
+
+
+# ------------------------------------- TEST POST -----------------------------------
 
 
 class TestRequestPOST(unittest.TestCase):
@@ -62,7 +65,6 @@ class TestRequestPOST(unittest.TestCase):
         super().__init__(methodName)
         self.maxDiff = 80
 
-    # ------------------------------------- TEST POST -----------------------------------
     def test_POST1(self):
         "LOREM IPSUM + right test"
         response = requests.post(
@@ -83,12 +85,14 @@ class TestRequestPOST(unittest.TestCase):
         self.assertEqual("", response.content.decode())
 
 
+# ----------------------------------- TEST AUTOINDEX ---------------------------------
+
+
 class TestRequestAUTO(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         self.maxDiff = 80
 
-    # ----------------------------------- TEST AUTOINDEX ---------------------------------
     def test_autoindex1(self):
         "autoindex on allowed directory"
         response = requests.get(
@@ -126,15 +130,16 @@ class TestRequestAUTO(unittest.TestCase):
             self.assertEqual(f.read(), response.content.decode())
 
 
+# ------------------------------------ TEST ERROR ------------------------------------
+
+
 class TestRequestERROR(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         self.maxDiff = 80
 
-    # ------------------------------------ TEST ERROR ------------------------------------
-    # 404
     def test_error1(self):
-        "404"
+        "404 - Bad Request with host"
         response = requests.get(
             urljoin(BASE_URL, "this page does not exits"),
             headers={"Host": "www.webserv_test.fr"},
@@ -142,7 +147,6 @@ class TestRequestERROR(unittest.TestCase):
         self.assertEqual(response.status_code, 404)
         with open("error_pages/error_404.html") as f:
             self.assertEqual(f.read(), response.content.decode())
-        # 404 - Bad Request with host
 
     def test_error2(self):
         "400"
@@ -155,17 +159,14 @@ class TestRequestERROR(unittest.TestCase):
             self.assertEqual(f.read(), response.content.decode())
 
     def test_error3(self):
-        response = requests.get(
-            urljoin(BASE_URL, "site-test3/index.html"), headers={"Host": ""}
-        )
+        "400"
+        response = requests.get(BASE_URL, headers={"Host": ""})
         self.assertEqual(response.status_code, 400)
         with open("site-test3/error/error_400.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
-        # 405 - Method not allowed
-
     def test_error4(self):
-        "405"
+        "405 - Method not allowed"
         response = requests.post(
             BASE_URL,
             headers={"Host": "www.webserv_test.fr"},
@@ -173,21 +174,19 @@ class TestRequestERROR(unittest.TestCase):
         self.assertEqual(response.status_code, 405)
         with open("site-test3/error/error_405.html") as f:
             self.assertEqual(f.read(), response.content.decode())
-        # 408 - Time out
 
     def test_error5(self):
-        "408"
+        "408 - Time out"
         response = requests.get(
             urljoin(BASE_URL, "cgi-bin/infinite.py"),
             headers={"Host": "www.webserv_test.fr"},
         )
-        self.assertEqual(response.status_code, 408)
-        with open("site-test3/error/error_408.html") as f:
+        self.assertEqual(response.status_code, 444)
+        with open("site-test3/error/error_444.html") as f:
             self.assertEqual(f.read(), response.content.decode())
-        # 500 - internal server
 
     def test_error6(self):
-        "500"
+        "500 - internal server"
         response = requests.get(
             urljoin(BASE_URL, "/cgi-bin/internal-error.py"),
             headers={"Host": "www.webserv_test.fr"},
@@ -197,12 +196,14 @@ class TestRequestERROR(unittest.TestCase):
             self.assertEqual(f.read(), response.content.decode())
 
 
+# ------------------------------------ TEST UPLOAD -----------------------------------
+
+
 class TestRequestPUT(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         self.maxDiff = 80
 
-    # ------------------------------------ TEST UPLOAD -----------------------------------
     def test_upload1(self):
         "simple txt file (authorized)"
         response = requests.put(
@@ -271,12 +272,13 @@ class TestRequestPUT(unittest.TestCase):
             raise e
 
 
+# ------------------------------------ TEST CHUNK -----------------------------------
+
+
 class TestRequestCHUNK(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
         self.maxDiff = 80
-
-    # ------------------------------------ TEST CHUNK -----------------------------------
 
     def test_chunk1(self):
         "GET on chunk on a big txt file"
@@ -323,8 +325,6 @@ class TestRequestCHUNK(unittest.TestCase):
             self.assertEqual(kitten, response.content)
         finally:
             os.remove(CHUNK_FILE2)
-
-    # TODO: test all site
 
 
 if __name__ == "__main__":

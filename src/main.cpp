@@ -5,9 +5,8 @@
 
 #define INVALID_SOCKET -1
 
-int incomming_fd = 0;
-
 bool must_quit = false;
+int fd_index = 0;
 
 void sign_handler(int sig)
 {
@@ -92,7 +91,10 @@ int network_accept_any(fd_vecset &fds, struct sockaddr *addr, socklen_t *addrlen
 	// Look for the first file descriptor that is ready to read
 	for (size_t i = 0; i < fds.size(); ++i)
 		if (pollfds[i].revents & POLLIN)
+		{
+			fd_index = i;
 			return accept4(fds[i], addr, addrlen, SOCK_NONBLOCK);
+		}
 
 	return INVALID_SOCKET;
 }
@@ -200,8 +202,8 @@ int main(int ac, char **argv)
 		if (connection == INVALID_SOCKET)
 			continue;
 
-		std::cout << "incomming fd:" << incomming_fd << "\n";
-		int port = parray[incomming_fd];
+		std::cout << "incomming fd:" << connection << "\n";
+		int port = parray[fd_index];
 
 		// Read from the connection
 		// * buffer to read request

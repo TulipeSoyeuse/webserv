@@ -450,31 +450,32 @@ void Server::configuration_checking()
 	_valid_conf = true;
 }
 
-inline bool check_host(std::string &host, const std::string &hosts)
-{
-	(void)host;
-	char **s_hosts = ft_split(hosts.c_str(), ' ');
-	for (int i = 0; s_hosts[i]; i++)
-	{
-		std::string h_str = s_hosts[i];
-		if (host.c_str() == h_str)
-		{
-			free_split(s_hosts);
-			return true;
-		}
-	}
-	free_split(s_hosts);
-	return false;
-}
+// inline bool check_host(std::string &host, const std::string &hosts)
+// {
+// 	(void)host;
+// 	char **s_hosts = ft_split(hosts.c_str(), ' ');
+// 	for (int i = 0; s_hosts[i]; i++)
+// 	{
+// 		std::string h_str = s_hosts[i];
+// 		if (host.c_str() == h_str)
+// 		{
+// 			free_split(s_hosts);
+// 			return true;
+// 		}
+// 	}
+// 	free_split(s_hosts);
+// 	return false;
+// }
 
 const server_m &Server::get_config(std::string &host, int port) const
 {
+	if (host.empty())
+		return _default_server;
 	for (Server_lst::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
-	{
-		bool match_host = check_host(host, (*it).find("host")->second.first);
-		if ((*it).find("port") != it->end() && atoi(((*it).find("port")->second.first.c_str())) == port && match_host)
-			return (*it);
-	}
+		if (atoi(it->find("port")->second.first.c_str()) == port)
+			if (it->find("host")->second.first.find(host) != std::string::npos)
+				return (*it);
+
 	return _default_server;
 }
 
@@ -506,7 +507,7 @@ void Server::init_default()
 	error_pages["403"] = "error_pages/error_403.html";
 	error_pages["404"] = "error_pages/error_404.html";
 	error_pages["405"] = "error_pages/error_405.html";
-	error_pages["408"] = "error_pages/error_408.html";
+	error_pages["444"] = "error_pages/error_444.html";
 	error_pages["500"] = "error_pages/error_500.html";
 	error_pages["505"] = "error_pages/error_505.html";
 	_default_server["error_page"] = server_m_pair(std::string(), error_pages);

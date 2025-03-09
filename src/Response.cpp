@@ -590,8 +590,8 @@ void Response::http_error(int code)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Not Found\r\n");
 	else if (code == 405)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Method Not Allowed\r\n");
-	else if (code == 408)
-		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Request Time-out\r\n");
+	else if (code == 444)
+		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "No Response\r\n");
 	else if (code == 413)
 		Status_line = ("HTTP/1.1 " + SSTR(code << " ") + "Request Entity Too Large\r\n");
 	else if (code == 500)
@@ -599,8 +599,8 @@ void Response::http_error(int code)
 	// read error file if provided in server conf
 	_is_binary = false;
 	server_m::iterator error_page = serv.find("error_page");
+	server_m def;
 	if (error_page != serv.end() &&
-		serv.find("host")->first != "NOTFOUND" &&
 		error_page->second.second.find(SSTR(code)) != error_page->second.second.end())
 	{
 		// dynamic error page
@@ -609,12 +609,16 @@ void Response::http_error(int code)
 		read_payload_from_file();
 		_header["Content-Length"] = SSTR(content_length);
 	}
-	else
+	else if (def = config.get_default_config(), def.find("error_page") != def.end())
 	{
-		file_path = config.get_default_config().find("error_page")->second.second.find(SSTR(code))->second;
+		file_path = def.find("error_page")->second.second.find(SSTR(code))->second;
 		std::cout << "file_path:" << file_path << '\n';
 		read_payload_from_file();
 		_header["Content-Length"] = SSTR(content_length);
+	}
+	else
+	{
+		_header["Content-Length"] = SSTR(0);
 	}
 }
 
