@@ -31,14 +31,11 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	MIME_attribute();
 
 	if (set_payload())
-	{
 		_header["Content-Length"] = SSTR(content_length);
-		if (!is_body_size_valid())
-		{
-			// is size is greater than client_size, then process by chunk
-			serv_by_chunk();
-		}
-	}
+
+	if (!is_body_size_valid())
+		// is size is greater than client_size, then process by chunk
+		serv_by_chunk();
 
 	// assembly ----------------------------
 	_response.fill(Status_line.c_str(), Status_line.size());
@@ -341,26 +338,21 @@ bool Response::set_payload()
 		http_error(505);
 		return (false);
 	}
-	if (!check_proto())
-	{
-		http_error(405);
-		return (false);
-	}
 	if (!check_file())
 	{
+		if (!check_proto())
+		{
+			http_error(405);
+			return (false);
+		}
 		if (_request.get_type() == PUT)
 		{
 			content_length = 0;
 			if (write_file())
-			{
 				return (true);
-			}
-			else
-				return (false);
 		}
 		else
 		{
-			// TODO: change error from 403 to 404, dit i miss something ? autoindex ?
 			if (_isdir)
 			{
 				if (autoindex)
@@ -371,6 +363,11 @@ bool Response::set_payload()
 			else
 				http_error(404);
 		}
+		return (false);
+	}
+	if (!check_proto())
+	{
+		http_error(405);
 		return (false);
 	}
 	// ? on part du principe que ca a passe check_file et que le fichier existe

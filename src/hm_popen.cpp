@@ -86,7 +86,7 @@ hm_popen::hm_popen(std::string &f, CGI cgi, const Request &_request) : _Request(
 		while (waitpid(pid, &status, WNOHANG) == 0)
 		{
 			time(&end);
-			if (difftime(end, start) > 2)
+			if (difftime(end, start) > TIME_OUT)
 			{
 				kill(pid, 9);
 				good = 444;

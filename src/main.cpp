@@ -107,7 +107,9 @@ void close_connection(t_clean_p &t)
 			close(*it);
 	}
 
-	delete[] t.sockaddr;
+	if (t.sockaddr)
+		delete[] t.sockaddr;
+
 	delete t.webserv;
 }
 
@@ -115,6 +117,7 @@ int main(int ac, char **argv)
 {
 	// * Signal handling: ^C to quit properly
 	t_clean_p t;
+	t.sockaddr = NULL;
 	struct sigaction act;
 	act.sa_handler = sign_handler;
 	sigemptyset(&act.sa_mask);
@@ -134,7 +137,8 @@ int main(int ac, char **argv)
 	if (!t.webserv->is_conf_valid())
 	{
 		std::cerr << "Usage: ./webserv <optional: config file path>\n";
-		return (1);
+		close_connection(t);
+		return (ERROR_CONFIG);
 	}
 
 	std::cout << "-------- listening ---------\n";

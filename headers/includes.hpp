@@ -44,6 +44,9 @@
 #include "config_string.hpp"
 #include "bytes_container.hpp"
 
+#define TIME_OUT 1
+#define ERROR_CONFIG 2
+
 class Server;
 
 typedef std::vector<int> fd_vecset;

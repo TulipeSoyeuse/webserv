@@ -3,3 +3,4 @@ webserv
 obj
 __pycache__
 *.ipynb
+*.log

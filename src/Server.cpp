@@ -434,6 +434,7 @@ void Server::configuration_checking()
 				}
 			}
 		}
+
 		// -------------------- LOCATION -----------------------------
 		for (server_m::iterator it2 = it->begin(); it2 != it->end(); ++it2)
 		{
@@ -442,6 +443,12 @@ void Server::configuration_checking()
 				if (!does_file_exist(route + it2->first))
 				{
 					std::cerr << "location: " << it2->first << " dont exist or is inaccessible\n";
+					return;
+				}
+				if (it2->second.second.find("client_size") != it2->second.second.end() &&
+					atoi(it2->second.second.find("client_size")->second.c_str()) < 1000)
+				{
+					std::cerr << "client size must be at least 1kb\n";
 					return;
 				}
 			}
