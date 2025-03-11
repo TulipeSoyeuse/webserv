@@ -8,12 +8,14 @@ from urllib.parse import urljoin
 from datetime import datetime
 import time
 import pathlib
+import re
 
 from unittest_ressources.unitest_global import *
 
 
 def do_skip():
-    if len(sys.argv) == 2 and sys.argv[1] == "TestRequestCONFIG":
+    regexp = re.compile(r"TestRequestCONFIG.*")
+    if len(sys.argv) == 2 and regexp.search(sys.argv[1]):
         return True
     else:
         return False
@@ -387,18 +389,21 @@ class TestRequestCONFIG(unittest.TestCase):
         super().__init__(methodName)
         self.maxDiff = 80
         self.webserv = None
+        self.addCleanup(self.cleanup)
 
+    @classmethod
+    def setUpClass(self):
         if not os.path.exists("unittest_ressources/output.log"):
             pathlib.Path("unittest_ressources/output.log").touch()
 
         self.log = open("unittest_ressources/output.log", "a")
-        self.addCleanup(self.cleanup)
+        self.log.write(LOG_SETUP.format(date=datetime.now()))
 
     def launch_webserv(self, config_file: str):
         if self.webserv and self.webserv.poll() != None:
             return
         else:
-            self.log.write(LOG_SETUP.format(date=datetime.now()))
+            self.log.write("---------------------------------\n")
             self.webserv = subprocess.Popen(
                 [
                     "valgrind",
@@ -437,6 +442,30 @@ class TestRequestCONFIG(unittest.TestCase):
         "empty file"
         with open(TEST_CONFIG_FILE, "w") as conf:
             conf.write("")
+        self.launch_webserv(TEST_CONFIG_FILE)
+        time.sleep(0.5)
+        self.assertEqual(self.webserv.poll(), 2)
+
+    def test_config4(self):
+        "no route"
+        with open(TEST_CONFIG_FILE, "w") as conf:
+            conf.write(TEST_CONFIG_3)
+        self.launch_webserv(TEST_CONFIG_FILE)
+        time.sleep(0.5)
+        self.assertEqual(self.webserv.poll(), 2)
+
+    def test_config5(self):
+        "route don't exist"
+        with open(TEST_CONFIG_FILE, "w") as conf:
+            conf.write(TEST_CONFIG_4)
+        self.launch_webserv(TEST_CONFIG_FILE)
+        time.sleep(0.5)
+        self.assertEqual(self.webserv.poll(), 2)
+
+    def test_config6(self):
+        "route is a file and not a directory"
+        with open(TEST_CONFIG_FILE, "w") as conf:
+            conf.write(TEST_CONFIG_5)
         self.launch_webserv(TEST_CONFIG_FILE)
         time.sleep(0.5)
         self.assertEqual(self.webserv.poll(), 2)
