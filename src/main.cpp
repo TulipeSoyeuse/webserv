@@ -218,12 +218,9 @@ int main(int ac, char **argv)
 			close(connection);
 			continue;
 		}
-		char hostname[30];
 		// * The gethostname function get the local computer's standard host name.
-		gethostname(hostname, 30);
 		std::cout << "------------------------------------------\n"
-				  << "socket port: " << port << "\n"
-				  << "hostname: " << hostname << "\n";
+				  << "socket port: " << port << "\n";
 
 		// * Request class : parsew request
 		std::cout << brut_request.get_data_size() << "\n";
