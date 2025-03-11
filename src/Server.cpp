@@ -84,7 +84,6 @@ bool Server::read_config()
 
 		while (l = server_conf.get_next_conf(), !l.empty())
 		{
-			std::cout << "L = " << l << std::endl;
 			if (!is_string_empty(l))
 				insert(server, parse_config_line(l));
 		}
@@ -447,6 +446,10 @@ void Server::configuration_checking()
 		{
 			if (it2->second.first == "location")
 			{
+				if(it2->first.empty()) {
+					std::cerr << "location can't be empty\n";
+					return;
+				}
 				if (!does_file_exist(route + it2->first))
 				{
 					std::cerr << "location: " << it2->first << " dont exist or is inaccessible\n";
