@@ -84,6 +84,7 @@ bool Server::read_config()
 
 		while (l = server_conf.get_next_conf(), !l.empty())
 		{
+			std::cout << "L = " << l << std::endl;
 			if (!is_string_empty(l))
 				insert(server, parse_config_line(l));
 		}
@@ -228,6 +229,7 @@ server_p Server::parse_config_line(config_string l)
 	size_t i = 0;
 	std::string::iterator it;
 
+	// si g pas de bracket
 	if (l.get_str().find('{') != l.get_str().npos)
 		return parse_subpart_config_line(l);
 
@@ -253,7 +255,7 @@ server_p Server::parse_config_line(config_string l)
 			break;
 	if (a == "host")
 	{
-		b = l.get_str().substr(i, (l.get_str().size() - i) - 1);
+		b = l.get_str().substr(i, (l.get_str().size() - i));
 	}
 	else
 		b = l.get_next_word(i);
@@ -423,6 +425,11 @@ void Server::configuration_checking()
 		val = it->find("error_page");
 		if (val != it->end())
 		{
+			if (!val->second.first.empty())
+			{
+				std::cerr << "Error parameter, should not have a name\n";
+				return;
+			}
 			for (Map::iterator it2 = val->second.second.begin(); it2 != val->second.second.end(); ++it2)
 			{
 				std::string f(route + "/" + it2->second);
@@ -479,10 +486,15 @@ const server_m &Server::get_config(std::string &host, int port) const
 	if (host.empty())
 		return _default_server;
 	for (Server_lst::const_iterator it = _servers.begin(); it != _servers.end(); ++it)
+	{
 		if (atoi(it->find("port")->second.first.c_str()) == port)
+		{
 			if (it->find("host")->second.first.find(host) != std::string::npos)
+			{
 				return (*it);
-
+			}
+		}
+	}
 	return _default_server;
 }
 

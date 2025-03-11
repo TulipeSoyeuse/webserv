@@ -124,60 +124,98 @@ std::string config_string::get_next_line()
 
 std::string config_string::get_next_conf()
 {
-	std::string key;
-	std::string result;
-	std::string::const_iterator it = in.begin() + c;
-	std::string::const_iterator end = in.end();
-	size_t count = c;
+    std::string key;
+    std::string result;
+    std::string::const_iterator it = in.begin() + c;
+    std::string::const_iterator end = in.end();
+    size_t count = c;
 
-	// passe les espaces
-	while (it != end && isspace(*it))
-	{
-		++it;
-		++count;
-	}
-	// y'a que des espaces
-	if (it == end)
-	{
-		return result;
-	}
+    while (it != end && isspace(*it))
+    {
+        ++it;
+        ++count;
+    }
+    if (it == end)
+        return result;
 
-	// si c pas un espace et que c'est pas un \n
-	while (it != end && *it != '{' && *it != '\n')
-	{
-		key.push_back(*it);
-		++it;
-		++count;
-	}
-	// si on a une bracket ouvrante
-	if (*it == '{')
-	{
-		result += key;
-		result.push_back(' ');
-		result += "{";
-		++it;
-		++count;
-		while (it != end && *it != '}')
-		{
-			result.push_back(*it);
+    while (it != end && !isspace(*it) && *it != '{')
+    {
+        key.push_back(*it);
+        ++it;
+        ++count;
+    }
+
+	if(key == "host") {
+		while(it != end && *it != '\n') {
+			key.push_back(*it);
 			++it;
 			++count;
 		}
+		c = count;
+		return key;
+	}
 
-		if (it != end && *it == '}')
-		{
-			result.push_back('}');
-			++it;
-			++count;
-		}
-	}
-	else
-	{
-		return (get_next_line());
-	}
-	c = count;
-	return result;
+    while (it != end && isspace(*it))
+    {
+        ++it;
+        ++count;
+    }
+
+    std::string path;
+    while (it != end && *it != '{' && !isspace(*it))
+    {
+        path.push_back(*it);
+        ++it;
+        ++count;
+    }
+
+    // Si un path existe on speaare key et path
+    if (!path.empty())
+        key += " " + path;
+
+    // Passe les espaces après le path
+    while (it != end && isspace(*it))
+    {
+        ++it;
+        ++count;
+    }
+
+    // Si { est pas la on lit la ligne d'apres
+    if (it == end || *it != '{')
+    {
+        std::string next_line = get_next_line();
+        if (!next_line.empty() && next_line.find('{') != std::string::npos)
+        {
+            result = key + " {";
+        }
+        else
+        {
+            return key; // Pas d'accolade on renvoie la ligne
+        }
+    }
+    else 
+    {
+        result = key + " {";
+        ++it;
+        ++count;
+    }
+    while (it != end && *it != '}')
+    {
+        result.push_back(*it);
+        ++it;
+        ++count;
+    }
+    if (it != end && *it == '}')
+    {
+        result.push_back('}');
+        ++it;
+        ++count;
+    }
+    c = count;
+    return result;
 }
+
+
 
 std::string &config_string::get_str()
 {
@@ -197,30 +235,4 @@ config_string::~config_string()
 {
 }
 
-char *ft_itoa(int n)
-{
-	int temp = n, len = (n <= 0) ? 1 : 0;
 
-	while (temp)
-	{
-		temp /= 10;
-		len++;
-	}
-
-	char *str = new char[len + 1];
-	str[len] = '\0';
-
-	if (n < 0)
-	{
-		str[0] = '-';
-		n = -n;
-	}
-	// unconditional jump valgrind
-	while (len-- && str[len] != '-')
-	{
-		str[len] = (n % 10) + '0';
-		n /= 10;
-	}
-
-	return str;
-}

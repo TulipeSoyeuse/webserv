@@ -440,6 +440,15 @@ class TestRequestCONFIG(unittest.TestCase):
         self.launch_webserv(TEST_CONFIG_FILE)
         time.sleep(0.5)
         self.assertEqual(self.webserv.poll(), 2)
+        
+    def test_config3(self):
+        "empty file"
+        with open(TEST_CONFIG_FILE, "w") as conf:
+            conf.write(TEST_CONFIG_2)
+        self.launch_webserv(TEST_CONFIG_FILE)
+        time.sleep(0.5)
+        self.assertEqual(self.webserv.poll(), 2)
+    
 
 
 if __name__ == "__main__":
