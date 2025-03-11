@@ -72,8 +72,7 @@ server testing2
 
 }"""
 
-
-TEST_CONFIG_2 = """server testing
+TEST_CONFIG_3 = """server testing
 {
     host www.webserv_test.fr webserv_test.com
     port 9997
@@ -86,19 +85,19 @@ TEST_CONFIG_2 = """server testing
         505 error/error_505.html
     }
     route   ./site-test3
-    location / 
+    location /
     {
         index index.html
         proto GET
         autoindex off
         client_size 1500
     }
-    location /cgi-bin 
+    location /cgi-bin
     {
         proto GET,POST
         autoindex on
     }
-    location /upload 
+    location /upload
     {
         proto PUT,DELETE
         autoindex off
@@ -113,6 +112,98 @@ server testing2
 {
     host www.web_test2.fr
     port 9998
+    host www.webserv_test.fr webserv_test.com
+
+
+            port 9998
+
+    location / {
+        proto GET
+    }
+}"""
+
+TEST_CONFIG_4 = """server testing
+{
+    host www.webserv_test.fr webserv_test.com
+    port 9997
+    error_page {
+        400 error/error_400.html
+        403 error/error_403.html
+        405 error/error_405.html
+        408 error/error_408.html
+        500 error/error_500.html
+        505 error/error_505.html
+    }
+    route   ./site-test3
+    location / {
+        index index.html
+        proto GET
+        autoindex off
+        client_size 1500
+    }
+    location /cgi-bin {
+        proto GET,POST
+        autoindex on
+    }
+    location /upload {
+        proto PUT,DELETE
+        autoindex off
+    }
+    location /upload/dirchunk {
+        proto PUT,GET
+        client_size 40000
+    }
+}
+
+server testing2
+{
+    host www.test.com
+    port 9998
+    route ./fzefazefea
+    location / {
+        proto GET
+    }
+
+}"""
+
+TEST_CONFIG_5 = """server testing
+{
+    host www.webserv_test.fr webserv_test.com
+    port 9997
+    error_page {
+        400 error/error_400.html
+        403 error/error_403.html
+        405 error/error_405.html
+        408 error/error_408.html
+        500 error/error_500.html
+        505 error/error_505.html
+    }
+    route   ./site-test3
+    location / {
+        index index.html
+        proto GET
+        autoindex off
+        client_size 1500
+    }
+    location /cgi-bin {
+        proto GET,POST
+        autoindex on
+    }
+    location /upload {
+        proto PUT,DELETE
+        autoindex off
+    }
+    location /upload/dirchunk {
+        proto PUT,GET
+        client_size 40000
+    }
+}
+
+server testing2
+{
+    host www.test.com
+    port 9998
+    route ./unittest_ressources/lorem_ipsum.txt
     location / {
         proto GET
     }
