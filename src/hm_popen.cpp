@@ -155,7 +155,6 @@ size_t hm_popen::read_out(bytes_container &b)
 	size_t nbytes;
 	while ((nbytes = read(subprocess_stdout_fd, buffer, 4096)) > 0)
 		b.fill(buffer, nbytes);
-	std::cout << "nbytes: " << nbytes << "\n";
 	return (b.get_data_size());
 }
 

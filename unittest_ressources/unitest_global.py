@@ -26,8 +26,9 @@ BASE_URL2 = "http://localhost:9998"
 
 TEST_CONFIG_FILE = "unittest_ressources/config_test.conf"
 LOG_SETUP = """
-\n--------------------------------- WEBSERV TESTING --------------------------------
+--------------------------------- WEBSERV TESTING --------------------------------
 DATE:{date}
+TEST:{test}
 \n"""
 
 TEST_CONFIG_1 = """server testing
@@ -246,4 +247,44 @@ server testing2
         proto GET
     }
 
+}"""
+
+TEST_CONFIG_6 = """server testing
+{
+    host localhost:9997             www.webserv_test.fr    webserv_test.com
+    port 9997
+    error_page
+    {
+        400             error/error_400.html
+           403              error/error_403.html
+    405 error/error_405.html
+        444                  error/error_444.html
+        500 error/error_500.html
+        505 error/error_505.html
+    }
+    route                           ./site-test3
+    location /
+    {
+        proto GET
+        autoindex off
+    }
+    location /cgi-bin
+    {
+        proto GET,POST
+        autoindex on
+    }
+    location /html/             {
+        proto GET
+        index definitlynotaindex.txt
+        autoindex on
+    }
+    location /upload {
+        proto GET,PUT,DELETE
+        autoindex off
+    }
+    location /upload/dirchunk
+    {
+        proto PUT,GET
+        client_size 40000
+    }
 }"""

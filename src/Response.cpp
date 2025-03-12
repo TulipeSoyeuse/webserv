@@ -9,7 +9,6 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	if (!_request._status)
 	{
 		http_error(400);
-		std::cout << "ici\n";
 		return;
 	}
 
@@ -23,10 +22,8 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	// * link the right server for the current request (link on "serv" var)
 	set_server_conf(s);
 	if (!strcmp(serv.find("host")->second.first.c_str(), "NOTFOUND"))
-	{
 		http_error(400);
-		std::cout << "la\n";
-	}
+
 	check_autoindex();
 
 	// * build header
@@ -144,9 +141,6 @@ void Response::MIME_attribute()
 		return;
 	}
 	std::string file_format = uri.substr(uri.find_last_of('.') + 1);
-
-	std::cout << "file format: " << file_format << std::endl;
-
 	if (file_format == "aac")
 		_header["Content-Type"] = AAC "; charset=UTF-8";
 	// ! Rajout de cette ligne pour tester le script bash et php
@@ -201,7 +195,6 @@ bool Response::match_file()
 				struct stat _stat;
 				stat(diread->d_name, &_stat);
 				file_path = root_dir + '/' + diread->d_name;
-				std::cout << file_path << "\n";
 				closedir(dir);
 				return true;
 			}
@@ -212,9 +205,6 @@ bool Response::match_file()
 	}
 
 	const std::string file = uri.substr(uri.find_last_of('/') + 1);
-	std::cout << "file asked: " << "\"" << file << "\"" << "\n";
-	std::cout << "full path: " << "\"" << root_dir << uri.c_str() << "\"" << "\n";
-
 	while ((diread = readdir(dir)) != NULL)
 	{
 		if (std::strcmp(diread->d_name, file.c_str()) == 0)
@@ -238,10 +228,10 @@ bool Response::check_file()
 	root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
 	file_path.clear();
 
-	std::string index_f = "index";
+	bool is_index = false;
 	p_location l = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
 	if (l.second.find("index") != l.second.end())
-		index_f = l.second.find("index")->second;
+		is_index = true;
 
 	DIR *dir = opendir((root_dir + uri).c_str());
 	if (!dir)
@@ -251,14 +241,15 @@ bool Response::check_file()
 		_isdir = true;
 		struct dirent *diread;
 		while ((diread = readdir(dir)) != NULL)
-			if (index_f == diread->d_name)
+			if ((is_index && l.second.find("index")->second == diread->d_name) ||
+				(!is_index && std::string(diread->d_name).find("index.") != std::string::npos))
 			{
 				if (*--uri.end() != '/')
 					file_path = root_dir + uri + '/' + diread->d_name;
 				else
 					file_path = root_dir + uri + diread->d_name;
-				std::cout << "file path " << file_path << "\n";
 			}
+
 		closedir(dir);
 	}
 	if (autoindex && _isdir && file_path == "")
@@ -320,7 +311,6 @@ bool Response::delete_file()
 	// * si c un dossier
 	else if (S_ISDIR(path_stat.st_mode))
 	{
-		std::cout << "je suis un dir" << std::endl;
 		http_error(403);
 		return false;
 	}
@@ -470,7 +460,6 @@ bool Response::generate_autoindex()
 
 bool Response::CGI_from_file(CGI c)
 {
-	std::cout << "---------CGI from file--------\n";
 	hm_popen hmpop(file_path, c, _request);
 	content_length = hmpop.read_out(payload);
 	if (hmpop.is_good() != 200)
@@ -480,10 +469,6 @@ bool Response::CGI_from_file(CGI c)
 		http_error(hmpop.is_good());
 		return (false);
 	}
-	std::cout << "content length: "
-			  << content_length << "\n";
-	std::cout << "---------PAYLOAD--------\n"
-			  << payload;
 	return (true);
 }
 
@@ -617,21 +602,17 @@ void Response::http_error(int code)
 	{
 		// dynamic error page
 		file_path = serv.find("route")->second.first + serv.find("location")->second.first + "/" + error_page->second.second.find(SSTR(code))->second;
-		std::cout << "file_path:" << file_path << '\n';
 		read_payload_from_file();
 		_header["Content-Length"] = SSTR(content_length);
 	}
 	else if (def = config.get_default_config(), def.find("error_page") != def.end())
 	{
 		file_path = def.find("error_page")->second.second.find(SSTR(code))->second;
-		std::cout << "file_path:" << file_path << '\n';
 		read_payload_from_file();
 		_header["Content-Length"] = SSTR(content_length);
 	}
 	else
-	{
 		_header["Content-Length"] = SSTR(0);
-	}
 }
 
 const bool &Response::is_chunked() const
