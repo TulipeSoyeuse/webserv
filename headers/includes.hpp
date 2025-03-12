@@ -24,7 +24,6 @@
 #include <sstream>
 #include <algorithm>
 
-#include <sys/types.h>
 #include <sys/socket.h> // For socket functions
 #include <netinet/in.h> // For sockaddr_in
 #include <cstdlib>

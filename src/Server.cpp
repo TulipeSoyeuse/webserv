@@ -506,6 +506,7 @@ const server_m_pair &Server::get_location_subconf(const server_m &m, const std::
 	do
 	{
 		substr = uri.substr(0, last);
+		std::cout << "substr uri: " << substr << "\n";
 		for (server_m::const_iterator it = m.begin(); it != m.end(); ++it)
 		{
 			if (it->first == substr)
