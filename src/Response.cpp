@@ -238,10 +238,10 @@ bool Response::check_file()
 	root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
 	file_path.clear();
 
-	std::string index_f = "index";
+	bool is_index = false;
 	p_location l = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
 	if (l.second.find("index") != l.second.end())
-		index_f = l.second.find("index")->second;
+		is_index = true;
 
 	DIR *dir = opendir((root_dir + uri).c_str());
 	if (!dir)
@@ -251,7 +251,8 @@ bool Response::check_file()
 		_isdir = true;
 		struct dirent *diread;
 		while ((diread = readdir(dir)) != NULL)
-			if (index_f == diread->d_name)
+			if ((is_index && l.second.find("index")->second == diread->d_name) ||
+				(!is_index && std::string(diread->d_name).find("index.") != std::string::npos))
 			{
 				if (*--uri.end() != '/')
 					file_path = root_dir + uri + '/' + diread->d_name;

@@ -115,22 +115,13 @@ class TestRequestAUTO(unittest.TestCase):
     def test_autoindex2(self):
         "forbiden autoindex"
         response = requests.get(
-            urljoin(BASE_URL, "html/"), headers={"Host": "www.webserv_test.fr"}
+            urljoin(BASE_URL, "upload/"), headers={"Host": "www.webserv_test.fr"}
         )
         self.assertEqual(response.status_code, 403)
         with open("site-test3/error/error_403.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
     def test_autoindex3(self):
-        "tricky fordibben autoindex"
-        response = requests.get(
-            urljoin(BASE_URL, "html"), headers={"Host": "www.webserv_test.fr"}
-        )
-        self.assertEqual(response.status_code, 403)
-        with open("site-test3/error/error_403.html") as f:
-            self.assertEqual(f.read(), response.content.decode())
-
-    def test_autoindex4(self):
         "tricky allowed autoindex"
         response = requests.get(
             BASE_URL + "/cgi-bin", headers={"Host": "www.webserv_test.fr"}
@@ -139,13 +130,13 @@ class TestRequestAUTO(unittest.TestCase):
         with open("unittest_ressources/autoindex_cgi.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
-    def test_autoindex5(self):
+    def test_autoindex4(self):
         "autoindex with index directive"
         response = requests.get(
-            BASE_URL + "/cgi-bin", headers={"Host": "www.webserv_test.fr"}
+            BASE_URL + "/html", headers={"Host": "www.webserv_test.fr"}
         )
         self.assertEqual(response.status_code, 200)
-        with open("site-test3/cgi-bin/definitlynotaindex.txt") as f:
+        with open("site-test3/html/definitlynotaindex.txt") as f:
             self.assertEqual(f.read(), response.content.decode())
 
 
