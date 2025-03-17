@@ -23,10 +23,8 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 	// * link the right server for the current request (link on "serv" var)
 	set_server_conf(s);
 	if (!strcmp(serv.find("host")->second.first.c_str(), "NOTFOUND"))
-	{
 		http_error(400);
-		std::cout << "la\n";
-	}
+
 	check_autoindex();
 
 	// * build header

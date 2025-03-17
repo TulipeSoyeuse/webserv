@@ -101,7 +101,7 @@ class TestRequestPOST(unittest.TestCase):
 class TestRequestAUTO(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        self.maxDiff = 80
+        self.maxDiff = None
 
     def test_autoindex1(self):
         "autoindex on allowed directory"

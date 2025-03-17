@@ -83,11 +83,9 @@ bool Server::read_config()
 		std::string l;
 
 		while (l = server_conf.get_next_conf(), !l.empty())
-		{
-			std::cout << "L = " << l << std::endl;
 			if (!is_string_empty(l))
 				insert(server, parse_config_line(l));
-		}
+
 		_servers.push_back(server);
 		server_count++;
 		// * get port
