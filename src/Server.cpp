@@ -83,23 +83,21 @@ bool Server::read_config()
 		std::string l;
 
 		while (l = server_conf.get_next_conf(), !l.empty())
-		{
 			if (!is_string_empty(l))
 				insert(server, parse_config_line(l));
-			_servers.push_back(server);
-			server_count++;
-			// * get port
-			if (server.find("port") != server.end())
+		_servers.push_back(server);
+		server_count++;
+		// * get port
+		if (server.find("port") != server.end())
+		{
+			bool _found = false;
+			for (port_array::iterator it = port_lst.begin(); it != port_lst.end(); ++it)
 			{
-				bool _found = false;
-				for (port_array::iterator it = port_lst.begin(); it != port_lst.end(); ++it)
-				{
-					if (*it == atoi(server.find("port")->second.first.c_str()))
-						_found = true;
-				}
-				if (!_found)
-					port_lst.push_back(std::atoi(server.find("port")->second.first.c_str()));
+				if (*it == atoi(server.find("port")->second.first.c_str()))
+					_found = true;
 			}
+			if (!_found)
+				port_lst.push_back(std::atoi(server.find("port")->second.first.c_str()));
 		}
 	}
 	return (true);

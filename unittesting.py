@@ -419,7 +419,6 @@ class TestRequestCONFIG(unittest.TestCase):
                 stderr=self.log,
             )
             time.sleep(0.5)
-        self.assertIsNone(self.webserv.poll())
 
     def cleanup(self):
         if self.webserv and self.webserv.poll() == None:

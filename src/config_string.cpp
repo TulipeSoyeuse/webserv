@@ -217,6 +217,7 @@ std::string config_string::get_next_conf()
 
 
 
+
 std::string &config_string::get_str()
 {
 	return (in);
