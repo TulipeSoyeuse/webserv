@@ -22,9 +22,8 @@ Response::Response(const Request &r, Server &s) : _request(r), Status_line("HTTP
 
 	// * link the right server for the current request (link on "serv" var)
 	set_server_conf(s);
-	if (!strcmp(serv.find("host")->second.first.c_str(), "NOTFOUND")) {
+	if (!strcmp(serv.find("host")->second.first.c_str(), "NOTFOUND"))
 		http_error(400);
-	}
 	check_autoindex();
 
 	// * build header
@@ -236,6 +235,11 @@ bool Response::check_file()
 	root_dir = serv.find("route")->second.first + serv.find("location")->second.first;
 	file_path.clear();
 
+	bool is_index = false;
+	p_location l = config.get_location_subconf(serv, _request.get_headers().find("URI")->second);
+	if (l.second.find("index") != l.second.end())
+		is_index = true;
+
 	DIR *dir = opendir((root_dir + uri).c_str());
 	if (!dir)
 		file_path = root_dir + uri;
@@ -244,8 +248,15 @@ bool Response::check_file()
 		_isdir = true;
 		struct dirent *diread;
 		while ((diread = readdir(dir)) != NULL)
-			if (std::strncmp(diread->d_name, "index", 5) == 0)
-				file_path = root_dir + uri + diread->d_name;
+			if ((is_index && l.second.find("index")->second == diread->d_name) ||
+				(!is_index && std::string(diread->d_name).find("index.") != std::string::npos))
+			{
+				if (*--uri.end() != '/')
+					file_path = root_dir + uri + '/' + diread->d_name;
+				else
+					file_path = root_dir + uri + diread->d_name;
+				std::cout << "file path " << file_path << "\n";
+			}
 		closedir(dir);
 	}
 	if (autoindex && _isdir && file_path == "")

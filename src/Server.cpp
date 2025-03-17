@@ -86,20 +86,20 @@ bool Server::read_config()
 		{
 			if (!is_string_empty(l))
 				insert(server, parse_config_line(l));
-		}
-		_servers.push_back(server);
-		server_count++;
-		// * get port
-		if (server.find("port") != server.end())
-		{
-			bool _found = false;
-			for (port_array::iterator it = port_lst.begin(); it != port_lst.end(); ++it)
+			_servers.push_back(server);
+			server_count++;
+			// * get port
+			if (server.find("port") != server.end())
 			{
-				if (*it == atoi(server.find("port")->second.first.c_str()))
-					_found = true;
+				bool _found = false;
+				for (port_array::iterator it = port_lst.begin(); it != port_lst.end(); ++it)
+				{
+					if (*it == atoi(server.find("port")->second.first.c_str()))
+						_found = true;
+				}
+				if (!_found)
+					port_lst.push_back(std::atoi(server.find("port")->second.first.c_str()));
 			}
-			if (!_found)
-				port_lst.push_back(std::atoi(server.find("port")->second.first.c_str()));
 		}
 	}
 	return (true);
@@ -446,7 +446,8 @@ void Server::configuration_checking()
 		{
 			if (it2->second.first == "location")
 			{
-				if(it2->first.empty()) {
+				if (it2->first.empty())
+				{
 					std::cerr << "location can't be empty\n";
 					return;
 				}
@@ -509,7 +510,6 @@ const server_m_pair &Server::get_location_subconf(const server_m &m, const std::
 	do
 	{
 		substr = uri.substr(0, last);
-		std::cout << "substr uri: " << substr << "\n";
 		for (server_m::const_iterator it = m.begin(); it != m.end(); ++it)
 		{
 			if (it->first == substr)

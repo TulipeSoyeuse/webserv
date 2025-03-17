@@ -8,12 +8,14 @@ from urllib.parse import urljoin
 from datetime import datetime
 import time
 import pathlib
+import re
 
 from unittest_ressources.unitest_global import *
 
 
 def do_skip():
-    if len(sys.argv) == 2 and sys.argv[1] == "TestRequestCONFIG":
+    regexp = re.compile(r"TestRequestCONFIG.*")
+    if len(sys.argv) == 2 and regexp.search(sys.argv[1]):
         return True
     else:
         return False
@@ -99,7 +101,7 @@ class TestRequestPOST(unittest.TestCase):
 class TestRequestAUTO(unittest.TestCase):
     def __init__(self, methodName="runTest"):
         super().__init__(methodName)
-        self.maxDiff = 80
+        self.maxDiff = None
 
     def test_autoindex1(self):
         "autoindex on allowed directory"
@@ -113,28 +115,28 @@ class TestRequestAUTO(unittest.TestCase):
     def test_autoindex2(self):
         "forbiden autoindex"
         response = requests.get(
-            urljoin(BASE_URL, "html/"), headers={"Host": "www.webserv_test.fr"}
+            urljoin(BASE_URL, "upload/"), headers={"Host": "www.webserv_test.fr"}
         )
         self.assertEqual(response.status_code, 403)
         with open("site-test3/error/error_403.html") as f:
             self.assertEqual(f.read(), response.content.decode())
 
     def test_autoindex3(self):
-        "tricky fordibben autoindex"
-        response = requests.get(
-            urljoin(BASE_URL, "html"), headers={"Host": "www.webserv_test.fr"}
-        )
-        self.assertEqual(response.status_code, 403)
-        with open("site-test3/error/error_403.html") as f:
-            self.assertEqual(f.read(), response.content.decode())
-
-    def test_autoindex4(self):
         "tricky allowed autoindex"
         response = requests.get(
             BASE_URL + "/cgi-bin", headers={"Host": "www.webserv_test.fr"}
         )
         self.assertEqual(response.status_code, 200)
         with open("unittest_ressources/autoindex_cgi.html") as f:
+            self.assertEqual(f.read(), response.content.decode())
+
+    def test_autoindex4(self):
+        "autoindex with index directive"
+        response = requests.get(
+            BASE_URL + "/html", headers={"Host": "www.webserv_test.fr"}
+        )
+        self.assertEqual(response.status_code, 200)
+        with open("site-test3/html/definitlynotaindex.txt") as f:
             self.assertEqual(f.read(), response.content.decode())
 
 
@@ -387,18 +389,21 @@ class TestRequestCONFIG(unittest.TestCase):
         super().__init__(methodName)
         self.maxDiff = 80
         self.webserv = None
+        self.addCleanup(self.cleanup)
+        self.setup()
 
+    def setup(self):
         if not os.path.exists("unittest_ressources/output.log"):
             pathlib.Path("unittest_ressources/output.log").touch()
 
         self.log = open("unittest_ressources/output.log", "a")
-        self.addCleanup(self.cleanup)
+        self.log.write(LOG_SETUP.format(date=datetime.now()))
 
     def launch_webserv(self, config_file: str):
         if self.webserv and self.webserv.poll() != None:
             return
         else:
-            self.log.write(LOG_SETUP.format(date=datetime.now()))
+            self.log.write("---------------------------------\n")
             self.webserv = subprocess.Popen(
                 [
                     "valgrind",
@@ -440,15 +445,38 @@ class TestRequestCONFIG(unittest.TestCase):
         self.launch_webserv(TEST_CONFIG_FILE)
         time.sleep(0.5)
         self.assertEqual(self.webserv.poll(), 2)
-        
+
     def test_config3(self):
-        "empty file"
+        'return line after "location /"'
         with open(TEST_CONFIG_FILE, "w") as conf:
             conf.write(TEST_CONFIG_2)
         self.launch_webserv(TEST_CONFIG_FILE)
         time.sleep(0.5)
         self.assertEqual(self.webserv.poll(), 2)
-    
+
+    def test_config4(self):
+        "no route"
+        with open(TEST_CONFIG_FILE, "w") as conf:
+            conf.write(TEST_CONFIG_3)
+        self.launch_webserv(TEST_CONFIG_FILE)
+        time.sleep(0.5)
+        self.assertEqual(self.webserv.poll(), 2)
+
+    def test_config5(self):
+        "route don't exist"
+        with open(TEST_CONFIG_FILE, "w") as conf:
+            conf.write(TEST_CONFIG_4)
+        self.launch_webserv(TEST_CONFIG_FILE)
+        time.sleep(0.5)
+        self.assertEqual(self.webserv.poll(), 2)
+
+    def test_config6(self):
+        "route is a file and not a directory"
+        with open(TEST_CONFIG_FILE, "w") as conf:
+            conf.write(TEST_CONFIG_5)
+        self.launch_webserv(TEST_CONFIG_FILE)
+        time.sleep(0.5)
+        self.assertEqual(self.webserv.poll(), 2)
 
 
 if __name__ == "__main__":

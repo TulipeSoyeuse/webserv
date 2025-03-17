@@ -72,7 +72,7 @@ int socket_write(int fd, const bytes_container &b)
 	}
 	else if (!(pfd.revents & POLLOUT) || ready == 0)
 		return 0;
-	return (send(fd, b.get_data(), b.get_data_size(), 0));
+	return (send(fd, b.get_data(), b.get_data_size(), MSG_NOSIGNAL));
 }
 
 int network_accept_any(fd_vecset &fds, struct sockaddr *addr, socklen_t *addrlen)
@@ -226,8 +226,7 @@ int main(int ac, char **argv)
 		std::cout << brut_request.get_data_size() << "\n";
 		Request r(brut_request, port);
 		std::cout << "-------------- PARSED REQUEST -----------\n"
-				  << r
-				  << "------------------------------------------" << std::endl;
+				  << r << std::endl;
 		// * Response class :
 		Response resp(r, *t.webserv);
 		std::cout << "---------------- RESPONSE ---------------\n";
@@ -242,10 +241,6 @@ int main(int ac, char **argv)
 			bytes_container b;
 			while (resp.get_next_chunk(b) != -1)
 			{
-				std::string s;
-				b.safeGetline(s);
-				b.seek(0);
-				std::cout << s << '\n';
 				bw = socket_write(connection, b);
 				if (bw == -1 || bw == 0)
 					break;
